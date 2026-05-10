@@ -44,12 +44,13 @@ class Settings(BaseSettings):
     ARK_BASE_URL: str = "https://ark.cn-beijing.volces.com/api/v3"
     ARK_API_KEY: Optional[str] = None
     
-    # TOS (Volcengine Object Storage)
-    TOS_ENABLED: bool = False
-    TOS_ENDPOINT: Optional[str] = None
-    TOS_ACCESS_KEY: Optional[str] = None
-    TOS_SECRET_KEY: Optional[str] = None
-    TOS_BUCKET: Optional[str] = None
+    # TOS (Volcengine Object Storage) - 必选项
+    TOS_ENDPOINT: str = "tos-cn-beijing.volces.com"
+    TOS_ACCESS_KEY: str = ""
+    TOS_SECRET_KEY: str = ""
+    TOS_BUCKET: str = ""
+    TOS_REGION: str = "cn-beijing"
+    TOS_EXPIRES: int = 86400 * 7  # 预签名URL有效期7天
     
     class Config:
         env_file = ".env"

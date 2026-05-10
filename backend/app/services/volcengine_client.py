@@ -7,6 +7,7 @@ import httpx
 from typing import Optional, List, Dict, Any
 from ..core.config import settings
 from ..services.model_manager import model_manager
+from ..services.file_processor import file_processor
 
 
 class VolcengineClient:
@@ -28,6 +29,23 @@ class VolcengineClient:
         else:
             return await self._create_image_task(task)
     
+    async def _prepare_file_content(self, file_record) -> Dict[str, Any]:
+        """
+        准备文件内容用于模型输入
+        策略: 优先TOS公网URL，失败则回退Base64
+        """
+        # 如果已有公网URL，直接使用
+        if file_record.public_url:
+            return {"url": file_record.public_url}
+        
+        # 否则通过文件处理器准备
+        url_or_b64, status = await file_processor.prepare_for_model(
+            file_record,
+            prefer_tos=True,  # 优先TOS上传
+        )
+        
+        return {"url": url_or_b64}
+    
     async def _create_video_task(self, task) -> str:
         """创建视频生成任务 (Seedance)"""
         contents = []
@@ -40,21 +58,23 @@ class VolcengineClient:
         
         # 添加参考文件
         for file_record in task.input_files:
+            file_content = await self._prepare_file_content(file_record)
+            
             if file_record.file_type.value == "image":
                 contents.append({
                     "type": "image_url",
-                    "image_url": {"url": file_record.public_url or self._file_to_url(file_record)},
+                    "image_url": file_content,
                 })
             elif file_record.file_type.value == "video":
                 contents.append({
                     "type": "video_url",
-                    "video_url": {"url": file_record.public_url or self._file_to_url(file_record)},
+                    "video_url": file_content,
                     "role": "reference_video",
                 })
             elif file_record.file_type.value == "audio":
                 contents.append({
                     "type": "audio_url",
-                    "audio_url": {"url": file_record.public_url or self._file_to_url(file_record)},
+                    "audio_url": file_content,
                 })
         
         payload = {
@@ -97,8 +117,8 @@ class VolcengineClient:
         images = []
         for file_record in task.input_files:
             if file_record.file_type.value == "image":
-                url = file_record.public_url or self._file_to_url(file_record)
-                images.append(url)
+                file_content = await self._prepare_file_content(file_record)
+                images.append(file_content["url"])
         
         if images:
             payload["image"] = images if len(images) > 1 else images[0]
@@ -159,21 +179,3 @@ class VolcengineClient:
                 return resp.status_code == 200
         except Exception:
             return False
-    
-    def _file_to_url(self, file_record) -> str:
-        """将本地文件转为可访问URL (Base64或TOS URL)"""
-        # 优先使用公网URL
-        if file_record.public_url:
-            return file_record.public_url
-        
-        # 转为Base64 (仅小文件)
-        import os
-        path = file_record.storage_path
-        if os.path.exists(path) and os.path.getsize(path) < 5 * 1024 * 1024:
-            with open(path, "rb") as f:
-                b64 = base64.b64encode(f.read()).decode()
-            ext = file_record.mime_type.split("/")[-1]
-            return f"data:{file_record.mime_type};base64,{b64}"
-        
-        # 返回平台本地URL (需要配置公网访问或TOS)
-        return f"{settings.APP_NAME}/api/files/{file_record.file_id}"
