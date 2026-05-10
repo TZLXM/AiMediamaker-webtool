@@ -62,7 +62,7 @@
 |------|----------|
 | 文件上传 | ✅ POST `/api/v1/files/upload` 接收 multipart；文件重命名唯一；按类型分子目录存储 |
 | 文件下载 | ✅ GET `/api/v1/files/{file_id}` 验证user_id归属后返回文件流；非本人返回404 |
-| **TOS上传 (必选项)** | ✅ 文件保存本地后**必须**异步上传TOS；`public_url`字段必须填写；状态流转: `local` → `uploading` → `uploaded` |
+| **TOS上传 (必选项)** | ✅ 文件保存本地后**必须**上传TOS获取公网URL（供模型读取参考文件）；`public_url`字段必须填写；状态流转: `local` → `uploading` → `uploaded`；TOS不做备份，主存储在本地 |
 | TOS配置校验 | ✅ 启动时检测TOS配置，不完整则打印ERROR日志并退出；`.env`模板明确标注TOS为必填 |
 | Base64转换 | ✅ 小文件(≤5MB)支持Base64转换；大文件强制走TOS |
 | 文件预览 | ✅ 前端缩略图可正常显示；图片/视频/音频类型识别正确 |

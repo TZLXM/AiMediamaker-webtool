@@ -282,7 +282,7 @@ npm run build
 **解决**: TOS是必选项，必须执行 `pip install tos`。这是火山引擎官方SDK。
 
 ### Q: `RuntimeError: TOS配置不完整`
-**解决**: 检查 `.env` 文件中 `TOS_ACCESS_KEY`, `TOS_SECRET_KEY`, `TOS_BUCKET`, `TOS_ENDPOINT` 是否都已填写。
+**解决**: 检查 `.env` 文件中 `TOS_ACCESS_KEY`, `TOS_SECRET_KEY`, `TOS_BUCKET`, `TOS_ENDPOINT` 是否都已填写。TOS 仅用于生成公网 URL 供模型读取参考文件，平台文件主存储在本地。
 
 ### Q: Redis连接失败
 **解决**: 
