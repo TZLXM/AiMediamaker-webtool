@@ -11,7 +11,7 @@ from passlib.context import CryptContext
 from ...core.config import settings
 from ...models.user import User
 from ...schemas.user import UserLogin, TokenResponse, UserResponse
-from ...api.deps import get_db
+from ...api.deps import get_db, get_current_user
 
 router = APIRouter()
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
@@ -54,6 +54,6 @@ async def login(data: UserLogin, db: AsyncSession = Depends(get_db)):
 
 
 @router.get("/me", response_model=UserResponse)
-async def get_me(current_user: User = Depends(get_db)):
+async def get_me(current_user: User = Depends(get_current_user)):
     """获取当前用户信息"""
     return UserResponse.model_validate(current_user)

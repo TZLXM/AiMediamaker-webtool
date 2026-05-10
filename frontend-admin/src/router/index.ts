@@ -68,11 +68,18 @@ const router = createRouter({
 
 router.beforeEach((to, from, next) => {
   const adminStore = useAdminStore()
+  // 未登录且访问非公开页面 → 登录页
   if (!to.meta.public && !adminStore.isLoggedIn) {
     next('/login')
-  } else {
-    next()
+    return
   }
+  // 已登录但非 admin 角色 → 无权限（退出到登录页）
+  if (!to.meta.public && adminStore.user?.role !== 'admin') {
+    adminStore.logout()
+    next('/login')
+    return
+  }
+  next()
 })
 
 export default router

@@ -176,7 +176,7 @@ cd frontend-admin
 npm run dev
 # 访问 http://localhost:5174
 # API请求自动代理到 localhost:8000
-# 仅 admin/leader 角色可登录后台
+# 仅 admin 角色可登录后台
 ```
 
 **数据库查看**：
