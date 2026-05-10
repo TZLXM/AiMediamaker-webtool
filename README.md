@@ -4,7 +4,8 @@
 
 ## 技术栈
 
-- **前端**: Vue 3 + TypeScript + Vite + Pinia + Vue Router + Tailwind CSS
+- **前台前端**: Vue 3 + TypeScript + Vite + Pinia + Vue Router + Tailwind CSS
+- **后台前端**: Vue 3 + TypeScript + Vite + Pinia + Vue Router + Tailwind CSS
 - **后端**: Python + FastAPI + SQLAlchemy (async) + SQLite
 - **缓存/队列**: Redis
 - **文件存储**: 本地文件系统
@@ -48,16 +49,28 @@ source .venv/bin/activate  # Windows: .venv\Scripts\activate
 pip install -r requirements.txt
 
 # 创建 .env 文件配置环境变量
+python scripts/init_data.py  # 初始化种子数据
+
 # 运行
 uvicorn app.main:app --reload --port 8000
 ```
 
-### 前端
+### 用户前台
 
 ```bash
 cd frontend
 npm install
 npm run dev
+# 访问 http://localhost:5173
+```
+
+### 管理后台
+
+```bash
+cd frontend-admin
+npm install
+npm run dev
+# 访问 http://localhost:5174
 ```
 
 ## 核心功能

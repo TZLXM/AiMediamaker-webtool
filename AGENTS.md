@@ -162,12 +162,21 @@ uvicorn app.main:app --reload --port 8000
 # 访问 http://localhost:8000/docs 查看 Swagger API 文档
 ```
 
-**前端调试**：
+**前台前端调试**：
 ```bash
 cd frontend
 npm run dev
 # 访问 http://localhost:5173
 # API请求自动代理到 localhost:8000
+```
+
+**后台前端调试**：
+```bash
+cd frontend-admin
+npm run dev
+# 访问 http://localhost:5174
+# API请求自动代理到 localhost:8000
+# 仅 admin/leader 角色可登录后台
 ```
 
 **数据库查看**：
