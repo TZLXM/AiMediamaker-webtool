@@ -54,22 +54,26 @@
 
 | 任务 | 验收标准 |
 |------|----------|
-| API配置CRUD | ❌ 路由骨架存在，Admin可增删改查API配置未实现 |
-| 模型配置CRUD | ❌ 路由骨架存在，可配置模型ID/名称/参数Schema/支持文件类型未实现 |
-| 模型参数Schema | ❌ GET `/api/v1/models/list?mode=video` 返回完整参数定义未实现 |
-| 多平台扩展性 | 🟡 `PlatformType` 枚举和 client 类骨架已预留 |
+| API配置CRUD | ✅ Admin可增删改查API配置；API Key明文存储（TODO: 加密）；`total_concurrency` 生效；`GET/POST/PUT/DELETE /api/v1/admin/api-configs` |
+| 模型配置CRUD | ✅ 可配置模型ID/名称/参数Schema/支持文件类型；`sort_order` 控制排序；`GET/POST/PUT/DELETE /api/v1/admin/model-configs` |
+| 模型参数Schema | ✅ GET `/api/v1/models/list?mode=video` 返回完整参数定义；前端可动态渲染表单 |
+| 多平台扩展性 | 🟡 新增平台只需增加 `PlatformType` 枚举和对应client类；不影响现有代码 |
+| Admin路由权限 | ✅ `/api/v1/admin/*` 全部使用 `get_current_admin` 依赖，仅admin可访问 |
 
 ### 里程碑 M2.2: 文件管理模块 (含TOS上传 - 必选项)
 **目标**: 用户上传的文件必须上传至TOS，返回公网URL
 
 | 任务 | 验收标准 |
 |------|----------|
-| 文件上传 | 🟡 POST `/api/v1/files/upload` 路由骨架存在，multipart 接收逻辑未完整实现 |
-| 文件下载 | 🟡 GET `/api/v1/files/{file_id}` 路由骨架存在，归属校验逻辑未完整实现 |
-| **TOS上传 (必选项)** | ❌ TOSUploader 服务类骨架存在，实际上传逻辑未实现 |
-| TOS配置校验 | 🟡 `.env` 模板已标注 TOS 必填，启动时检测未实现 |
-| Base64转换 | ❌ 未实现 |
-| 文件预览 | ❌ 未实现 |
+| 文件上传 | ✅ POST `/api/v1/files/upload` 接收 multipart；文件重命名唯一；按类型分子目录存储；类型/大小校验 |
+| 文件下载 | ✅ GET `/api/v1/files/{file_id}` 验证 `user_id` 归属后返回文件流；非本人返回 404 |
+| 文件删除 | ✅ DELETE `/api/v1/files/{file_id}` 验证归属后删除；本地文件 + DB 记录一并清理 |
+| 文件预览 | ✅ GET `/api/v1/files/{file_id}/preview` 图片生成 Pillow 缩略图；视频/音频返回原文件 |
+| 资产列表 | ✅ GET `/api/v1/files/assets/list` 支持 `file_type`/`search`/`page`/`page_size` 筛选分页 |
+| **TOS上传 (必选项)** | 🟡 `tos_uploader` 上传逻辑已实现；`_sign_request` 返回完整预签名URL；与任务队列的集成待验证 |
+| TOS配置校验 | 🟡 启动时检测 TOS 配置，未完整时输出**警告日志**；按验收标准应为 **ERROR 日志并退出** |
+| Base64转换 | ✅ `file_processor` 支持 `prepare_for_model` 策略；小文件可转 Base64；TOS 失败可回退 |
+| 文件预览前端 | ❌ 前端缩略图显示未实现 |
 
 ### 里程碑 M2.3: 任务队列模块
 **目标**: 任务异步执行，并发可控，状态可追踪
@@ -94,6 +98,8 @@
 | 资源用量记录 | ❌ 未实现 |
 
 ### M2 阶段出口检查清单
+- [ ] API Key 加密存储（当前为明文存储在 DB）
+- [ ] TOS 配置校验改为 ERROR 日志并退出（当前为警告）
 - [ ] 完整走通一次 "上传图片 → 创建图生图任务 → 获取结果" 全流程
 - [ ] 完整走通一次 "输入提示词 → 创建视频生成任务 → 下载视频" 全流程
 - [ ] 并发提交5个任务，验证队列和并发控制正确工作
