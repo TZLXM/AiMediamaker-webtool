@@ -19,7 +19,13 @@ import { useUserStore } from '@/stores'
 const userStore = useUserStore()
 
 onMounted(() => {
-  userStore.fetchProfile()
+  const token = localStorage.getItem('token')
+  if (!token) {
+    // 未登录，显示登录弹窗
+    userStore.showLogin = true
+  } else {
+    userStore.fetchProfile()
+  }
 })
 </script>
 

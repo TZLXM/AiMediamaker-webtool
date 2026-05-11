@@ -32,11 +32,13 @@ const router = createRouter({
 })
 
 router.beforeEach((to, _from, next) => {
-  const userStore = JSON.parse(localStorage.getItem('pinia-user-store') || '{}')
-  const isLoggedIn = !!userStore?.token
+  // pinia 默认不持久化到 localStorage，直接读取 token
+  const token = localStorage.getItem('token')
+  const isLoggedIn = !!token
 
   if (to.meta.requiresAuth && !isLoggedIn) {
-    next('/')
+    // 取消导航，避免无限重定向（因为 / 会 redirect 回 /generate）
+    next(false)
   } else {
     next()
   }
