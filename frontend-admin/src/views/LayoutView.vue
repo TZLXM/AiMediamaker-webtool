@@ -45,7 +45,7 @@ import {
   Settings,
   LogOut as LogOutIcon,
 } from 'lucide-vue-next'
-import { useAdminStore } from '@/stores'
+import { useAdminStore } from '@/stores/admin'
 
 const route = useRoute()
 const router = useRouter()

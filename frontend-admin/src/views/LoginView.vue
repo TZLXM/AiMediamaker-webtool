@@ -25,7 +25,7 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
-import { useAdminStore } from '@/stores'
+import { useAdminStore } from '@/stores/admin'
 
 const router = useRouter()
 const adminStore = useAdminStore()

@@ -3,7 +3,7 @@
 """
 from datetime import datetime
 from typing import Optional, List, Any
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, ConfigDict
 
 
 class TaskParameter(BaseModel):
@@ -27,6 +27,7 @@ class TaskParameter(BaseModel):
 
 
 class TaskCreate(BaseModel):
+    model_config = ConfigDict(protected_namespaces=())
     mode: str = Field(..., pattern="^(image|video)$")
     model_id: str
     prompt: str = Field(..., min_length=1)
@@ -56,8 +57,7 @@ class TaskResponse(BaseModel):
     input_files: List[Any] = []   # FileResponse simplified
     output_files: List[Any] = []  # FileResponse simplified
     
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(protected_namespaces=(), from_attributes=True)
 
 
 class TaskHistoryFilter(BaseModel):
