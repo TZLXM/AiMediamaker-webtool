@@ -8,8 +8,50 @@
       <div class="config-card">
         <div class="card-header">
           <h2>API 配置</h2>
-          <button class="btn-primary" @click="showApiModal = true">新增配置</button>
+          <button class="btn-primary" @click="openApiForm()">新增配置</button>
         </div>
+
+        <!-- 新增/编辑表单 -->
+        <div v-if="showApiForm" class="form-card">
+          <h3>{{ editingApiId ? '编辑 API 配置' : '新增 API 配置' }}</h3>
+          <div class="form-grid">
+            <div class="form-field">
+              <label>配置名称 <span class="required">*</span></label>
+              <input v-model="apiForm.name" placeholder="如：火山方舟主账号" />
+            </div>
+            <div class="form-field">
+              <label>平台类型 <span class="required">*</span></label>
+              <select v-model="apiForm.platform">
+                <option value="volcengine_ark">火山方舟</option>
+              </select>
+            </div>
+            <div class="form-field full">
+              <label>API Key <span class="required">*</span></label>
+              <input v-model="apiForm.api_key" type="password" placeholder="sk-xxx..." />
+            </div>
+            <div class="form-field full">
+              <label>Base URL</label>
+              <input v-model="apiForm.base_url" placeholder="https://ark.cn-beijing.volces.com/api/v3" />
+            </div>
+            <div class="form-field">
+              <label>总并发限制</label>
+              <input v-model.number="apiForm.total_concurrency" type="number" min="1" />
+            </div>
+            <div class="form-field">
+              <label class="checkbox">
+                <input v-model="apiForm.is_active" type="checkbox" />
+                启用该配置
+              </label>
+            </div>
+          </div>
+          <div class="form-actions">
+            <button class="btn-secondary" @click="closeApiForm">取消</button>
+            <button class="btn-primary" @click="saveApi" :disabled="savingApi">
+              {{ savingApi ? '保存中...' : '保存' }}
+            </button>
+          </div>
+        </div>
+
         <div class="config-list">
           <div v-for="api in apiConfigs" :key="api.id" class="config-item">
             <div class="config-info">
@@ -23,40 +65,39 @@
               <span class="concurrency">并发: {{ api.total_concurrency }}</span>
             </div>
             <div class="config-actions">
-              <button class="btn-text" @click="editApi(api)">编辑</button>
+              <button class="btn-text" @click="openApiForm(api)">编辑</button>
               <button class="btn-text danger" @click="deleteApi(api.id)">删除</button>
             </div>
           </div>
+          <div v-if="apiConfigs.length === 0" class="empty-tip">暂无 API 配置</div>
         </div>
       </div>
 
       <!-- TOS配置 -->
       <div class="config-card">
         <h2>TOS 对象存储配置</h2>
+        <p class="form-tip">TOS 配置当前从服务器环境变量读取，暂不支持通过前端修改。</p>
         <div class="form-grid">
           <div class="form-field">
             <label>Endpoint</label>
-            <input v-model="tosForm.endpoint" placeholder="tos-cn-beijing.volces.com" />
+            <input v-model="tosForm.endpoint" placeholder="tos-cn-beijing.volces.com" disabled />
           </div>
           <div class="form-field">
             <label>Region</label>
-            <input v-model="tosForm.region" placeholder="cn-beijing" />
+            <input v-model="tosForm.region" placeholder="cn-beijing" disabled />
           </div>
           <div class="form-field">
             <label>Bucket</label>
-            <input v-model="tosForm.bucket" />
+            <input v-model="tosForm.bucket" disabled />
           </div>
           <div class="form-field">
             <label>Access Key</label>
-            <input v-model="tosForm.access_key" type="password" />
+            <input v-model="tosForm.access_key" type="password" disabled />
           </div>
           <div class="form-field">
             <label>Secret Key</label>
-            <input v-model="tosForm.secret_key" type="password" />
+            <input v-model="tosForm.secret_key" type="password" disabled />
           </div>
-        </div>
-        <div class="form-actions">
-          <button class="btn-primary" @click="saveTos">保存 TOS 配置</button>
         </div>
       </div>
     </div>
@@ -65,11 +106,22 @@
 
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
-// import api from '@/api'
+import api from '@/api'
 import type { ApiConfig } from '@/types'
 
 const apiConfigs = ref<ApiConfig[]>([])
-const showApiModal = ref(false)
+const showApiForm = ref(false)
+const editingApiId = ref<number | null>(null)
+const savingApi = ref(false)
+
+const apiForm = ref({
+  name: '',
+  platform: 'volcengine_ark',
+  api_key: '',
+  base_url: 'https://ark.cn-beijing.volces.com/api/v3',
+  total_concurrency: 5,
+  is_active: true,
+})
 
 const tosForm = ref({
   endpoint: '',
@@ -80,20 +132,73 @@ const tosForm = ref({
 })
 
 async function fetchConfigs() {
-  // TODO: 接入API配置列表
+  try {
+    const res = await api.get('/admin/api-configs')
+    apiConfigs.value = res.data
+  } catch (e) {
+    alert('获取 API 配置失败')
+  }
 }
 
-function editApi(_config: ApiConfig) {
-  // TODO
+function openApiForm(config?: ApiConfig) {
+  if (config) {
+    editingApiId.value = config.id
+    apiForm.value = {
+      name: config.name,
+      platform: config.platform,
+      api_key: config.api_key,
+      base_url: config.base_url,
+      total_concurrency: config.total_concurrency,
+      is_active: config.is_active,
+    }
+  } else {
+    editingApiId.value = null
+    apiForm.value = {
+      name: '',
+      platform: 'volcengine_ark',
+      api_key: '',
+      base_url: 'https://ark.cn-beijing.volces.com/api/v3',
+      total_concurrency: 5,
+      is_active: true,
+    }
+  }
+  showApiForm.value = true
 }
 
-async function deleteApi(_id: number) {
-  if (!confirm('确定删除该API配置？')) return
-  // TODO
+function closeApiForm() {
+  showApiForm.value = false
+  editingApiId.value = null
 }
 
-async function saveTos() {
-  // TODO: 接入保存TOS配置API
+async function saveApi() {
+  if (!apiForm.value.name || !apiForm.value.api_key) {
+    alert('请填写名称和 API Key')
+    return
+  }
+  savingApi.value = true
+  try {
+    if (editingApiId.value) {
+      await api.put(`/admin/api-configs/${editingApiId.value}`, apiForm.value)
+    } else {
+      await api.post('/admin/api-configs', apiForm.value)
+    }
+    closeApiForm()
+    await fetchConfigs()
+  } catch (e: any) {
+    alert(e.response?.data?.detail || '保存失败')
+  } finally {
+    savingApi.value = false
+  }
+}
+
+async function deleteApi(id: number) {
+  if (!confirm('确定删除该 API 配置？')) return
+  try {
+    await api.delete(`/admin/api-configs/${id}`)
+    await fetchConfigs()
+  } catch (e: any) {
+    alert(e.response?.data?.detail || '删除失败')
+  }
 }
 
 onMounted(fetchConfigs)
@@ -149,6 +254,7 @@ onMounted(fetchConfigs)
   display: flex;
   flex-direction: column;
   gap: 2px;
+  flex: 1;
 }
 .config-name { font-size: 14px; font-weight: 500; }
 .config-detail { font-size: 12px; color: var(--color-txtm); }
@@ -157,6 +263,7 @@ onMounted(fetchConfigs)
   display: flex;
   align-items: center;
   gap: 12px;
+  margin: 0 16px;
 }
 .tag {
   padding: 2px 8px; border-radius: 4px; font-size: 12px;
@@ -179,6 +286,26 @@ onMounted(fetchConfigs)
   border: none; border-radius: 8px; color: white;
   font-size: 13px; cursor: pointer;
 }
+.btn-primary:hover { background: var(--color-accent-hover); }
+.btn-primary:disabled { opacity: 0.6; cursor: not-allowed; }
+
+.btn-secondary {
+  padding: 8px 16px; background: var(--color-active);
+  border: 1px solid var(--color-borderc); border-radius: 8px;
+  color: var(--color-txts); font-size: 13px; cursor: pointer;
+}
+
+.form-card {
+  background: var(--color-active);
+  border: 1px solid var(--color-borderc);
+  border-radius: 10px;
+  padding: 20px;
+  margin-bottom: 16px;
+}
+.form-card h3 {
+  font-size: 14px; font-weight: 600;
+  margin-bottom: 16px; color: var(--color-txtp);
+}
 
 .form-grid {
   display: grid;
@@ -189,13 +316,36 @@ onMounted(fetchConfigs)
 .form-field {
   display: flex; flex-direction: column; gap: 6px;
 }
+.form-field.full { grid-column: 1 / -1; }
 .form-field label { font-size: 13px; color: var(--color-txts); }
-.form-field input {
-  padding: 10px 12px; background: var(--color-active);
+.form-field .required { color: var(--color-danger); }
+.form-field input,
+.form-field select {
+  padding: 10px 12px; background: var(--color-card);
   border: 1px solid var(--color-borderc); border-radius: 8px;
   color: var(--color-txtp); font-size: 14px; outline: none;
 }
+.form-field input:focus,
+.form-field select:focus { border-color: var(--color-accent); }
+.form-field input:disabled {
+  opacity: 0.5; cursor: not-allowed;
+}
+
+.form-field .checkbox {
+  display: flex; align-items: center; gap: 8px;
+  font-size: 14px; color: var(--color-txtp); cursor: pointer;
+}
+
 .form-actions {
-  display: flex; justify-content: flex-end;
+  display: flex; justify-content: flex-end; gap: 12px;
+}
+
+.empty-tip {
+  text-align: center; padding: 24px;
+  color: var(--color-txtm); font-size: 14px;
+}
+.form-tip {
+  font-size: 12px; color: var(--color-txtm);
+  margin-bottom: 12px;
 }
 </style>

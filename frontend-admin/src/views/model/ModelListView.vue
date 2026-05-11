@@ -39,6 +39,7 @@
           </tr>
         </tbody>
       </table>
+      <div v-if="models.length === 0" class="empty-tip">暂无模型配置</div>
     </div>
   </div>
 </template>
@@ -56,17 +57,26 @@ const router = useRouter()
 const models = ref<ModelConfig[]>([])
 
 async function fetchModels() {
-  const res = await api.get('/models/list')
-  models.value = res.data
+  try {
+    const res = await api.get('/admin/model-configs')
+    models.value = res.data
+  } catch (e: any) {
+    alert(e.response?.data?.detail || '获取模型列表失败')
+  }
 }
 
 function editModel(id: number) {
   router.push(`/models/edit/${id}`)
 }
 
-async function deleteModel(_id: number) {
+async function deleteModel(id: number) {
   if (!confirm('确定要删除该模型配置吗？')) return
-  // TODO: 接入删除API
+  try {
+    await api.delete(`/admin/model-configs/${id}`)
+    await fetchModels()
+  } catch (e: any) {
+    alert(e.response?.data?.detail || '删除失败')
+  }
 }
 
 onMounted(fetchModels)
@@ -184,5 +194,12 @@ onMounted(fetchModels)
 
 .btn-text.danger {
   color: var(--color-danger);
+}
+
+.empty-tip {
+  text-align: center;
+  padding: 40px;
+  color: var(--color-txtm);
+  font-size: 14px;
 }
 </style>

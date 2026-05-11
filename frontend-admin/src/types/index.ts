@@ -16,6 +16,7 @@ export interface ModelConfig {
   id: number
   name: string
   model_id: string
+  api_config_id: number
   mode: 'image' | 'video'
   description?: string
   concurrency_limit: number
@@ -43,9 +44,11 @@ export interface ApiConfig {
   id: number
   name: string
   platform: string
+  api_key: string
   base_url: string
   total_concurrency: number
   is_active: boolean
+  extra_config?: Record<string, any>
   created_at: string
 }
 

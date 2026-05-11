@@ -104,6 +104,16 @@
 | 结果下载 | ✅ `_download_outputs()` 自动下载模型生成的图片/视频；支持 HTTP URL 和 Base64 data URI 两种格式；保存为 `FileRecord` (`source=output`) 关联到源任务 |
 | 任务取消 | ✅ `cancel_task()` 对视频任务调用 `DELETE /contents/generations/tasks/{task_id}`；图片任务（`img_sync_` 前缀）直接返回成功 |
 
+### 里程碑 M2.5: 前端 Admin 配置页面接入后端 API
+**目标**: 管理后台可实际配置 API 和模型，不再停留在 TODO
+
+| 任务 | 验收标准 |
+|------|----------|
+| API 配置 CRUD | ✅ `SystemConfigView.vue` 接入 `GET/POST/PUT/DELETE /api/v1/admin/api-configs`；支持新增、编辑、删除 API 配置 |
+| 模型配置 CRUD | ✅ `ModelListView.vue` 接入 `GET/DELETE /api/v1/admin/model-configs`；`ModelEditView.vue` 接入 `GET/POST/PUT /api/v1/admin/model-configs`；编辑时可选关联的 API 配置 |
+| 类型定义对齐 | ✅ `frontend-admin/src/types/index.ts` 补充 `api_key`、`api_config_id`、`sort_order` 等缺失字段 |
+| TOS 配置表单 | 🟡 `SystemConfigView.vue` 保留 TOS 配置 UI，但后端暂无持久化接口（当前从 `.env` 读取），需后续后端新增 `/admin/system-config` 接口 |
+
 ### M2 阶段出口检查清单
 - [ ] API Key 加密存储（当前为明文存储在 DB）
 - [ ] TOS 配置校验改为 ERROR 日志并退出（当前为警告）
