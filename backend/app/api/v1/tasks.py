@@ -98,7 +98,7 @@ async def list_history(
     if search:
         query = query.where(Task.prompt.contains(search))
     
-    query = query.order_by(desc(Task.created_at))
+    query = query.order_by(Task.created_at)  # 升序：最晚生成的在最下方
     query = query.offset((page - 1) * page_size).limit(page_size)
     
     result = await db.execute(query)

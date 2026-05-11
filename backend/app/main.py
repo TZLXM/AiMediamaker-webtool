@@ -8,7 +8,8 @@ from fastapi.staticfiles import StaticFiles
 import logging
 
 from .core.config import settings
-from .core.database import init_db, close_db
+from .core.database import init_db, close_db, async_session_maker
+from .core.redis import redis_client
 from .api.v1 import router as api_v1_router
 
 logger = logging.getLogger(__name__)
@@ -20,8 +21,14 @@ async def lifespan(app: FastAPI):
     # 启动
     await init_db()
     
+    # 连接 Redis
+    try:
+        await redis_client.connect()
+        logger.info("Redis connected")
+    except Exception as e:
+        logger.warning(f"Redis connection failed: {e}. Concurrency control will fall back to memory-only.")
+    
     # 加载模型配置缓存
-    from .core.database import async_session_maker
     from .services.model_manager import model_manager
     async with async_session_maker() as db:
         try:
@@ -41,8 +48,21 @@ async def lifespan(app: FastAPI):
     else:
         logger.info("TOS configuration verified.")
     
+    # 恢复未完成的任务
+    from .services.task_queue import task_queue
+    async with async_session_maker() as db:
+        try:
+            await task_queue.recover_tasks(db, async_session_maker)
+            logger.info("Task queue recovery completed")
+        except Exception as e:
+            logger.warning(f"Failed to recover tasks on startup: {e}")
+    
     yield
+    
     # 关闭
+    logger.info("Shutting down...")
+    await task_queue.shutdown()
+    await redis_client.close()
     await close_db()
 
 

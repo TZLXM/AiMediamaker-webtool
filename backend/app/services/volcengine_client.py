@@ -1,14 +1,31 @@
 """
 火山方舟 API 客户端
-封装视频生成和图片生成API调用
+封装视频生成(Seedance)和图片生成(Seedream) API调用
+
+API 文档:
+- Seedance: https://www.volcengine.com/docs/82379/2291680
+- Seedream: https://www.volcengine.com/docs/82379/1824121
+- 多模态输入: https://www.volcengine.com/docs/82379/2298881
 """
 import base64
 import httpx
+import logging
 from typing import Optional, List, Dict, Any
 from sqlalchemy.ext.asyncio import AsyncSession
 from ..core.config import settings
 from ..services.model_manager import model_manager
 from ..services.file_processor import file_processor
+
+logger = logging.getLogger(__name__)
+
+
+class VolcengineAPIError(Exception):
+    """火山方舟API业务错误"""
+    def __init__(self, code: str, message: str, status_code: int = 0):
+        self.code = code
+        self.message = message
+        self.status_code = status_code
+        super().__init__(f"[{code}] {message}")
 
 
 class VolcengineClient:
@@ -22,13 +39,18 @@ class VolcengineClient:
             "Authorization": f"Bearer {self.api_key}",
             "Content-Type": "application/json",
         }
+        # 用于暂存同步图片生成结果（单实例顺序使用，无需线程安全）
+        self._last_image_result: Optional[Dict[str, Any]] = None
     
     async def create_task(self, task, db: Optional[AsyncSession] = None) -> str:
         """创建生成任务，返回远端任务ID"""
         if task.mode == "video":
             return await self._create_video_task(task, db=db)
         else:
-            return await self._create_image_task(task, db=db)
+            result = await self._create_image_task(task, db=db)
+            self._last_image_result = result
+            # 使用 created 时间戳作为伪任务ID，便于追踪
+            return f"img_sync_{result.get('created', '')}"
     
     async def _prepare_file_content(
         self, file_record, db: Optional[AsyncSession] = None
@@ -64,21 +86,24 @@ class VolcengineClient:
         for file_record in task.input_files:
             file_content = await self._prepare_file_content(file_record, db=db)
             
-            if file_record.file_type.value == "image":
+            ft = str(file_record.file_type)
+            if ft == "image":
                 contents.append({
                     "type": "image_url",
                     "image_url": file_content,
+                    "role": "reference_image",
                 })
-            elif file_record.file_type.value == "video":
+            elif ft == "video":
                 contents.append({
                     "type": "video_url",
                     "video_url": file_content,
                     "role": "reference_video",
                 })
-            elif file_record.file_type.value == "audio":
+            elif ft == "audio":
                 contents.append({
                     "type": "audio_url",
                     "audio_url": file_content,
+                    "role": "reference_audio",
                 })
         
         payload = {
@@ -92,12 +117,24 @@ class VolcengineClient:
             payload["ratio"] = params["ratio"]
         if params.get("duration"):
             payload["duration"] = params["duration"]
+        if params.get("resolution"):
+            payload["resolution"] = params["resolution"]
+        if params.get("fps"):
+            payload["fps"] = params["fps"]
         if "generate_audio" in params:
             payload["generate_audio"] = params["generate_audio"]
         if "watermark" in params:
             payload["watermark"] = params["watermark"]
-        if params.get("seed"):
+        if params.get("seed") is not None:
             payload["seed"] = params["seed"]
+        
+        # 额外参数（如 tools 等）
+        extra = params.get("extra") or {}
+        for key, value in extra.items():
+            if key not in payload:
+                payload[key] = value
+        
+        logger.info(f"[Seedance] Creating video task with model={self.model_id}, content_items={len(contents)}")
         
         async with httpx.AsyncClient() as client:
             resp = await client.post(
@@ -106,12 +143,10 @@ class VolcengineClient:
                 json=payload,
                 timeout=60,
             )
-            resp.raise_for_status()
-            data = resp.json()
-            return data["id"]
+            return self._parse_task_response(resp)
     
-    async def _create_image_task(self, task, db: Optional[AsyncSession] = None) -> str:
-        """创建图片生成任务 (Seedream)"""
+    async def _create_image_task(self, task, db: Optional[AsyncSession] = None) -> Dict[str, Any]:
+        """创建图片生成任务 (Seedream)，返回完整响应数据"""
         payload = {
             "model": self.model_id,
             "prompt": task.prompt,
@@ -120,7 +155,7 @@ class VolcengineClient:
         # 参考图
         images = []
         for file_record in task.input_files:
-            if file_record.file_type.value == "image":
+            if str(file_record.file_type) == "image":
                 file_content = await self._prepare_file_content(file_record, db=db)
                 images.append(file_content["url"])
         
@@ -139,6 +174,16 @@ class VolcengineClient:
             payload["sequential_image_generation_options"] = {"max_images": params["max_images"]}
         if "watermark" in params:
             payload["watermark"] = params["watermark"]
+        if params.get("response_format"):
+            payload["response_format"] = params["response_format"]
+        
+        # 额外参数（如 tools 等）
+        extra = params.get("extra") or {}
+        for key, value in extra.items():
+            if key not in payload:
+                payload[key] = value
+        
+        logger.info(f"[Seedream] Creating image task with model={self.model_id}, refs={len(images)}")
         
         async with httpx.AsyncClient() as client:
             resp = await client.post(
@@ -149,15 +194,36 @@ class VolcengineClient:
             )
             resp.raise_for_status()
             data = resp.json()
-            # 图片生成是同步的，使用伪任务ID
-            return f"img_{data.get('created', '')}_{id(data)}"
+            
+            # 检查API返回的业务错误
+            if data.get("error"):
+                error = data["error"]
+                raise VolcengineAPIError(
+                    code=error.get("code", "unknown"),
+                    message=error.get("message", "Unknown error"),
+                    status_code=resp.status_code,
+                )
+            
+            return data
     
     async def get_task_status(self, remote_task_id: str) -> Dict[str, Any]:
-        """获取任务状态"""
-        if remote_task_id.startswith("img_"):
-            # 图片任务实际是同步的，这里应该走不同逻辑
-            # 简化处理：图片生成结果已在create时返回
-            return {"status": "succeeded"}
+        """获取任务状态，返回完整响应（含 usage）"""
+        if remote_task_id.startswith("img_sync_"):
+            # 图片任务是同步的，结果已在 create_task 时返回
+            contents = []
+            usage = {}
+            if self._last_image_result:
+                usage = self._last_image_result.get("usage", {})
+                for item in self._last_image_result.get("data", []):
+                    if "url" in item:
+                        contents.append({"image_url": {"url": item["url"]}})
+                    elif "b64_json" in item:
+                        contents.append({"image_url": {"url": f"data:image/png;base64,{item['b64_json']}"}})
+            return {
+                "status": "succeeded",
+                "content": contents,
+                "usage": usage,
+            }
         
         async with httpx.AsyncClient() as client:
             resp = await client.get(
@@ -166,20 +232,67 @@ class VolcengineClient:
                 timeout=30,
             )
             resp.raise_for_status()
-            return resp.json()
+            data = resp.json()
+            
+            # 检查API返回的业务错误（任务失败时返回200但带有error字段）
+            if data.get("error"):
+                error = data["error"]
+                logger.warning(f"[Seedance] Task API error: {error}")
+            
+            return data
     
     async def cancel_task(self, remote_task_id: str) -> bool:
-        """取消远端任务"""
-        if remote_task_id.startswith("img_"):
+        """取消远端任务（使用DELETE方法）"""
+        if remote_task_id.startswith("img_sync_"):
             return True
         
         try:
             async with httpx.AsyncClient() as client:
-                resp = await client.post(
-                    f"{self.base_url}/contents/generations/tasks/{remote_task_id}/cancel",
+                resp = await client.delete(
+                    f"{self.base_url}/contents/generations/tasks/{remote_task_id}",
                     headers=self.headers,
                     timeout=30,
                 )
-                return resp.status_code == 200
-        except Exception:
+                return resp.status_code in (200, 202, 204)
+        except Exception as e:
+            logger.warning(f"[Volcengine] Failed to cancel task {remote_task_id}: {e}")
             return False
+    
+    def _parse_task_response(self, resp: httpx.Response) -> str:
+        """解析任务创建响应，提取任务ID或抛出详细错误"""
+        try:
+            resp.raise_for_status()
+        except httpx.HTTPStatusError as e:
+            # 尝试解析错误响应体
+            try:
+                error_data = e.response.json()
+                error = error_data.get("error", {})
+                code = error.get("code", f"HTTP_{e.response.status_code}")
+                message = error.get("message", str(e))
+            except Exception:
+                code = f"HTTP_{e.response.status_code}"
+                message = e.response.text or str(e)
+            
+            logger.error(f"[Volcengine] API error {code}: {message}")
+            raise VolcengineAPIError(code=code, message=message, status_code=e.response.status_code)
+        
+        data = resp.json()
+        
+        # 检查API返回的业务错误（即使HTTP 200也可能包含错误）
+        if data.get("error"):
+            error = data["error"]
+            code = error.get("code", "unknown")
+            message = error.get("message", "Unknown error")
+            logger.error(f"[Volcengine] API business error {code}: {message}")
+            raise VolcengineAPIError(code=code, message=message, status_code=resp.status_code)
+        
+        task_id = data.get("id")
+        if not task_id:
+            raise VolcengineAPIError(
+                code="missing_task_id",
+                message="API response does not contain task id",
+                status_code=resp.status_code,
+            )
+        
+        logger.info(f"[Volcengine] Task created: {task_id}")
+        return task_id

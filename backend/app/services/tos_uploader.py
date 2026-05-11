@@ -141,18 +141,18 @@ class TOSUploader:
             # 使用 tos SDK 上传
             try:
                 import tos
-                client = tos.TosClient(
-                    ak=self.access_key,
-                    sk=self.secret_key,
-                    endpoint=self.endpoint,
+                auth = tos.Auth(
+                    access_key_id=self.access_key,
+                    access_key_secret=self.secret_key,
                     region=self.region,
                 )
+                client = tos.TosClient(auth, endpoint=self.endpoint)
                 with open(file_path, "rb") as f:
                     client.put_object(
-                        self.bucket, 
-                        object_key, 
-                        content=f.read(),
-                        content_type=content_type
+                        Bucket=self.bucket,
+                        Key=object_key,
+                        Body=f.read(),
+                        ContentType=content_type,
                     )
                 
                 public_url = f"{self.base_url}/{object_key}"
