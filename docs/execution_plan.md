@@ -38,7 +38,7 @@
 | Admin/Leader/User角色 | ✅ 数据库中3种角色的测试账号已创建；`role`字段正确返回 |
 
 ### M1 阶段出口检查清单
-- [x] `pytest backend/tests/` 全部通过（8 passed）
+- [x] `pytest backend/tests/` 全部通过（69 passed）
 - [x] `npm run build` 前端构建无报错（前台+后台均通过）
 - [ ] 任意开发者clone后按README可10分钟内启动项目
 - [x] Git提交信息符合规范 (feat/fix/docs/style/refactor/test)
@@ -55,6 +55,8 @@
 | 任务 | 验收标准 |
 |------|----------|
 | API配置CRUD | ✅ Admin可增删改查API配置；API Key明文存储（TODO: 加密）；`total_concurrency` 生效；`GET/POST/PUT/DELETE /api/v1/admin/api-configs` |
+| API配置删除 | ✅ `DELETE /api/v1/admin/api-configs/{id}` 级联删除（删除后刷新 model_manager 缓存） |
+| 模型配置删除 | ✅ `DELETE /api/v1/admin/model-configs/{id}` 级联删除（删除后刷新 model_manager 缓存） |
 | 模型配置CRUD | ✅ 可配置模型ID/名称/参数Schema/支持文件类型；`sort_order` 控制排序；`GET/POST/PUT/DELETE /api/v1/admin/model-configs` |
 | 模型参数Schema | ✅ GET `/api/v1/models/list?mode=video` 返回完整参数定义；前端可动态渲染表单 |
 | 多平台扩展性 | 🟡 新增平台只需增加 `PlatformType` 枚举和对应client类；不影响现有代码 |
@@ -70,9 +72,10 @@
 | 文件删除 | ✅ DELETE `/api/v1/files/{file_id}` 验证归属后删除；本地文件 + DB 记录一并清理 |
 | 文件预览 | ✅ GET `/api/v1/files/{file_id}/preview` 图片生成 Pillow 缩略图；视频/音频返回原文件 |
 | 资产列表 | ✅ GET `/api/v1/files/assets/list` 支持 `file_type`/`search`/`page`/`page_size` 筛选分页 |
-| **TOS上传 (必选项)** | 🟡 `tos_uploader` 上传逻辑已实现；`_sign_request` 返回完整预签名URL；与任务队列的集成待验证 |
+| **TOS上传 (必选项)** | ✅ `tos_uploader.upload_file()` 基于 `tos` SDK (`Auth` + `TosClient`) 实现；真实上传至 `tempmedia` bucket 验证通过；与任务队列的 `file_processor.prepare_for_model()` 集成完成 |
 | TOS配置校验 | 🟡 启动时检测 TOS 配置，未完整时输出**警告日志**；按验收标准应为 **ERROR 日志并退出** |
 | Base64转换 | ✅ `file_processor` 支持 `prepare_for_model` 策略；小文件可转 Base64；TOS 失败可回退 |
+| 文件删除 | ✅ `DELETE /api/v1/files/{file_id}` 验证归属后删除；本地文件 + DB 记录一并清理 |
 | 文件预览前端 | ❌ 前端缩略图显示未实现 |
 
 ### 里程碑 M2.3: 任务队列模块
@@ -80,22 +83,26 @@
 
 | 任务 | 验收标准 |
 |------|----------|
-| 任务创建与排队 | 🟡 POST `/api/v1/tasks/create` 路由骨架存在，实际排队逻辑未实现 |
-| 并发控制 | ❌ 未实现 |
-| 状态轮询 | ❌ 未实现 |
-| 任务取消 | 🟡 POST `/api/v1/tasks/{id}/cancel` 路由骨架存在 |
-| 历史记录 | 🟡 GET `/api/v1/tasks/history/list` 路由骨架存在 |
+| 任务创建与排队 | ✅ `POST /api/v1/tasks/create` 创建任务 → `task_queue.enqueue()` 分配 `platform_task_id` → 立即启动 `start_task_processing()` 异步处理；支持 `file_ids` 关联输入文件 |
+| 并发控制 | ✅ Redis 分布式并发计数 (`redis_client.incr_model_active/decr_model_active`)；Redis 不可用时回退到内存计数 (`_memory_active_counts`)；每个模型独立计数，超出 `concurrency_limit` 时排队等待（轮询检查间隔 5 秒，最大等待 1 小时） |
+| 状态轮询 | ✅ `_poll_task()` 默认 30 秒轮询一次；每个任务独立 `asyncio.Task`；支持 `succeeded`/`failed`/`cancelled`/`running` 状态；轮询连续失败 5 次后标记任务失败 |
+| 任务取消 | ✅ `POST /api/v1/tasks/{platform_task_id}/cancel`；`QUEUED` 状态直接改 `CANCELLED`；`RUNNING` 状态调用远端 API 取消 + 取消本地 `asyncio.Task` |
+| 历史记录 | ✅ `GET /api/v1/tasks/history/list` 按 `created_at` 升序排列（最晚在最下方）；支持 `mode`/`search` 筛选；仅返回 `SUCCEEDED`/`FAILED`/`CANCELLED` 状态 |
+| 服务重启恢复 | ✅ `recover_tasks()` 启动时恢复 `QUEUED` 和 `RUNNING` 状态任务，自动重新进入轮询队列 |
+| 优雅关闭 | ✅ `shutdown()` 取消所有运行中的本地轮询任务，等待 `asyncio.gather` 完成 |
 
 ### 里程碑 M2.4: 火山方舟API集成
 **目标**: 可成功调用Seedance和Seedream生成内容
 
 | 任务 | 验收标准 |
 |------|----------|
-| Seedance视频生成 | ❌ VolcengineClient 服务类骨架存在，实际调用未实现 |
-| Seedream图片生成 | ❌ 未实现 |
-| 多模态输入 | ❌ 未实现 |
-| 错误处理 | ❌ 未实现 |
-| 资源用量记录 | ❌ 未实现 |
+| Seedance视频生成 | ✅ `VolcengineClient._create_video_task()` 调用 `POST /contents/generations/tasks`；支持 `ratio`/`duration`/`resolution`/`fps`/`generate_audio`/`watermark`/`seed` 参数；返回远端 `task_id` 供轮询 |
+| Seedream图片生成 | ✅ `VolcengineClient._create_image_task()` 调用 `POST /images/generations`；支持 `size`/`output_format`/`sequential_image_generation`/`max_images`/`watermark`/`response_format` 参数；同步返回结果，使用 `img_sync_{created}` 作为伪任务ID |
+| 多模态输入 | ✅ `_prepare_file_content()` 优先使用已有 `public_url`；无URL时调用 `file_processor.prepare_for_model()` 通过 TOS 上传获取公网 URL；支持 `image_url`/`video_url`/`audio_url` 三种参考类型 |
+| 错误处理 | ✅ `VolcengineAPIError` 自定义异常（含 `code`/`message`/`status_code`）；HTTP 错误和 API 业务错误（200 但带 `error` 字段）均处理；创建任务带指数退避重试（`max_retries` 次） |
+| 资源用量记录 | ✅ 轮询到 `succeeded` 时从响应中提取 `usage.completion_tokens` 写入 `task.usage_tokens` |
+| 结果下载 | ✅ `_download_outputs()` 自动下载模型生成的图片/视频；支持 HTTP URL 和 Base64 data URI 两种格式；保存为 `FileRecord` (`source=output`) 关联到源任务 |
+| 任务取消 | ✅ `cancel_task()` 对视频任务调用 `DELETE /contents/generations/tasks/{task_id}`；图片任务（`img_sync_` 前缀）直接返回成功 |
 
 ### M2 阶段出口检查清单
 - [ ] API Key 加密存储（当前为明文存储在 DB）
@@ -103,7 +110,7 @@
 - [ ] 完整走通一次 "上传图片 → 创建图生图任务 → 获取结果" 全流程
 - [ ] 完整走通一次 "输入提示词 → 创建视频生成任务 → 下载视频" 全流程
 - [ ] 并发提交5个任务，验证队列和并发控制正确工作
-- [ ] TOS桶中可查看到已上传的文件对象
+- [x] TOS桶中可查看到已上传的文件对象（已用真实 AK/SK 验证上传到 `tempmedia` bucket）
 - [ ] 取消一个running状态的任务，验证远端和本地状态一致
 
 ---
@@ -349,7 +356,7 @@ Vue 组件 `<style scoped>` 中的旧 CSS 变量已全部替换为 Tailwind v4 `
 | ✅ 已完成 | Pydantic `class Config` 弃用警告 | 已修复 | 运行时 DeprecationWarning | `core/config.py` 改用 `SettingsConfigDict()` |
 | 🟡 P1 | 前台颜色系统未对齐 | 进行中 | 页面背景、强调色等色值不同 | 对比 `前端前台.zip` 逐页校对，将自定义变量替换为标准 Tailwind utility 类 |
 | 🟡 P1 | Vue 组件从 CSS 变量迁移到 utility 类 | 未开始 | 未充分利用 Tailwind v4 | 新组件优先用 `bg-page text-txtp`，旧组件逐步替换 |
-| 🟡 P2 | `main` 分支缺失 | 未修复 | Git 工作流不完整 | 从 `develop` 创建 `main` 分支 |
+| ✅ 已完成 | `main` 分支缺失 | 已修复 | Git 工作流不完整 | 已从 `develop` 创建 `main` 分支 |
 | 🟡 P2 | 前端 admin 构建循环依赖警告 | 未修复 | Rollup chunk 执行顺序可能异常 | 将 `useAdminStore` 的引用从 `stores/index.ts` 改为直接引用 `stores/admin.ts` |
 | 🟢 P3 | 数据库 100 并发压测未执行 | 未执行 | 未验证连接池稳定性 | 使用 `locust` 或 `ab` 压测 `/health` |
 

@@ -41,8 +41,8 @@ source .venv/bin/activate
 ```bash
 pip install -r requirements.txt
 
-# TOS上传是必选项，必须安装火山引擎TOS SDK
-pip install tos
+# TOS上传是必选项，必须安装火山引擎TOS SDK (v2.7.0+)
+pip install "tos>=2.7.0"
 ```
 
 ### 2.3 配置环境变量
@@ -95,6 +95,7 @@ python scripts/init_data.py
 
 种子数据包含：
 - 管理员账号: `admin` / `admin123` (首次登录后请修改密码)
+- Leader 账号: `leader` / `leader123`
 - 测试用户: `user1` / `user123`
 - 模型配置: Seedance 2.0, Seedance 2.0 Fast, Seedream 5.0 Lite, Seedream 4.5
 - API配置模板 (需手动填入API Key)
@@ -266,6 +267,8 @@ pytest tests/ -v --tb=short
 pytest tests/ --cov=app --cov-report=html
 ```
 
+当前测试覆盖：69 passed（database 8 + auth 10 + admin 12 + file_processor 6 + files 12 + model_manager 5 + task_queue 9 + volcengine_client 7）
+
 ### 前端构建测试
 
 ```bash
@@ -284,10 +287,14 @@ npm run build
 ### Q: `RuntimeError: TOS配置不完整`
 **解决**: 检查 `.env` 文件中 `TOS_ACCESS_KEY`, `TOS_SECRET_KEY`, `TOS_BUCKET`, `TOS_ENDPOINT` 是否都已填写。TOS 仅用于生成公网 URL 供模型读取参考文件，平台文件主存储在本地。
 
+### Q: `ImportError: No module named 'tos'`
+**解决**: 执行 `pip install "tos>=2.7.0"`。注意 `tos` SDK v2.1+ 的 API 与旧版本不同，使用 `tos.Auth()` + `tos.TosClient(auth, endpoint)` 初始化。
+
 ### Q: Redis连接失败
 **解决**: 
 - Windows: 确认WSL中redis-server已启动，或安装 [Redis-x64](https://github.com/tporadowski/redis/releases)
 - 检查 `.env` 中 `REDIS_URL` 是否匹配实际Redis地址
+- Redis 为可选项，连接失败时并发控制自动回退到内存计数（仅影响单机多进程场景）
 
 ### Q: 前端代理到后端失败
 **解决**: 检查 `frontend/vite.config.ts` 中 proxy 配置；确认后端确实运行在 `8000` 端口。
