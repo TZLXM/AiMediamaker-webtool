@@ -116,7 +116,7 @@ class TaskQueue:
                 
                 # 调用远端API创建任务
                 client = VolcengineClient(model_id)
-                remote_task_id = await client.create_task(task)
+                remote_task_id = await client.create_task(task, db=db)
                 
                 task.remote_task_id = remote_task_id
                 await db.commit()

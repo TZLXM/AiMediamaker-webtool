@@ -5,6 +5,7 @@
 import base64
 import httpx
 from typing import Optional, List, Dict, Any
+from sqlalchemy.ext.asyncio import AsyncSession
 from ..core.config import settings
 from ..services.model_manager import model_manager
 from ..services.file_processor import file_processor
@@ -22,14 +23,16 @@ class VolcengineClient:
             "Content-Type": "application/json",
         }
     
-    async def create_task(self, task) -> str:
+    async def create_task(self, task, db: Optional[AsyncSession] = None) -> str:
         """创建生成任务，返回远端任务ID"""
         if task.mode == "video":
-            return await self._create_video_task(task)
+            return await self._create_video_task(task, db=db)
         else:
-            return await self._create_image_task(task)
+            return await self._create_image_task(task, db=db)
     
-    async def _prepare_file_content(self, file_record) -> Dict[str, Any]:
+    async def _prepare_file_content(
+        self, file_record, db: Optional[AsyncSession] = None
+    ) -> Dict[str, Any]:
         """
         准备文件内容用于模型输入
         策略: 优先TOS公网URL，失败则回退Base64
@@ -42,11 +45,12 @@ class VolcengineClient:
         url_or_b64, status = await file_processor.prepare_for_model(
             file_record,
             prefer_tos=True,  # 优先TOS上传
+            db=db,
         )
         
         return {"url": url_or_b64}
     
-    async def _create_video_task(self, task) -> str:
+    async def _create_video_task(self, task, db: Optional[AsyncSession] = None) -> str:
         """创建视频生成任务 (Seedance)"""
         contents = []
         
@@ -58,7 +62,7 @@ class VolcengineClient:
         
         # 添加参考文件
         for file_record in task.input_files:
-            file_content = await self._prepare_file_content(file_record)
+            file_content = await self._prepare_file_content(file_record, db=db)
             
             if file_record.file_type.value == "image":
                 contents.append({
@@ -106,7 +110,7 @@ class VolcengineClient:
             data = resp.json()
             return data["id"]
     
-    async def _create_image_task(self, task) -> str:
+    async def _create_image_task(self, task, db: Optional[AsyncSession] = None) -> str:
         """创建图片生成任务 (Seedream)"""
         payload = {
             "model": self.model_id,
@@ -117,7 +121,7 @@ class VolcengineClient:
         images = []
         for file_record in task.input_files:
             if file_record.file_type.value == "image":
-                file_content = await self._prepare_file_content(file_record)
+                file_content = await self._prepare_file_content(file_record, db=db)
                 images.append(file_content["url"])
         
         if images:

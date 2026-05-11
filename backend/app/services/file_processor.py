@@ -11,6 +11,7 @@
 import base64
 from pathlib import Path
 from typing import Optional, Tuple
+from sqlalchemy.ext.asyncio import AsyncSession
 from ..models.file import FileRecord, StorageStatus
 from ..services.tos_uploader import tos_uploader
 
@@ -47,9 +48,16 @@ class FileProcessor:
             return ("", False)
     
     @staticmethod
-    async def upload_to_tos(file_record: FileRecord) -> Tuple[str, StorageStatus]:
+    async def upload_to_tos(
+        file_record: FileRecord,
+        db: Optional[AsyncSession] = None,
+    ) -> Tuple[str, StorageStatus]:
         """
         将文件上传至TOS，返回公网URL和状态
+        
+        Args:
+            file_record: 文件记录
+            db: 可选的数据库会话，如果提供则会更新并持久化 file_record 状态
         
         Returns:
             (public_url, storage_status)
@@ -61,11 +69,23 @@ class FileProcessor:
         if file_record.storage_status == StorageStatus.UPLOADED and file_record.public_url:
             return (file_record.public_url, StorageStatus.UPLOADED)
         
+        # 更新状态为上传中
+        file_record.storage_status = StorageStatus.UPLOADING
+        if db:
+            await db.commit()
+        
         try:
-            url = await tos_uploader.upload_file(file_record)
-            return (url, StorageStatus.UPLOADED)
+            url, status = await tos_uploader.upload_file(file_record)
+            file_record.public_url = url
+            file_record.storage_status = status
+            if db:
+                await db.commit()
+            return (url, status)
         except Exception:
             # 上传失败但保留本地副本
+            file_record.storage_status = StorageStatus.FAILED
+            if db:
+                await db.commit()
             return ("", StorageStatus.FAILED)
     
     @classmethod
@@ -73,6 +93,7 @@ class FileProcessor:
         cls,
         file_record: FileRecord,
         prefer_tos: bool = True,
+        db: Optional[AsyncSession] = None,
     ) -> Tuple[str, StorageStatus]:
         """
         为模型调用准备文件URL
@@ -82,16 +103,20 @@ class FileProcessor:
         - TOS失败且文件小 -> 回退Base64
         - 文件大且TOS失败 -> 报错
         
+        Args:
+            file_record: 文件记录
+            prefer_tos: 是否优先使用TOS
+            db: 可选的数据库会话，用于持久化状态
+        
         Returns:
             (url_or_base64, status)
         """
-        import os
         path = Path(file_record.storage_path)
         size = path.stat().st_size if path.exists() else 0
         
         # 优先TOS
         if prefer_tos or size > cls.BASE64_MAX_SIZE:
-            url, status = await cls.upload_to_tos(file_record)
+            url, status = await cls.upload_to_tos(file_record, db=db)
             if status == StorageStatus.UPLOADED:
                 return (url, status)
             
@@ -113,7 +138,7 @@ class FileProcessor:
             return (b64, StorageStatus.LOCAL)
         
         # Base64失败，回退TOS
-        return await cls.upload_to_tos(file_record)
+        return await cls.upload_to_tos(file_record, db=db)
 
 
 # 全局实例

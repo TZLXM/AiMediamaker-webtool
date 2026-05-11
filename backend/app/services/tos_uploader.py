@@ -12,7 +12,7 @@ import hashlib
 import hmac
 import datetime
 import urllib.parse
-from typing import Optional
+from typing import Optional, Tuple
 from pathlib import Path
 import httpx
 from ..core.config import settings
@@ -97,19 +97,30 @@ class TOSUploader:
         k_signing = hmac.new(k_service, b"request", hashlib.sha256).digest()
         signature = hmac.new(k_signing, string_to_sign.encode(), hashlib.sha256).hexdigest()
         
-        # 构建预签名URL (简化版，实际生产建议使用tos-python-sdk)
-        # 这里返回基础路径，实际上传需要配合SDK或更完整的签名逻辑
-        return f"{self.base_url}/{object_key}"
+        # 构建预签名URL查询参数
+        params = {
+            "X-Volc-Algorithm": algorithm,
+            "X-Volc-Credential": f"{self.access_key}/{credential_scope}",
+            "X-Volc-Date": date,
+            "X-Volc-Expires": str(self.expires),
+            "X-Volc-SignedHeaders": signed_headers,
+            "X-Volc-Signature": signature,
+        }
+        query_string = urllib.parse.urlencode(params)
+        return f"{self.base_url}/{object_key}?{query_string}"
     
-    async def upload_file(self, file_record: FileRecord) -> Optional[str]:
+    async def upload_file(self, file_record: FileRecord) -> Tuple[Optional[str], StorageStatus]:
         """
-        上传文件到TOS，返回公网URL
+        上传文件到TOS，返回公网URL和状态
+        
+        Returns:
+            (public_url, storage_status)
         
         流程:
         1. 读取本地文件
         2. 生成对象键
-        3. 使用预签名URL或SDK上传
-        4. 更新文件记录状态为已上传
+        3. 使用SDK上传
+        4. 返回公网URL和状态 (不直接修改ORM对象，由调用方持久化)
         """
         if not self._is_configured():
             raise RuntimeError(
@@ -124,17 +135,10 @@ class TOSUploader:
         content_type = file_record.mime_type
         
         try:
-            # 更新状态为上传中
-            file_record.storage_status = StorageStatus.UPLOADING
-            
             # 读取文件内容
             file_size = file_path.stat().st_size
             
-            # 使用PUT方式上传 (简化实现，生产环境建议使用 tos-python-sdk)
-            # 这里演示基于httpx的直接上传流程
-            # 注意: 火山引擎TOS推荐直接使用官方SDK: pip install tos
-            
-            # 尝试使用 tos SDK
+            # 使用 tos SDK 上传
             try:
                 import tos
                 client = tos.TosClient(
@@ -144,25 +148,24 @@ class TOSUploader:
                     region=self.region,
                 )
                 with open(file_path, "rb") as f:
-                    client.put_object(self.bucket, object_key, content=file_path.read(),
-                                    content_type=content_type)
+                    client.put_object(
+                        self.bucket, 
+                        object_key, 
+                        content=f.read(),
+                        content_type=content_type
+                    )
                 
                 public_url = f"{self.base_url}/{object_key}"
-                file_record.public_url = public_url
-                file_record.storage_status = StorageStatus.UPLOADED
-                return public_url
+                return (public_url, StorageStatus.UPLOADED)
                 
             except ImportError:
                 # 回退: 使用httpx + 预签名URL方式
-                # 注意: 这只是一个示意，实际签名逻辑较复杂
-                # 强烈建议安装 tos SDK
                 raise ImportError(
                     "请安装 tos SDK: pip install tos\n"
                     "TOS上传是平台的必选项，用于向火山方舟API提供可访问的文件URL。"
                 )
                 
         except Exception as e:
-            file_record.storage_status = StorageStatus.FAILED
             raise RuntimeError(f"TOS上传失败: {e}")
     
     async def get_presigned_url(self, object_key: str, expires: int = 3600) -> str:
@@ -184,8 +187,8 @@ class TOSUploader:
             )
             return url.signed_url
         except ImportError:
-            # 简化回退
-            return f"{self.base_url}/{object_key}"
+            # 简化回退: 使用手动签名
+            return self._sign_request("GET", object_key)
     
     def get_object_key_from_url(self, url: str) -> Optional[str]:
         """从URL中提取对象键"""
