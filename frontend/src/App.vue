@@ -34,7 +34,7 @@ onMounted(() => {
   display: flex;
   height: 100vh;
   width: 100vw;
-  background-color: var(--bg-primary);
+  background-color: var(--color-bg-primary);
 }
 
 .main-area {

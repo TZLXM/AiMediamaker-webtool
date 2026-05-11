@@ -3,7 +3,7 @@
 """
 from pathlib import Path
 from typing import List, Optional
-from pydantic_settings import BaseSettings
+from pydantic_settings import BaseSettings, SettingsConfigDict
 
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
 STORAGE_DIR = BASE_DIR / "storage"
@@ -52,9 +52,10 @@ class Settings(BaseSettings):
     TOS_REGION: str = "cn-beijing"
     TOS_EXPIRES: int = 86400 * 7  # 预签名URL有效期7天
     
-    class Config:
-        env_file = ".env"
-        env_file_encoding = "utf-8"
+    model_config = SettingsConfigDict(
+        env_file=".env",
+        env_file_encoding="utf-8",
+    )
 
 
 settings = Settings()

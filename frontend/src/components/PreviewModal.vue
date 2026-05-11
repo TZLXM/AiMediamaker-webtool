@@ -207,9 +207,9 @@ function downloadFile() {
   width: 36px;
   height: 36px;
   border-radius: 8px;
-  background: var(--bg-tertiary);
-  border: 1px solid var(--border);
-  color: var(--text-secondary);
+  background: var(--color-bg-tertiary);
+  border: 1px solid var(--color-border);
+  color: var(--color-text-secondary);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -227,8 +227,8 @@ function downloadFile() {
 
 .preview-close:hover,
 .preview-download:hover {
-  background: var(--bg-hover);
-  color: var(--text-primary);
+  background: var(--color-bg-hover);
+  color: var(--color-text-primary);
 }
 
 .image-preview-container {
@@ -256,7 +256,7 @@ function downloadFile() {
   padding: 4px 12px;
   border-radius: 4px;
   font-size: 12px;
-  color: var(--text-secondary);
+  color: var(--color-text-secondary);
 }
 
 .video-preview-container {
@@ -277,7 +277,7 @@ function downloadFile() {
   align-items: center;
   gap: 12px;
   padding: 12px 16px;
-  background: var(--bg-secondary);
+  background: var(--color-bg-secondary);
   border-radius: 0 0 8px 8px;
 }
 
@@ -285,9 +285,9 @@ function downloadFile() {
   width: 32px;
   height: 32px;
   border-radius: 50%;
-  background: var(--bg-tertiary);
+  background: var(--color-bg-tertiary);
   border: none;
-  color: var(--text-primary);
+  color: var(--color-text-primary);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -297,7 +297,7 @@ function downloadFile() {
 .progress-bar {
   flex: 1;
   height: 4px;
-  background: var(--bg-tertiary);
+  background: var(--color-bg-tertiary);
   border-radius: 2px;
   cursor: pointer;
   position: relative;
@@ -311,13 +311,13 @@ function downloadFile() {
 
 .progress-fill {
   height: 100%;
-  background: var(--accent);
+  background: var(--color-accent);
   border-radius: 2px;
 }
 
 .time-display {
   font-size: 12px;
-  color: var(--text-secondary);
+  color: var(--color-text-secondary);
   white-space: nowrap;
 }
 
@@ -325,12 +325,12 @@ function downloadFile() {
   display: flex;
   align-items: center;
   gap: 8px;
-  color: var(--text-secondary);
+  color: var(--color-text-secondary);
 }
 
 .volume-slider {
   width: 80px;
-  accent-color: var(--accent);
+  accent-color: var(--color-accent);
 }
 
 .fade-enter-active,

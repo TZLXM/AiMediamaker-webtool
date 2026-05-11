@@ -94,7 +94,7 @@ onMounted(fetchModels)
   align-items: center;
   gap: 6px;
   padding: 8px 16px;
-  background: var(--accent);
+  background: var(--color-accent);
   border: none;
   border-radius: 8px;
   color: white;
@@ -104,12 +104,12 @@ onMounted(fetchModels)
 }
 
 .btn-primary:hover {
-  background: var(--accent-hover);
+  background: var(--color-accent-hover);
 }
 
 .table-container {
-  background: var(--bg-secondary);
-  border: 1px solid var(--border);
+  background: var(--color-card);
+  border: 1px solid var(--color-borderc);
   border-radius: 12px;
   overflow: hidden;
 }
@@ -123,21 +123,21 @@ onMounted(fetchModels)
 .data-table th {
   text-align: left;
   padding: 12px 16px;
-  background: var(--bg-tertiary);
-  color: var(--text-secondary);
+  background: var(--color-active);
+  color: var(--color-txts);
   font-weight: 500;
   font-size: 13px;
 }
 
 .data-table td {
   padding: 12px 16px;
-  border-top: 1px solid var(--border);
+  border-top: 1px solid var(--color-borderc);
 }
 
 .mono {
   font-family: monospace;
   font-size: 12px;
-  color: var(--text-secondary);
+  color: var(--color-txts);
 }
 
 .tag {
@@ -149,12 +149,12 @@ onMounted(fetchModels)
 
 .tag.image {
   background: rgba(99, 102, 241, 0.15);
-  color: var(--accent);
+  color: var(--color-accent);
 }
 
 .tag.video {
   background: rgba(245, 158, 11, 0.15);
-  color: var(--accent-warning);
+  color: var(--color-warning);
 }
 
 .status-dot {
@@ -165,24 +165,24 @@ onMounted(fetchModels)
 
 .status-dot.active {
   background: rgba(34, 197, 94, 0.15);
-  color: var(--accent-success);
+  color: var(--color-success);
 }
 
 .status-dot.inactive {
   background: rgba(113, 113, 122, 0.15);
-  color: var(--text-muted);
+  color: var(--color-txtm);
 }
 
 .btn-text {
   padding: 4px 8px;
   background: transparent;
   border: none;
-  color: var(--accent);
+  color: var(--color-accent);
   font-size: 13px;
   cursor: pointer;
 }
 
 .btn-text.danger {
-  color: var(--accent-danger);
+  color: var(--color-danger);
 }
 </style>

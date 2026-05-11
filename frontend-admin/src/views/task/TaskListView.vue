@@ -116,19 +116,19 @@ onMounted(fetchTasks)
   display: flex; align-items: center; gap: 12px;
 }
 .filter-bar select {
-  padding: 8px 12px; background: var(--bg-secondary);
-  border: 1px solid var(--border); border-radius: 8px;
-  color: var(--text-primary); font-size: 13px; outline: none;
+  padding: 8px 12px; background: var(--color-card);
+  border: 1px solid var(--color-borderc); border-radius: 8px;
+  color: var(--color-txtp); font-size: 13px; outline: none;
 }
 .btn-text {
   display: flex; align-items: center; gap: 4px;
   padding: 8px 12px; background: transparent; border: none;
-  color: var(--text-secondary); font-size: 13px; cursor: pointer;
+  color: var(--color-txts); font-size: 13px; cursor: pointer;
 }
 
 .table-container {
-  background: var(--bg-secondary);
-  border: 1px solid var(--border);
+  background: var(--color-card);
+  border: 1px solid var(--color-borderc);
   border-radius: 12px;
   overflow: hidden;
 }
@@ -137,13 +137,13 @@ onMounted(fetchTasks)
 }
 .data-table th {
   text-align: left; padding: 12px 16px;
-  background: var(--bg-tertiary); color: var(--text-secondary);
+  background: var(--color-active); color: var(--color-txts);
   font-weight: 500; font-size: 13px;
 }
 .data-table td {
-  padding: 12px 16px; border-top: 1px solid var(--border);
+  padding: 12px 16px; border-top: 1px solid var(--color-borderc);
 }
-.mono { font-family: monospace; font-size: 12px; color: var(--text-secondary); }
+.mono { font-family: monospace; font-size: 12px; color: var(--color-txts); }
 .truncate {
   max-width: 200px; white-space: nowrap; overflow: hidden;
   text-overflow: ellipsis;
@@ -152,22 +152,22 @@ onMounted(fetchTasks)
 .tag {
   padding: 2px 8px; border-radius: 4px; font-size: 12px; font-weight: 500;
 }
-.tag.image { background: rgba(99, 102, 241, 0.15); color: var(--accent); }
-.tag.video { background: rgba(245, 158, 11, 0.15); color: var(--accent-warning); }
+.tag.image { background: rgba(99, 102, 241, 0.15); color: var(--color-accent); }
+.tag.video { background: rgba(245, 158, 11, 0.15); color: var(--color-warning); }
 
 .status-dot {
   padding: 2px 8px; border-radius: 4px; font-size: 12px;
 }
-.status-dot.pending { background: rgba(113, 113, 122, 0.15); color: var(--text-muted); }
-.status-dot.queued { background: rgba(245, 158, 11, 0.15); color: var(--accent-warning); }
-.status-dot.running { background: rgba(99, 102, 241, 0.15); color: var(--accent); }
-.status-dot.succeeded { background: rgba(34, 197, 94, 0.15); color: var(--accent-success); }
-.status-dot.failed { background: rgba(239, 68, 68, 0.15); color: var(--accent-danger); }
-.status-dot.cancelled { background: rgba(113, 113, 122, 0.15); color: var(--text-muted); }
+.status-dot.pending { background: rgba(113, 113, 122, 0.15); color: var(--color-txtm); }
+.status-dot.queued { background: rgba(245, 158, 11, 0.15); color: var(--color-warning); }
+.status-dot.running { background: rgba(99, 102, 241, 0.15); color: var(--color-accent); }
+.status-dot.succeeded { background: rgba(34, 197, 94, 0.15); color: var(--color-success); }
+.status-dot.failed { background: rgba(239, 68, 68, 0.15); color: var(--color-danger); }
+.status-dot.cancelled { background: rgba(113, 113, 122, 0.15); color: var(--color-txtm); }
 
 .data-table .btn-text {
   padding: 4px 8px; background: transparent; border: none;
-  color: var(--accent); font-size: 13px; cursor: pointer;
+  color: var(--color-accent); font-size: 13px; cursor: pointer;
 }
-.data-table .btn-text.danger { color: var(--accent-danger); }
+.data-table .btn-text.danger { color: var(--color-danger); }
 </style>

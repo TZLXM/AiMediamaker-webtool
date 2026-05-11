@@ -6,7 +6,7 @@
           <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
             <defs>
               <linearGradient id="logoGrad" x1="0" y1="0" x2="28" y2="28">
-                <stop offset="0%" stop-color="var(--accent)" />
+                <stop offset="0%" stop-color="var(--color-accent)" />
                 <stop offset="100%" stop-color="#a855f7" />
               </linearGradient>
             </defs>
@@ -77,8 +77,8 @@ const navItems = [
 .sidebar {
   width: var(--sidebar-width);
   height: 100vh;
-  background-color: var(--bg-secondary);
-  border-right: 1px solid var(--border);
+  background-color: var(--color-bg-secondary);
+  border-right: 1px solid var(--color-border);
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -114,18 +114,18 @@ const navItems = [
   gap: 4px;
   padding: 10px 0;
   border-radius: 10px;
-  color: var(--text-muted);
+  color: var(--color-text-muted);
   text-decoration: none;
   transition: all 0.2s ease;
 }
 
 .nav-item:hover {
-  background-color: var(--bg-hover);
-  color: var(--text-secondary);
+  background-color: var(--color-bg-hover);
+  color: var(--color-text-secondary);
 }
 
 .nav-item.active {
-  background-color: var(--accent);
+  background-color: var(--color-accent);
   color: white;
 }
 
@@ -147,7 +147,7 @@ const navItems = [
   justify-content: center;
   gap: 6px;
   padding: 8px;
-  color: var(--text-secondary);
+  color: var(--color-text-secondary);
   font-size: 12px;
 }
 
@@ -155,7 +155,7 @@ const navItems = [
   width: 24px;
   height: 24px;
   border-radius: 50%;
-  background: var(--bg-tertiary);
+  background: var(--color-bg-tertiary);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -167,8 +167,8 @@ const navItems = [
   padding: 8px;
   border-radius: 8px;
   border: none;
-  background: var(--bg-tertiary);
-  color: var(--text-secondary);
+  background: var(--color-bg-tertiary);
+  color: var(--color-text-secondary);
   font-size: 12px;
   cursor: pointer;
   display: flex;
@@ -180,7 +180,7 @@ const navItems = [
 
 .logout-btn:hover,
 .login-btn:hover {
-  background: var(--bg-hover);
-  color: var(--text-primary);
+  background: var(--color-bg-hover);
+  color: var(--color-text-primary);
 }
 </style>

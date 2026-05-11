@@ -87,10 +87,10 @@ onMounted(handleSearch)
 .search-box input,
 .filter-bar select {
   padding: 8px 12px;
-  background: var(--bg-secondary);
-  border: 1px solid var(--border);
+  background: var(--color-bg-secondary);
+  border: 1px solid var(--color-border);
   border-radius: 8px;
-  color: var(--text-primary);
+  color: var(--color-text-primary);
   font-size: 13px;
   outline: none;
 }
@@ -100,7 +100,7 @@ onMounted(handleSearch)
 }
 
 .search-box input:focus {
-  border-color: var(--accent);
+  border-color: var(--color-accent);
 }
 
 .content {
@@ -110,7 +110,7 @@ onMounted(handleSearch)
 
 .empty {
   text-align: center;
-  color: var(--text-muted);
+  color: var(--color-text-muted);
   padding: 60px 0;
 }
 
@@ -120,7 +120,7 @@ onMounted(handleSearch)
 
 .group-date {
   font-size: 12px;
-  color: var(--text-muted);
+  color: var(--color-text-muted);
   margin-bottom: 12px;
   padding-left: 4px;
 }

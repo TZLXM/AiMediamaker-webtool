@@ -3,7 +3,7 @@
     <h1 class="page-title">系统状态</h1>
     <div class="stats-grid">
       <div class="stat-card">
-        <div class="stat-icon" style="background: rgba(99, 102, 241, 0.15); color: var(--accent);">
+        <div class="stat-icon" style="background: rgba(99, 102, 241, 0.15); color: var(--color-accent);">
           <ActivityIcon :size="24" />
         </div>
         <div class="stat-info">
@@ -12,7 +12,7 @@
         </div>
       </div>
       <div class="stat-card">
-        <div class="stat-icon" style="background: rgba(245, 158, 11, 0.15); color: var(--accent-warning);">
+        <div class="stat-icon" style="background: rgba(245, 158, 11, 0.15); color: var(--color-warning);">
           <ClockIcon :size="24" />
         </div>
         <div class="stat-info">
@@ -21,7 +21,7 @@
         </div>
       </div>
       <div class="stat-card">
-        <div class="stat-icon" style="background: rgba(34, 197, 94, 0.15); color: var(--accent-success);">
+        <div class="stat-icon" style="background: rgba(34, 197, 94, 0.15); color: var(--color-success);">
           <UsersIcon :size="24" />
         </div>
         <div class="stat-info">
@@ -30,7 +30,7 @@
         </div>
       </div>
       <div class="stat-card">
-        <div class="stat-icon" style="background: rgba(239, 68, 68, 0.15); color: var(--accent-danger);">
+        <div class="stat-icon" style="background: rgba(239, 68, 68, 0.15); color: var(--color-danger);">
           <FileTextIcon :size="24" />
         </div>
         <div class="stat-info">
@@ -104,8 +104,8 @@ onMounted(async () => {
 }
 
 .stat-card {
-  background: var(--bg-secondary);
-  border: 1px solid var(--border);
+  background: var(--color-card);
+  border: 1px solid var(--color-borderc);
   border-radius: 12px;
   padding: 20px;
   display: flex;
@@ -134,13 +134,13 @@ onMounted(async () => {
 
 .stat-label {
   font-size: 13px;
-  color: var(--text-secondary);
+  color: var(--color-txts);
   margin-top: 2px;
 }
 
 .status-section {
-  background: var(--bg-secondary);
-  border: 1px solid var(--border);
+  background: var(--color-card);
+  border: 1px solid var(--color-borderc);
   border-radius: 12px;
   padding: 20px;
 }
@@ -162,13 +162,13 @@ onMounted(async () => {
   align-items: center;
   justify-content: space-between;
   padding: 12px 16px;
-  background: var(--bg-tertiary);
+  background: var(--color-active);
   border-radius: 8px;
 }
 
 .status-label {
   font-size: 14px;
-  color: var(--text-secondary);
+  color: var(--color-txts);
 }
 
 .status-badge {
@@ -180,12 +180,12 @@ onMounted(async () => {
 
 .status-badge.success {
   background: rgba(34, 197, 94, 0.15);
-  color: var(--accent-success);
+  color: var(--color-success);
 }
 
 .status-badge.error {
   background: rgba(239, 68, 68, 0.15);
-  color: var(--accent-danger);
+  color: var(--color-danger);
 }
 
 .status-value {

@@ -111,8 +111,8 @@ onMounted(fetchConfigs)
 }
 
 .config-card {
-  background: var(--bg-secondary);
-  border: 1px solid var(--border);
+  background: var(--color-card);
+  border: 1px solid var(--color-borderc);
   border-radius: 12px;
   padding: 24px;
 }
@@ -141,7 +141,7 @@ onMounted(fetchConfigs)
   align-items: center;
   justify-content: space-between;
   padding: 12px 16px;
-  background: var(--bg-tertiary);
+  background: var(--color-active);
   border-radius: 8px;
 }
 
@@ -151,7 +151,7 @@ onMounted(fetchConfigs)
   gap: 2px;
 }
 .config-name { font-size: 14px; font-weight: 500; }
-.config-detail { font-size: 12px; color: var(--text-muted); }
+.config-detail { font-size: 12px; color: var(--color-txtm); }
 
 .config-meta {
   display: flex;
@@ -161,21 +161,21 @@ onMounted(fetchConfigs)
 .tag {
   padding: 2px 8px; border-radius: 4px; font-size: 12px;
 }
-.tag.active { background: rgba(34, 197, 94, 0.15); color: var(--accent-success); }
-.tag.inactive { background: rgba(113, 113, 122, 0.15); color: var(--text-muted); }
-.concurrency { font-size: 12px; color: var(--text-secondary); }
+.tag.active { background: rgba(34, 197, 94, 0.15); color: var(--color-success); }
+.tag.inactive { background: rgba(113, 113, 122, 0.15); color: var(--color-txtm); }
+.concurrency { font-size: 12px; color: var(--color-txts); }
 
 .config-actions {
   display: flex; gap: 8px;
 }
 .btn-text {
   padding: 4px 8px; background: transparent; border: none;
-  color: var(--accent); font-size: 13px; cursor: pointer;
+  color: var(--color-accent); font-size: 13px; cursor: pointer;
 }
-.btn-text.danger { color: var(--accent-danger); }
+.btn-text.danger { color: var(--color-danger); }
 
 .btn-primary {
-  padding: 8px 16px; background: var(--accent);
+  padding: 8px 16px; background: var(--color-accent);
   border: none; border-radius: 8px; color: white;
   font-size: 13px; cursor: pointer;
 }
@@ -189,11 +189,11 @@ onMounted(fetchConfigs)
 .form-field {
   display: flex; flex-direction: column; gap: 6px;
 }
-.form-field label { font-size: 13px; color: var(--text-secondary); }
+.form-field label { font-size: 13px; color: var(--color-txts); }
 .form-field input {
-  padding: 10px 12px; background: var(--bg-tertiary);
-  border: 1px solid var(--border); border-radius: 8px;
-  color: var(--text-primary); font-size: 14px; outline: none;
+  padding: 10px 12px; background: var(--color-active);
+  border: 1px solid var(--color-borderc); border-radius: 8px;
+  color: var(--color-txtp); font-size: 14px; outline: none;
 }
 .form-actions {
   display: flex; justify-content: flex-end;

@@ -107,10 +107,10 @@ onMounted(handleSearch)
 .search-box input,
 .filter-bar select {
   padding: 8px 12px;
-  background: var(--bg-secondary);
-  border: 1px solid var(--border);
+  background: var(--color-bg-secondary);
+  border: 1px solid var(--color-border);
   border-radius: 8px;
-  color: var(--text-primary);
+  color: var(--color-text-primary);
   font-size: 13px;
   outline: none;
 }
@@ -120,7 +120,7 @@ onMounted(handleSearch)
 }
 
 .search-box input:focus {
-  border-color: var(--accent);
+  border-color: var(--color-accent);
 }
 
 .content {
@@ -130,7 +130,7 @@ onMounted(handleSearch)
 
 .empty {
   text-align: center;
-  color: var(--text-muted);
+  color: var(--color-text-muted);
   padding: 60px 0;
 }
 
@@ -140,7 +140,7 @@ onMounted(handleSearch)
 
 .group-date {
   font-size: 12px;
-  color: var(--text-muted);
+  color: var(--color-text-muted);
   margin-bottom: 12px;
   padding-left: 4px;
 }
@@ -156,8 +156,8 @@ onMounted(handleSearch)
   aspect-ratio: 1;
   border-radius: 10px;
   overflow: hidden;
-  background: var(--bg-secondary);
-  border: 1px solid var(--border);
+  background: var(--color-bg-secondary);
+  border: 1px solid var(--color-border);
   cursor: pointer;
   transition: transform 0.2s;
 }
@@ -185,12 +185,12 @@ onMounted(handleSearch)
   width: 48px;
   height: 48px;
   border-radius: 50%;
-  background: var(--bg-tertiary);
+  background: var(--color-bg-tertiary);
   display: flex;
   align-items: center;
   justify-content: center;
   font-size: 10px;
-  color: var(--text-muted);
+  color: var(--color-text-muted);
 }
 
 .video-badge {

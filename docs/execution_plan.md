@@ -212,8 +212,8 @@
 
 | 项目 | 参考实现 | 当前代码 | 状态 |
 |------|---------|---------|------|
-| Tailwind CSS 版本 | **v4** (`/*! tailwindcss v4.3.0 */`) | v3.4.19 | 🔴 **必须升级** |
-| 配置方式 | CSS `@theme` 指令 | `tailwind.config.js` | 🔴 需同步升级 |
+| Tailwind CSS 版本 | **v4** (`/*! tailwindcss v4.3.0 */`) | v3.4.19 | ✅ 已升级 |
+| 配置方式 | CSS `@theme` 指令 | `tailwind.config.js` | ✅ 已升级 |
 
 ### 后台设计系统（提取自 `前端后台.zip`）
 
@@ -248,15 +248,60 @@
 
 前台未定义自定义颜色变量，使用标准 Tailwind 色板 + 深色主题。构建产物显示为标准 Tailwind v4 主题。
 
+### 颜色变量替换映射表（已完成）
+
+Vue 组件 `<style scoped>` 中的旧 CSS 变量已全部替换为 Tailwind v4 `@theme` 变量，确保组件样式与 `@theme` 定义的设计系统完全绑定。
+
+**后台 (`frontend-admin/`) 替换映射：**
+
+| 旧变量（:root 兼容层） | 新变量（@theme） | Tailwind utility 类 |
+|----------------------|-----------------|-------------------|
+| `var(--bg-primary)` | `var(--color-page)` | `bg-page` |
+| `var(--bg-secondary)` | `var(--color-card)` | `bg-card` |
+| `var(--bg-tertiary)` | `var(--color-active)` | `bg-active` |
+| `var(--bg-hover)` | `var(--color-hover)` | `bg-hover` |
+| `var(--bg-card)` | `var(--color-card)` | `bg-card` |
+| `var(--text-primary)` | `var(--color-txtp)` | `text-txtp` |
+| `var(--text-secondary)` | `var(--color-txts)` | `text-txts` |
+| `var(--text-muted)` | `var(--color-txtm)` | `text-txtm` |
+| `var(--accent)` | `var(--color-accent)` | `bg-accent` / `text-accent` |
+| `var(--accent-hover)` | `var(--color-accent-hover)` | `bg-accent-hover` / `text-accent-hover` |
+| `var(--accent-success)` | `var(--color-success)` | `bg-success` / `text-success` |
+| `var(--accent-warning)` | `var(--color-warning)` | `bg-warning` / `text-warning` |
+| `var(--accent-danger)` | `var(--color-danger)` | `bg-danger` / `text-danger` |
+| `var(--border)` | `var(--color-borderc)` | `border-borderc` |
+
+**前台 (`frontend/`) 替换映射：**
+
+| 旧变量（:root 兼容层） | 新变量（@theme） | Tailwind utility 类 |
+|----------------------|-----------------|-------------------|
+| `var(--bg-primary)` | `var(--color-bg-primary)` | `bg-bg-primary` |
+| `var(--bg-secondary)` | `var(--color-bg-secondary)` | `bg-bg-secondary` |
+| `var(--bg-tertiary)` | `var(--color-bg-tertiary)` | `bg-bg-tertiary` |
+| `var(--bg-hover)` | `var(--color-bg-hover)` | `bg-bg-hover` |
+| `var(--bg-card)` | `var(--color-bg-card)` | `bg-bg-card` |
+| `var(--text-primary)` | `var(--color-text-primary)` | `text-text-primary` |
+| `var(--text-secondary)` | `var(--color-text-secondary)` | `text-text-secondary` |
+| `var(--text-muted)` | `var(--color-text-muted)` | `text-text-muted` |
+| `var(--accent)` | `var(--color-accent)` | `bg-accent` / `text-accent` |
+| `var(--accent-hover)` | `var(--color-accent-hover)` | `bg-accent-hover` / `text-accent-hover` |
+| `var(--accent-danger)` | `var(--color-accent-danger)` | `bg-accent-danger` / `text-accent-danger` |
+| `var(--accent-success)` | `var(--color-accent-success)` | `bg-accent-success` / `text-accent-success` |
+| `var(--accent-warning)` | `var(--color-accent-warning)` | `bg-accent-warning` / `text-accent-warning` |
+| `var(--border)` | `var(--color-border)` | `border-border` |
+
+> **后续开发建议**：新组件优先直接使用 Tailwind v4 utility 类（如 `bg-page text-txtp`），不再使用 `var(--color-xxx)` 形式的 CSS 变量。
+
 ### 样式施工检查清单
 
-- [ ] 将 Tailwind CSS 从 v3 升级到 v4（前台 + 后台）
-- [ ] 删除 `tailwind.config.js`，改用 CSS `@theme` 指令配置（v4 方式）
-- [ ] 后台：将 `styles/main.css` 中的 CSS 变量替换为参考实现的精确色值
+- [x] 将 Tailwind CSS 从 v3 升级到 v4（前台 + 后台）
+- [x] 删除 `tailwind.config.js`，改用 CSS `@theme` 指令配置（v4 方式）
+- [x] 后台：将 `styles/main.css` 中的 CSS 变量替换为参考实现的精确色值
+- [x] 所有 Vue 组件中 `var(--xxx)` 变量引用替换为 `var(--color-xxx)` 形式
 - [ ] 前台：对齐 `前端前台.zip` 的颜色和布局（需解压后逐一比对）
 - [ ] 所有 Vue 组件中 hardcode 的颜色值必须替换为 theme 变量
-- [ ] 确保按钮圆角 `6px`、卡片圆角 `10px` 与参考一致
-- [ ] 字体栈统一为 `ui-sans-serif, system-ui, sans-serif, ...`
+- [x] 确保按钮圆角 `6px`、卡片圆角 `10px` 与参考一致（后台已配置）
+- [x] 字体栈统一为 `ui-sans-serif, system-ui, sans-serif, ...`
 
 ---
 
