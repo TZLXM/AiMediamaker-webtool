@@ -1,29 +1,44 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "tailwindcss";
 
-:root {
-  --bg-primary: #0f0f11;
-  --bg-secondary: #1a1a1f;
-  --bg-tertiary: #25252b;
-  --bg-hover: #2a2a32;
-  --bg-card: #1e1e24;
-  --accent: #6366f1;
-  --accent-hover: #818cf8;
-  --accent-danger: #ef4444;
-  --accent-success: #22c55e;
-  --accent-warning: #f59e0b;
-  --text-primary: #f1f1f4;
-  --text-secondary: #a1a1aa;
-  --text-muted: #71717a;
-  --border: rgba(255, 255, 255, 0.08);
-  --sidebar-width: 240px;
+@theme {
+  /* 后台设计系统 - 提取自前端后台.zip 参考实现 */
+  --color-page:        #0b0d11;
+  --color-card:        #14161c;
+  --color-hover:       #1a1d25;
+  --color-active:      #1e212b;
+  --color-borderc:     #252833;
+  --color-border-hover:#353a4a;
+  --color-txtp:        #e1e3e8;
+  --color-txts:        #8b8f9a;
+  --color-txtm:        #5a5e6a;
+  --color-accent:      #4f8ff7;
+  --color-accent-hover:#3a7de8;
+  --color-success:     #34c759;
+  --color-warning:     #ff9f0a;
+  --color-danger:      #ff453a;
+  --color-white:       #ffffff;
+
+  --radius-btn:  6px;
+  --radius-card: 10px;
 }
 
-* {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
+/* 兼容性变量：Vue 组件 scoped style 中仍使用旧变量名 */
+:root {
+  --bg-primary:   #0b0d11;
+  --bg-secondary: #14161c;
+  --bg-tertiary:  #1e212b;
+  --bg-hover:     #1a1d25;
+  --bg-card:      #14161c;
+  --accent:       #4f8ff7;
+  --accent-hover: #3a7de8;
+  --accent-danger:#ff453a;
+  --accent-success:#34c759;
+  --accent-warning:#ff9f0a;
+  --text-primary: #e1e3e8;
+  --text-secondary:#8b8f9a;
+  --text-muted:   #5a5e6a;
+  --border:       #252833;
+  --sidebar-width: 240px;
 }
 
 html, body, #app {
@@ -33,9 +48,9 @@ html, body, #app {
 }
 
 body {
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-  background-color: var(--bg-primary);
-  color: var(--text-primary);
+  font-family: ui-sans-serif, system-ui, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+  background-color: var(--color-page);
+  color: var(--color-txtp);
   -webkit-font-smoothing: antialiased;
 }
 
@@ -47,18 +62,18 @@ body {
   background: transparent;
 }
 ::-webkit-scrollbar-thumb {
-  background: var(--bg-tertiary);
+  background: var(--color-borderc);
   border-radius: 3px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: var(--text-muted);
-}
-
-.animate-fade-in {
-  animation: fadeIn 0.3s ease;
+  background: var(--color-border-hover);
 }
 
 @keyframes fadeIn {
   from { opacity: 0; }
   to { opacity: 1; }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.3s ease;
 }
