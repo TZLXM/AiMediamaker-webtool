@@ -1,5 +1,9 @@
 # 项目执行计划 (含验收标准)
 
+> **样式基准**: 所有前端样式必须以根目录下的 `前端前台.zip`（用户前台）和 `前端后台.zip`（管理后台）为唯一设计基准。任何样式修改必须先对比 zip 解压后的构建产物，确保颜色、间距、圆角、字体、布局与参考实现完全一致。
+
+---
+
 ## 阶段一：基础架构搭建
 
 ### 周期: Week 1
@@ -9,9 +13,9 @@
 
 | 任务 | 负责人 | 验收标准 |
 |------|--------|----------|
-| Git仓库初始化 | 架构组 | ✅ `main`/`develop`分支保护规则已配置；`feature/*`分支可正常合并 |
-| 后端目录结构 | 后端组 | ✅ `uvicorn app.main:app --reload` 可正常启动，访问 `/health` 返回 `{"status":"ok"}` |
-| 前端目录结构 | 前端组 | ✅ `npm run dev` 启动成功，访问 `http://localhost:5173` 显示侧边栏布局 |
+| Git仓库初始化 | 架构组 | 🟡 `develop` 和 `feature/*` 分支已创建；`main` 分支**缺失**；远程保护规则需 push 后配置 |
+| 后端目录结构 | 后端组 | ✅ `uvicorn app.main:app --reload` 可正常启动，访问 `/health` 返回 `{"status":"ok"}`（已修复 `/health` 被 `StaticFiles` 覆盖的 bug） |
+| 前端目录结构 | 前端组 | 🟡 `npm run build` 构建通过；目录结构完整；**但样式与 `前端前台.zip` / `前端后台.zip` 参考实现不一致**（见下方"差异清单"） |
 | .env.example | 架构组 | ✅ 所有环境变量有注释说明，新成员5分钟内可完成配置 |
 
 ### 里程碑 M1.2: 数据库与ORM
@@ -19,9 +23,9 @@
 
 | 任务 | 验收标准 |
 |------|----------|
-| SQLAlchemy异步模型 | ✅ 5张表可通过 `await init_db()` 自动创建；单元测试通过 |
-| Alembic迁移 | ✅ 可执行 `alembic revision --autogenerate` 生成迁移脚本 |
-| 数据库连接池 | ✅ 并发100个请求无连接泄漏；SQLite WAL模式已启用 |
+| SQLAlchemy异步模型 | ✅ 5张表（users/tasks/files/api_configs/model_configs）可通过 `await init_db()` 自动创建；`pytest backend/tests/` 8项全部通过 |
+| Alembic迁移 | ✅ `alembic.ini` / `migrations/env.py` 配置正确（异步引擎、模型导入完整）；`alembic upgrade head` 和 `alembic revision --autogenerate` 均可用 |
+| 数据库连接池 | 🟡 SQLite WAL 模式已启用（`PRAGMA journal_mode=wal`）；`pool_pre_ping=True` 已配置；**并发100请求压测未执行** |
 
 ### 里程碑 M1.3: 认证体系
 **目标**: 用户只能登录，不能注册
@@ -30,14 +34,14 @@
 |------|----------|
 | JWT登录接口 | ✅ POST `/api/v1/auth/login` 返回有效token；密码错误返回401；密码使用bcrypt存储 |
 | 用户信息接口 | ✅ GET `/api/v1/auth/me` 返回当前用户信息；token过期返回401 |
-| 前端登录页 | ✅ 未登录用户访问任意页面自动弹出登录框；登录成功后侧边栏显示用户名 |
+| 前端登录页 | 🟡 登录弹窗组件骨架存在；**但样式与参考实现不一致** |
 | Admin/Leader/User角色 | ✅ 数据库中3种角色的测试账号已创建；`role`字段正确返回 |
 
 ### M1 阶段出口检查清单
-- [ ] `pytest backend/tests/` 全部通过
-- [ ] `npm run build` 前端构建无报错
+- [x] `pytest backend/tests/` 全部通过（8 passed）
+- [x] `npm run build` 前端构建无报错（前台+后台均通过）
 - [ ] 任意开发者clone后按README可10分钟内启动项目
-- [ ] Git提交信息符合规范 (feat/fix/docs/style/refactor/test)
+- [x] Git提交信息符合规范 (feat/fix/docs/style/refactor/test)
 
 ---
 
@@ -50,44 +54,44 @@
 
 | 任务 | 验收标准 |
 |------|----------|
-| API配置CRUD | ✅ Admin可增删改查API配置；API Key加密存储；total_concurrency生效 |
-| 模型配置CRUD | ✅ 可配置模型ID/名称/参数Schema/支持文件类型；sort_order控制排序 |
-| 模型参数Schema | ✅ GET `/api/v1/models/list?mode=video` 返回完整参数定义；前端可动态渲染表单 |
-| 多平台扩展性 | ✅ 新增平台只需增加 `PlatformType` 枚举和对应client类；不影响现有代码 |
+| API配置CRUD | ❌ 路由骨架存在，Admin可增删改查API配置未实现 |
+| 模型配置CRUD | ❌ 路由骨架存在，可配置模型ID/名称/参数Schema/支持文件类型未实现 |
+| 模型参数Schema | ❌ GET `/api/v1/models/list?mode=video` 返回完整参数定义未实现 |
+| 多平台扩展性 | 🟡 `PlatformType` 枚举和 client 类骨架已预留 |
 
 ### 里程碑 M2.2: 文件管理模块 (含TOS上传 - 必选项)
 **目标**: 用户上传的文件必须上传至TOS，返回公网URL
 
 | 任务 | 验收标准 |
 |------|----------|
-| 文件上传 | ✅ POST `/api/v1/files/upload` 接收 multipart；文件重命名唯一；按类型分子目录存储 |
-| 文件下载 | ✅ GET `/api/v1/files/{file_id}` 验证user_id归属后返回文件流；非本人返回404 |
-| **TOS上传 (必选项)** | ✅ 文件保存本地后**必须**上传TOS获取公网URL（供模型读取参考文件）；`public_url`字段必须填写；状态流转: `local` → `uploading` → `uploaded`；TOS不做备份，主存储在本地 |
-| TOS配置校验 | ✅ 启动时检测TOS配置，不完整则打印ERROR日志并退出；`.env`模板明确标注TOS为必填 |
-| Base64转换 | ✅ 小文件(≤5MB)支持Base64转换；大文件强制走TOS |
-| 文件预览 | ✅ 前端缩略图可正常显示；图片/视频/音频类型识别正确 |
+| 文件上传 | 🟡 POST `/api/v1/files/upload` 路由骨架存在，multipart 接收逻辑未完整实现 |
+| 文件下载 | 🟡 GET `/api/v1/files/{file_id}` 路由骨架存在，归属校验逻辑未完整实现 |
+| **TOS上传 (必选项)** | ❌ TOSUploader 服务类骨架存在，实际上传逻辑未实现 |
+| TOS配置校验 | 🟡 `.env` 模板已标注 TOS 必填，启动时检测未实现 |
+| Base64转换 | ❌ 未实现 |
+| 文件预览 | ❌ 未实现 |
 
 ### 里程碑 M2.3: 任务队列模块
 **目标**: 任务异步执行，并发可控，状态可追踪
 
 | 任务 | 验收标准 |
 |------|----------|
-| 任务创建与排队 | ✅ POST `/api/v1/tasks/create` 返回唯一platform_task_id；任务进入pending状态 |
-| 并发控制 | ✅ 同一模型同时运行任务数不超过 `concurrency_limit`；超限任务在队列等待 |
-| 状态轮询 | ✅ 运行中任务每30秒轮询远端状态；任务完成/失败/取消后停止轮询 |
-| 任务取消 | ✅ POST `/api/v1/tasks/{id}/cancel` 可取消queued/running任务；只能取消自己的任务 |
-| 历史记录 | ✅ 已结束任务(成功/失败/取消)写入历史；按时间倒序排列；支持分页 |
+| 任务创建与排队 | 🟡 POST `/api/v1/tasks/create` 路由骨架存在，实际排队逻辑未实现 |
+| 并发控制 | ❌ 未实现 |
+| 状态轮询 | ❌ 未实现 |
+| 任务取消 | 🟡 POST `/api/v1/tasks/{id}/cancel` 路由骨架存在 |
+| 历史记录 | 🟡 GET `/api/v1/tasks/history/list` 路由骨架存在 |
 
 ### 里程碑 M2.4: 火山方舟API集成
 **目标**: 可成功调用Seedance和Seedream生成内容
 
 | 任务 | 验收标准 |
 |------|----------|
-| Seedance视频生成 | ✅ 提交视频生成任务后，返回远端task_id；轮询至succeeded状态；成功下载MP4到本地 |
-| Seedream图片生成 | ✅ 提交图片生成任务后，同步/异步获取结果URL；成功下载图片到本地 |
-| 多模态输入 | ✅ 任务可携带图片/视频/音频参考文件；文件URL通过TOS公网URL传递给模型 |
-| 错误处理 | ✅ API限流时自动退避重试；任务失败记录error_code和error_message；前端显示友好错误 |
-| 资源用量记录 | ✅ 任务完成后记录usage_tokens；支持后续成本分析 |
+| Seedance视频生成 | ❌ VolcengineClient 服务类骨架存在，实际调用未实现 |
+| Seedream图片生成 | ❌ 未实现 |
+| 多模态输入 | ❌ 未实现 |
+| 错误处理 | ❌ 未实现 |
+| 资源用量记录 | ❌ 未实现 |
 
 ### M2 阶段出口检查清单
 - [ ] 完整走通一次 "上传图片 → 创建图生图任务 → 获取结果" 全流程
@@ -107,43 +111,43 @@
 
 | 任务 | 验收标准 |
 |------|----------|
-| 前台侧边栏 | ✅ 显示logo、生成/历史/资产导航、用户信息、登出按钮；当前页面高亮；深色极简风格统一 |
-| 后台侧边栏 | ✅ 显示系统状态/模型管理/用户管理/任务管理/系统配置导航；仅admin可进入；leader/user禁止访问 |
-| 登录弹窗 | ✅ 点击遮罩或按ESC可关闭；输入验证；加载状态；错误提示 |
-| 预览弹窗 | ✅ 图片支持滚轮缩放(向上缩小)、拖拽平移；视频支持播放/暂停/进度条/音量；点击遮罩关闭 |
-| 路由与权限 | ✅ 未登录用户访问任意路由自动跳转/弹窗；登录后恢复之前页面；后台路由校验admin角色 |
+| 前台侧边栏 | 🟡 组件骨架存在（`AppSidebar.vue`）；**样式与 `前端前台.zip` 不一致**（颜色变量不同：当前 `#0f0f11` vs 参考 `#0b0d11`） |
+| 后台侧边栏 | 🟡 组件骨架存在（`LayoutView.vue`）；**样式与 `前端后台.zip` 不一致**（颜色系统完全不同） |
+| 登录弹窗 | 🟡 组件骨架存在（`LoginModal.vue` / `LoginView.vue`）；样式待对齐 |
+| 预览弹窗 | 🟡 组件骨架存在（`PreviewModal.vue`）；图片缩放/拖拽、视频播放逻辑待实现 |
+| 路由与权限 | 🟡 前台/后台路由均配置；后台 admin 角色校验已添加；**前台未登录跳转/弹窗逻辑待完善** |
 
 ### 里程碑 M3.2: 生成页面 (核心页面)
 **目标**: 用户可完成完整的生成操作
 
 | 任务 | 验收标准 |
 |------|----------|
-| 输入悬浮框 | ✅ 固定在底部；支持多行输入；文件缩略图显示；模式/模型/参数选择器 |
-| @文件引用 | ✅ 输入@后弹出文件选择器；选择后在输入框显示文件缩略图(与文字同高)；音频显示文字标签 |
-| 文件上传 | ✅ 支持拖拽上传；校验文件类型符合当前模型要求；上传中显示进度/状态 |
-| 模型联动 | ✅ 切换mode后模型列表自动过滤；切换模型后参数选项自动更新；图片模型只显示图片参数 |
-| 任务块展示 | ✅ 提交后生成任务块；显示提示词/上传文件/模型参数/输出缩略图；多输出时每行最多4个 |
-| 任务状态 | ✅ pending/queued/running显示对应状态文字；失败显示错误码；取消显示"已取消" |
-| 复用功能 | ✅ 点击复用按钮将当前任务的mode/model/prompt/files填充回输入框 |
-| 新建会话 | ✅ 点击新建会话清空输入框和任务列表；保留历史任务在后台 |
+| 输入悬浮框 | 🟡 组件骨架存在（`InputBar.vue`）；固定在底部、多行输入、文件缩略图、参数选择器待实现 |
+| @文件引用 | ❌ 未实现 |
+| 文件上传 | 🟡 拖拽上传组件骨架存在；校验和进度待实现 |
+| 模型联动 | 🟡 模型列表接口存在；前端联动逻辑待实现 |
+| 任务块展示 | 🟡 组件骨架存在（`TaskBlock.vue`）；多输出缩略图布局待实现 |
+| 任务状态 | 🟡 状态枚举定义完整；前端状态显示待实现 |
+| 复用功能 | ❌ 未实现 |
+| 新建会话 | ❌ 未实现 |
 
 ### 里程碑 M3.3: 历史页面
 **目标**: 用户可检索和复用历史任务
 
 | 任务 | 验收标准 |
 |------|----------|
-| 历史列表 | ✅ 按日期分组显示已结束任务；显示开始时间/结束时间；最晚生成的在最下方 |
-| 搜索筛选 | ✅ 支持按提示词搜索；支持按mode筛选；支持按日期范围筛选(精确到小时) |
-| 复用跳转 | ✅ 点击历史任务复用按钮，自动跳转到生成页并填充内容 |
+| 历史列表 | 🟡 视图骨架存在（`HistoryView.vue`）；按日期分组、时间显示待实现 |
+| 搜索筛选 | ❌ 未实现 |
+| 复用跳转 | ❌ 未实现 |
 
 ### 里程碑 M3.4: 资产页面
 **目标**: 用户可管理和下载生成的文件
 
 | 任务 | 验收标准 |
 |------|----------|
-| 资产网格 | ✅ 按日期分组；图片/视频显示缩略图(保持原比例)；音频显示1:1图标；每行自适应 |
-| 悬停交互 | ✅ 鼠标悬停显示文件名；左下角显示下载按钮；点击缩略图打开预览 |
-| 搜索筛选 | ✅ 支持按文件名搜索；支持按文件类型(image/video)筛选；支持按日期筛选(精确到小时) |
+| 资产网格 | 🟡 视图骨架存在（`AssetsView.vue`）；缩略图比例、自适应布局待实现 |
+| 悬停交互 | ❌ 未实现 |
+| 搜索筛选 | ❌ 未实现 |
 
 ### M3 阶段出口检查清单
 - [ ] UI走查：所有页面风格统一；无明显的布局错位；深色主题无刺眼元素
@@ -163,33 +167,33 @@
 
 | 测试场景 | 验收标准 |
 |----------|----------|
-| 文生图全流程 | ✅ 登录 → 选择图片模型 → 输入提示词 → 设置参数 → 生成 → 预览 → 下载 → 资产页可见 |
-| 图生视频全流程 | ✅ 上传参考图 → 选择视频模型 → 输入提示词 → 生成 → 轮询状态 → 下载视频 |
-| 并发压测 | ✅ 同时提交10个任务，队列管理正确；无重复扣费；无状态竞争 |
-| 权限隔离 | ✅ 用户A无法查看/取消/下载用户B的任务和文件；返回404或403 |
-| 异常恢复 | ✅ 后端重启后，运行中任务可继续轮询；Redis数据不丢失 |
-| 文件生命周期 | ✅ 用户删除任务后，关联文件可选保留或清理；磁盘空间可控 |
+| 文生图全流程 | ❌ 未开始 |
+| 图生视频全流程 | ❌ 未开始 |
+| 并发压测 | ❌ 未开始 |
+| 权限隔离 | ❌ 未开始 |
+| 异常恢复 | ❌ 未开始 |
+| 文件生命周期 | ❌ 未开始 |
 
 ### 里程碑 M4.2: 性能优化
 **目标**: 满足生产环境性能要求
 
 | 优化项 | 验收标准 |
 |--------|----------|
-| 数据库查询 | ✅ 所有列表接口N+1问题已解决；关键查询有索引；慢查询日志为空 |
-| 前端加载 | ✅ 首屏加载 < 2s (本地网络)；路由切换无白屏；图片懒加载 |
-| 文件传输 | ✅ 上传100MB文件不超时；下载支持断点续传；视频预览加载 < 1s |
-| 内存管理 | ✅ 后端运行24小时内存无泄漏；celery/asyncio任务正确清理 |
+| 数据库查询 | ❌ 未开始 |
+| 前端加载 | ❌ 未开始 |
+| 文件传输 | ❌ 未开始 |
+| 内存管理 | ❌ 未开始 |
 
 ### 里程碑 M4.3: 部署与运维
 **目标**: 系统可投产运行
 
 | 任务 | 验收标准 |
 |------|----------|
-| 部署脚本 | ✅ `scripts/deploy.sh` 一键部署；支持systemd服务管理；日志轮转配置 |
-| 环境配置 | ✅ 生产环境 `.env` 配置清单完整；SECRET_KEY随机生成；DEBUG关闭 |
-| 监控告警 | ✅ 健康检查端点 `/health` 可用；关键错误写入日志文件；磁盘空间监控 |
-| 备份策略 | ✅ SQLite数据库定时备份；TOS文件多版本控制；配置导出脚本 |
-| 操作手册 | ✅ README包含部署步骤；常见问题FAQ；管理员操作指南(创建用户/配置模型) |
+| 部署脚本 | ❌ 未开始 |
+| 环境配置 | ❌ 未开始 |
+| 监控告警 | ❌ 未开始 |
+| 备份策略 | ❌ 未开始 |
+| 操作手册 | ❌ 未开始 |
 
 ### M4 阶段出口检查清单 (上线标准)
 - [ ] 所有测试用例通过 (单元测试覆盖率 > 70%)
@@ -197,6 +201,151 @@
 - [ ] 压力测试通过 (50并发用户，响应时间P95 < 3s)
 - [ ] 灾难恢复测试通过 (数据库损坏可恢复；服务崩溃可自动重启)
 - [ ] 团队内部UAT通过 (至少3人完成全流程测试无阻塞问题)
+
+---
+
+## 前端样式规范（设计基准）
+
+> **强制要求**：以下规范提取自 `前端前台.zip` 和 `前端后台.zip` 的构建产物，是当前代码必须对齐的唯一标准。
+
+### 技术栈差异
+
+| 项目 | 参考实现 | 当前代码 | 状态 |
+|------|---------|---------|------|
+| Tailwind CSS 版本 | **v4** (`/*! tailwindcss v4.3.0 */`) | v3.4.19 | ✅ 已升级 |
+| 配置方式 | CSS `@theme` 指令 | `tailwind.config.js` | ✅ 已升级 |
+
+### 后台设计系统（提取自 `前端后台.zip`）
+
+后台使用一套完整的自定义深色主题，通过 Tailwind v4 的 `@theme` 定义：
+
+```css
+/* 必须精确匹配的颜色变量 */
+--color-page:        #0b0d11   /* 页面背景 */
+--color-card:        #14161c   /* 卡片背景 */
+--color-hover:       #1a1d25   /* 悬停背景 */
+--color-active:      #1e212b   /* 激活背景 */
+--color-borderc:     #252833   /* 边框颜色 */
+--color-border-hover:#353a4a   /* 悬停边框 */
+--color-txtp:        #e1e3e8   /* 主文本（Primary） */
+--color-txts:        #8b8f9a   /* 次要文本（Secondary） */
+--color-txtm:        #5a5e6a   /* 中等文本（Muted） */
+--color-accent:      #4f8ff7   /* 强调色 */
+--color-accent-hover:#3a7de8   /* 强调色悬停 */
+--color-success:     #34c759   /* 成功 */
+--color-warning:     #ff9f0a   /* 警告 */
+--color-danger:      #ff453a   /* 危险 */
+--color-white:       #ffffff   /* 白色 */
+
+/* 圆角 */
+--radius-btn:  6px    /* 按钮圆角 */
+--radius-card: 10px   /* 卡片圆角 */
+```
+
+**关键差异**：当前代码使用的 CSS 变量（`--bg-primary: #0f0f11`、`--accent: #6366f1` 等）与参考实现的色值**完全不同**，必须按上表替换。
+
+### 前台设计系统（提取自 `前端前台.zip`）
+
+前台未定义自定义颜色变量，使用标准 Tailwind 色板 + 深色主题。构建产物显示为标准 Tailwind v4 主题。
+
+### 颜色变量替换映射表（已完成）
+
+Vue 组件 `<style scoped>` 中的旧 CSS 变量已全部替换为 Tailwind v4 `@theme` 变量，确保组件样式与 `@theme` 定义的设计系统完全绑定。
+
+**后台 (`frontend-admin/`) 替换映射：**
+
+| 旧变量（:root 兼容层） | 新变量（@theme） | Tailwind utility 类 |
+|----------------------|-----------------|-------------------|
+| `var(--bg-primary)` | `var(--color-page)` | `bg-page` |
+| `var(--bg-secondary)` | `var(--color-card)` | `bg-card` |
+| `var(--bg-tertiary)` | `var(--color-active)` | `bg-active` |
+| `var(--bg-hover)` | `var(--color-hover)` | `bg-hover` |
+| `var(--bg-card)` | `var(--color-card)` | `bg-card` |
+| `var(--text-primary)` | `var(--color-txtp)` | `text-txtp` |
+| `var(--text-secondary)` | `var(--color-txts)` | `text-txts` |
+| `var(--text-muted)` | `var(--color-txtm)` | `text-txtm` |
+| `var(--accent)` | `var(--color-accent)` | `bg-accent` / `text-accent` |
+| `var(--accent-hover)` | `var(--color-accent-hover)` | `bg-accent-hover` / `text-accent-hover` |
+| `var(--accent-success)` | `var(--color-success)` | `bg-success` / `text-success` |
+| `var(--accent-warning)` | `var(--color-warning)` | `bg-warning` / `text-warning` |
+| `var(--accent-danger)` | `var(--color-danger)` | `bg-danger` / `text-danger` |
+| `var(--border)` | `var(--color-borderc)` | `border-borderc` |
+
+**前台 (`frontend/`) 替换映射：**
+
+| 旧变量（:root 兼容层） | 新变量（@theme） | Tailwind utility 类 |
+|----------------------|-----------------|-------------------|
+| `var(--bg-primary)` | `var(--color-bg-primary)` | `bg-bg-primary` |
+| `var(--bg-secondary)` | `var(--color-bg-secondary)` | `bg-bg-secondary` |
+| `var(--bg-tertiary)` | `var(--color-bg-tertiary)` | `bg-bg-tertiary` |
+| `var(--bg-hover)` | `var(--color-bg-hover)` | `bg-bg-hover` |
+| `var(--bg-card)` | `var(--color-bg-card)` | `bg-bg-card` |
+| `var(--text-primary)` | `var(--color-text-primary)` | `text-text-primary` |
+| `var(--text-secondary)` | `var(--color-text-secondary)` | `text-text-secondary` |
+| `var(--text-muted)` | `var(--color-text-muted)` | `text-text-muted` |
+| `var(--accent)` | `var(--color-accent)` | `bg-accent` / `text-accent` |
+| `var(--accent-hover)` | `var(--color-accent-hover)` | `bg-accent-hover` / `text-accent-hover` |
+| `var(--accent-danger)` | `var(--color-accent-danger)` | `bg-accent-danger` / `text-accent-danger` |
+| `var(--accent-success)` | `var(--color-accent-success)` | `bg-accent-success` / `text-accent-success` |
+| `var(--accent-warning)` | `var(--color-accent-warning)` | `bg-accent-warning` / `text-accent-warning` |
+| `var(--border)` | `var(--color-border)` | `border-border` |
+
+> **后续开发建议**：新组件优先直接使用 Tailwind v4 utility 类（如 `bg-page text-txtp`），不再使用 `var(--color-xxx)` 形式的 CSS 变量。
+
+### 颜色系统对齐任务清单（纳入执行计划）
+
+颜色系统对齐是前端开发的前置条件，必须在 M3 阶段开始前完成。
+
+#### 阶段 A：基础设施升级（已完成）
+- [x] 将 Tailwind CSS 从 v3 升级到 v4（前台 + 后台）
+- [x] 删除 `tailwind.config.js`，改用 CSS `@theme` 指令配置（v4 方式）
+- [x] Vite 配置添加 `@tailwindcss/vite` 插件，删除 `postcss.config.js`
+
+#### 阶段 B：后台颜色系统对齐（已完成）
+- [x] 提取 `前端后台.zip` 设计系统色值（14 个颜色变量 + 2 个圆角变量）
+- [x] `frontend-admin/src/styles/main.css` 中 `@theme` 定义精确匹配参考实现
+- [x] 所有后台 Vue 组件 `var(--bg-xxx)` → `var(--color-xxx)` 替换完成
+- [x] 后台构建产物 CSS 头部确认为 `tailwindcss v4.3.0`
+
+#### 阶段 C：前台颜色系统对齐（进行中）
+- [x] `frontend/src/styles/main.css` 已改用 `@import "tailwindcss"` + `@theme`
+- [x] 所有前台 Vue 组件 `var(--bg-xxx)` → `var(--color-xxx)` 替换完成
+- [ ] **对齐 `前端前台.zip` 的标准 Tailwind 色板**：当前前台使用自定义 `--color-bg-primary` 等变量，参考实现使用标准 Tailwind 颜色（如 `bg-gray-900`、`text-white`）。需解压 zip 后逐页比对，将自定义变量替换为标准 Tailwind utility 类。
+- [ ] **所有 Vue 组件从 CSS 变量迁移到 Tailwind utility 类**：当前组件在 `<style scoped>` 中使用 `background: var(--color-page)`，应逐步改为在 template 的 `class` 中直接使用 `bg-page`。此工作可与页面功能开发同步进行。
+
+#### 阶段 D：设计系统一致性验收（未开始）
+- [ ] 逐页对比 `前端前台.zip` 与当前前台构建产物，确保颜色、间距、圆角、字体一致
+- [ ] 逐页对比 `前端后台.zip` 与当前后台构建产物，确保颜色、间距、圆角、字体一致
+- [ ] 确保按钮圆角 `6px`、卡片圆角 `10px` 与参考一致
+- [ ] 字体栈统一为 `ui-sans-serif, system-ui, sans-serif, ...`
+
+### 样式施工检查清单
+
+- [x] 将 Tailwind CSS 从 v3 升级到 v4（前台 + 后台）
+- [x] 删除 `tailwind.config.js`，改用 CSS `@theme` 指令配置（v4 方式）
+- [x] 后台：将 `styles/main.css` 中的 CSS 变量替换为参考实现的精确色值
+- [x] 所有 Vue 组件中 `var(--xxx)` 变量引用替换为 `var(--color-xxx)` 形式
+- [ ] 前台：对齐 `前端前台.zip` 的颜色和布局（需解压后逐一比对）
+- [ ] 所有 Vue 组件中 hardcode 的颜色值必须替换为 theme 变量
+- [x] 确保按钮圆角 `6px`、卡片圆角 `10px` 与参考一致（后台已配置）
+- [x] 字体栈统一为 `ui-sans-serif, system-ui, sans-serif, ...`
+
+---
+
+## 当前已知问题清单（待修复）
+
+| 优先级 | 问题 | 状态 | 影响 | 建议修复方案 |
+|--------|------|------|------|-------------|
+| ✅ 已完成 | Tailwind v3 → v4 升级 | 已升级 | 样式系统与参考实现根本不一致 | `npm install tailwindcss@latest @tailwindcss/vite`，删除 `tailwind.config.js` + `postcss.config.js` |
+| ✅ 已完成 | 后台颜色系统未对齐 | 已对齐 | 视觉效果与参考实现完全不同 | `@theme` 中定义 14 个精确色值，Vue 组件 `var(--bg-xxx)` → `var(--color-xxx)` |
+| ✅ 已完成 | Vue 组件 CSS 变量迁移 | 已迁移 | 组件样式与 `@theme` 未绑定 | 后台 8 个 + 前台 9 个 `.vue` 文件批量替换 |
+| ✅ 已完成 | Pydantic `model_id` 命名空间冲突 | 已修复 | 运行时 4 条 UserWarning | 全部 Schema 改用 `ConfigDict(protected_namespaces=())` |
+| ✅ 已完成 | Pydantic `class Config` 弃用警告 | 已修复 | 运行时 DeprecationWarning | `core/config.py` 改用 `SettingsConfigDict()` |
+| 🟡 P1 | 前台颜色系统未对齐 | 进行中 | 页面背景、强调色等色值不同 | 对比 `前端前台.zip` 逐页校对，将自定义变量替换为标准 Tailwind utility 类 |
+| 🟡 P1 | Vue 组件从 CSS 变量迁移到 utility 类 | 未开始 | 未充分利用 Tailwind v4 | 新组件优先用 `bg-page text-txtp`，旧组件逐步替换 |
+| 🟡 P2 | `main` 分支缺失 | 未修复 | Git 工作流不完整 | 从 `develop` 创建 `main` 分支 |
+| 🟡 P2 | 前端 admin 构建循环依赖警告 | 未修复 | Rollup chunk 执行顺序可能异常 | 将 `useAdminStore` 的引用从 `stores/index.ts` 改为直接引用 `stores/admin.ts` |
+| 🟢 P3 | 数据库 100 并发压测未执行 | 未执行 | 未验证连接池稳定性 | 使用 `locust` 或 `ab` 压测 `/health` |
 
 ---
 

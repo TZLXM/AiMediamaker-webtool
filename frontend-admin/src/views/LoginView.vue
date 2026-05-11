@@ -25,7 +25,7 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
-import { useAdminStore } from '@/stores'
+import { useAdminStore } from '@/stores/admin'
 
 const router = useRouter()
 const adminStore = useAdminStore()
@@ -53,12 +53,12 @@ async function handleLogin() {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: var(--bg-primary);
+  background: var(--color-page);
 }
 
 .login-card {
-  background: var(--bg-secondary);
-  border: 1px solid var(--border);
+  background: var(--color-card);
+  border: 1px solid var(--color-borderc);
   border-radius: 16px;
   padding: 40px;
   width: 400px;
@@ -75,7 +75,7 @@ async function handleLogin() {
 }
 
 .login-header p {
-  color: var(--text-secondary);
+  color: var(--color-txts);
   font-size: 14px;
 }
 
@@ -86,29 +86,29 @@ async function handleLogin() {
 .form-field label {
   display: block;
   font-size: 13px;
-  color: var(--text-secondary);
+  color: var(--color-txts);
   margin-bottom: 6px;
 }
 
 .form-field input {
   width: 100%;
   padding: 10px 12px;
-  background: var(--bg-tertiary);
-  border: 1px solid var(--border);
+  background: var(--color-active);
+  border: 1px solid var(--color-borderc);
   border-radius: 8px;
-  color: var(--text-primary);
+  color: var(--color-txtp);
   font-size: 14px;
   outline: none;
 }
 
 .form-field input:focus {
-  border-color: var(--accent);
+  border-color: var(--color-accent);
 }
 
 .login-btn {
   width: 100%;
   padding: 12px;
-  background: var(--accent);
+  background: var(--color-accent);
   border: none;
   border-radius: 8px;
   color: white;
@@ -119,7 +119,7 @@ async function handleLogin() {
 }
 
 .login-btn:hover {
-  background: var(--accent-hover);
+  background: var(--color-accent-hover);
 }
 
 .login-btn:disabled {

@@ -35,16 +35,16 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+@app.get("/health")
+async def health_check():
+    return {"status": "ok", "version": settings.APP_VERSION}
+
+
 # API路由
 app.include_router(api_v1_router, prefix="/api")
 
-# 静态文件 (前端构建产物)
+# 静态文件 (前端构建产物) - 必须放在最后，避免覆盖API路由
 import os
 frontend_dist = os.path.join(os.path.dirname(os.path.dirname(__file__)), "..", "frontend", "dist")
 if os.path.exists(frontend_dist):
     app.mount("/", StaticFiles(directory=frontend_dist, html=True), name="frontend")
-
-
-@app.get("/health")
-async def health_check():
-    return {"status": "ok", "version": settings.APP_VERSION}

@@ -43,9 +43,9 @@ import {
   Users,
   ListTodo,
   Settings,
-  LogOut,
+  LogOut as LogOutIcon,
 } from 'lucide-vue-next'
-import { useAdminStore } from '@/stores'
+import { useAdminStore } from '@/stores/admin'
 
 const route = useRoute()
 const router = useRouter()
@@ -74,8 +74,8 @@ function handleLogout() {
 
 .sidebar {
   width: var(--sidebar-width);
-  background: var(--bg-secondary);
-  border-right: 1px solid var(--border);
+  background: var(--color-card);
+  border-right: 1px solid var(--color-borderc);
   display: flex;
   flex-direction: column;
   flex-shrink: 0;
@@ -83,7 +83,7 @@ function handleLogout() {
 
 .sidebar-header {
   padding: 20px;
-  border-bottom: 1px solid var(--border);
+  border-bottom: 1px solid var(--color-borderc);
 }
 
 .sidebar-header h2 {
@@ -95,7 +95,7 @@ function handleLogout() {
   display: inline-block;
   margin-top: 4px;
   padding: 2px 8px;
-  background: var(--accent);
+  background: var(--color-accent);
   color: white;
   font-size: 11px;
   border-radius: 4px;
@@ -115,25 +115,25 @@ function handleLogout() {
   gap: 10px;
   padding: 10px 12px;
   border-radius: 8px;
-  color: var(--text-secondary);
+  color: var(--color-txts);
   text-decoration: none;
   font-size: 14px;
   transition: all 0.2s;
 }
 
 .nav-item:hover {
-  background: var(--bg-hover);
-  color: var(--text-primary);
+  background: var(--color-hover);
+  color: var(--color-txtp);
 }
 
 .nav-item.active {
-  background: var(--accent);
+  background: var(--color-accent);
   color: white;
 }
 
 .sidebar-footer {
   padding: 16px;
-  border-top: 1px solid var(--border);
+  border-top: 1px solid var(--color-borderc);
 }
 
 .user-info {
@@ -146,20 +146,20 @@ function handleLogout() {
 
 .role {
   padding: 2px 8px;
-  background: var(--bg-tertiary);
+  background: var(--color-active);
   border-radius: 4px;
   font-size: 11px;
-  color: var(--text-muted);
+  color: var(--color-txtm);
   text-transform: uppercase;
 }
 
 .logout-btn {
   width: 100%;
   padding: 8px;
-  background: var(--bg-tertiary);
-  border: 1px solid var(--border);
+  background: var(--color-active);
+  border: 1px solid var(--color-borderc);
   border-radius: 6px;
-  color: var(--text-secondary);
+  color: var(--color-txts);
   font-size: 13px;
   cursor: pointer;
   display: flex;
@@ -170,9 +170,9 @@ function handleLogout() {
 }
 
 .logout-btn:hover {
-  background: var(--accent-danger);
+  background: var(--color-danger);
   color: white;
-  border-color: var(--accent-danger);
+  border-color: var(--color-danger);
 }
 
 .main-content {

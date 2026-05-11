@@ -66,7 +66,7 @@ const router = createRouter({
   routes,
 })
 
-router.beforeEach((to, from, next) => {
+router.beforeEach((to, _from, next) => {
   const adminStore = useAdminStore()
   // 未登录且访问非公开页面 → 登录页
   if (!to.meta.public && !adminStore.isLoggedIn) {

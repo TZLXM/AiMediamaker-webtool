@@ -29,7 +29,7 @@
 
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
-import { Plus } from 'lucide-vue-next'
+import { Plus as PlusIcon } from 'lucide-vue-next'
 import { useTaskStore } from '@/stores'
 import type { TaskItem, TaskMode, TaskParameters, FileItem } from '@/types'
 import InputBar from '@/components/InputBar.vue'
@@ -117,18 +117,18 @@ onMounted(() => {
   align-items: center;
   gap: 6px;
   padding: 8px 14px;
-  background: var(--bg-secondary);
-  border: 1px solid var(--border);
+  background: var(--color-bg-secondary);
+  border: 1px solid var(--color-border);
   border-radius: 8px;
-  color: var(--text-secondary);
+  color: var(--color-text-secondary);
   font-size: 13px;
   cursor: pointer;
   transition: all 0.2s;
 }
 
 .new-chat-btn:hover {
-  background: var(--bg-hover);
-  color: var(--text-primary);
+  background: var(--color-bg-hover);
+  color: var(--color-text-primary);
 }
 
 .generate-content {

@@ -66,8 +66,8 @@ async function handleLogin() {
 }
 
 .login-card {
-  background: var(--bg-secondary);
-  border: 1px solid var(--border);
+  background: var(--color-bg-secondary);
+  border: 1px solid var(--color-border);
   border-radius: 16px;
   padding: 32px;
   width: 380px;
@@ -85,7 +85,7 @@ async function handleLogin() {
 }
 
 .login-header p {
-  color: var(--text-secondary);
+  color: var(--color-text-secondary);
   font-size: 14px;
 }
 
@@ -96,29 +96,29 @@ async function handleLogin() {
 .form-field label {
   display: block;
   font-size: 13px;
-  color: var(--text-secondary);
+  color: var(--color-text-secondary);
   margin-bottom: 6px;
 }
 
 .form-field input {
   width: 100%;
   padding: 10px 12px;
-  background: var(--bg-tertiary);
-  border: 1px solid var(--border);
+  background: var(--color-bg-tertiary);
+  border: 1px solid var(--color-border);
   border-radius: 8px;
-  color: var(--text-primary);
+  color: var(--color-text-primary);
   font-size: 14px;
   outline: none;
 }
 
 .form-field input:focus {
-  border-color: var(--accent);
+  border-color: var(--color-accent);
 }
 
 .login-submit {
   width: 100%;
   padding: 12px;
-  background: var(--accent);
+  background: var(--color-accent);
   border: none;
   border-radius: 8px;
   color: white;
@@ -129,7 +129,7 @@ async function handleLogin() {
 }
 
 .login-submit:hover {
-  background: var(--accent-hover);
+  background: var(--color-accent-hover);
 }
 
 .login-submit:disabled {
@@ -140,7 +140,7 @@ async function handleLogin() {
 .login-note {
   margin-top: 16px;
   font-size: 12px;
-  color: var(--text-muted);
+  color: var(--color-text-muted);
   text-align: center;
 }
 

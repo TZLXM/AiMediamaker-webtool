@@ -65,7 +65,7 @@
 
 <script setup lang="ts">
 import { computed } from 'vue'
-import { RefreshCw } from 'lucide-vue-next'
+import { RefreshCw as RefreshIcon } from 'lucide-vue-next'
 import dayjs from 'dayjs'
 import { usePreviewStore } from '@/stores'
 import type { TaskItem } from '@/types'
@@ -75,7 +75,9 @@ const props = defineProps<{
   showReuse?: boolean
 }>()
 
-defineEmits<['reuse']>()
+defineEmits<{
+  (e: 'reuse'): void
+}>()
 
 const previewStore = usePreviewStore()
 
@@ -101,8 +103,8 @@ function formatTime(t: string) {
 
 <style scoped>
 .task-block {
-  background: var(--bg-secondary);
-  border: 1px solid var(--border);
+  background: var(--color-bg-secondary);
+  border: 1px solid var(--color-border);
   border-radius: 12px;
   padding: 16px;
   animation: slideUp 0.3s ease;
@@ -133,7 +135,7 @@ function formatTime(t: string) {
   height: 56px;
   border-radius: 8px;
   overflow: hidden;
-  background: var(--bg-tertiary);
+  background: var(--color-bg-tertiary);
   cursor: pointer;
 }
 
@@ -151,7 +153,7 @@ function formatTime(t: string) {
   align-items: center;
   justify-content: center;
   font-size: 10px;
-  color: var(--text-muted);
+  color: var(--color-text-muted);
 }
 
 .task-meta {
@@ -165,12 +167,12 @@ function formatTime(t: string) {
   padding: 3px 8px;
   border-radius: 4px;
   font-size: 11px;
-  background: var(--bg-tertiary);
-  color: var(--text-secondary);
+  background: var(--color-bg-tertiary);
+  color: var(--color-text-secondary);
 }
 
 .meta-badge.mode {
-  background: var(--accent);
+  background: var(--color-accent);
   color: white;
 }
 
@@ -192,7 +194,7 @@ function formatTime(t: string) {
   aspect-ratio: 1;
   border-radius: 8px;
   overflow: hidden;
-  background: var(--bg-tertiary);
+  background: var(--color-bg-tertiary);
   cursor: pointer;
 }
 
@@ -205,7 +207,7 @@ function formatTime(t: string) {
 
 .status-display {
   font-size: 13px;
-  color: var(--text-muted);
+  color: var(--color-text-muted);
 }
 
 .status-display .error {
@@ -218,7 +220,7 @@ function formatTime(t: string) {
   gap: 12px;
   margin-top: 10px;
   padding-top: 10px;
-  border-top: 1px solid var(--border);
+  border-top: 1px solid var(--color-border);
 }
 
 .reuse-btn {
@@ -227,22 +229,22 @@ function formatTime(t: string) {
   gap: 4px;
   padding: 4px 10px;
   background: transparent;
-  border: 1px solid var(--border);
+  border: 1px solid var(--color-border);
   border-radius: 6px;
-  color: var(--text-muted);
+  color: var(--color-text-muted);
   font-size: 12px;
   cursor: pointer;
   transition: all 0.2s;
 }
 
 .reuse-btn:hover {
-  background: var(--bg-hover);
-  color: var(--text-secondary);
+  background: var(--color-bg-hover);
+  color: var(--color-text-secondary);
 }
 
 .task-time {
   font-size: 11px;
-  color: var(--text-muted);
+  color: var(--color-text-muted);
   margin-left: auto;
 }
 </style>

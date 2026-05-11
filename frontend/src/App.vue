@@ -19,7 +19,13 @@ import { useUserStore } from '@/stores'
 const userStore = useUserStore()
 
 onMounted(() => {
-  userStore.fetchProfile()
+  const token = localStorage.getItem('token')
+  if (!token) {
+    // 未登录，显示登录弹窗
+    userStore.showLogin = true
+  } else {
+    userStore.fetchProfile()
+  }
 })
 </script>
 
@@ -28,7 +34,7 @@ onMounted(() => {
   display: flex;
   height: 100vh;
   width: 100vw;
-  background-color: var(--bg-primary);
+  background-color: var(--color-bg-primary);
 }
 
 .main-area {

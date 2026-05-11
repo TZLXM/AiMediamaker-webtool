@@ -2,7 +2,7 @@
 模型配置 Pydantic Schema
 """
 from typing import Optional, List, Any
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, ConfigDict
 
 
 class ParameterOption(BaseModel):
@@ -45,12 +45,12 @@ class ModelConfigResponse(BaseModel):
     is_active: bool
     sort_order: int
     
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(protected_namespaces=(), from_attributes=True)
 
 
 class ModelSelectorInfo(BaseModel):
     """前端模型选择器所需信息"""
+    model_config = ConfigDict(protected_namespaces=())
     model_id: str
     name: str
     mode: str

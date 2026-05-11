@@ -46,13 +46,13 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import api from '@/api'
+// import api from '@/api'
 
 const route = useRoute()
 const router = useRouter()
 
 const isEdit = computed(() => route.name === 'model-edit')
-const modelId = computed(() => route.params.id)
+// const modelId = computed(() => route.params.id)
 
 const form = ref({
   name: '',
@@ -91,8 +91,8 @@ onMounted(fetchModel)
 }
 
 .form-card {
-  background: var(--bg-secondary);
-  border: 1px solid var(--border);
+  background: var(--color-card);
+  border: 1px solid var(--color-borderc);
   border-radius: 12px;
   padding: 24px;
 }
@@ -115,17 +115,17 @@ onMounted(fetchModel)
 
 .form-field label {
   font-size: 13px;
-  color: var(--text-secondary);
+  color: var(--color-txts);
 }
 
 .form-field input,
 .form-field select,
 .form-field textarea {
   padding: 10px 12px;
-  background: var(--bg-tertiary);
-  border: 1px solid var(--border);
+  background: var(--color-active);
+  border: 1px solid var(--color-borderc);
   border-radius: 8px;
-  color: var(--text-primary);
+  color: var(--color-txtp);
   font-size: 14px;
   outline: none;
 }
@@ -133,7 +133,7 @@ onMounted(fetchModel)
 .form-field input:focus,
 .form-field select:focus,
 .form-field textarea:focus {
-  border-color: var(--accent);
+  border-color: var(--color-accent);
 }
 
 .form-field .checkbox {
@@ -141,7 +141,7 @@ onMounted(fetchModel)
   align-items: center;
   gap: 8px;
   font-size: 14px;
-  color: var(--text-primary);
+  color: var(--color-txtp);
   cursor: pointer;
 }
 
@@ -151,22 +151,22 @@ onMounted(fetchModel)
   gap: 12px;
   margin-top: 24px;
   padding-top: 24px;
-  border-top: 1px solid var(--border);
+  border-top: 1px solid var(--color-borderc);
 }
 
 .btn-secondary {
   padding: 8px 16px;
-  background: var(--bg-tertiary);
-  border: 1px solid var(--border);
+  background: var(--color-active);
+  border: 1px solid var(--color-borderc);
   border-radius: 8px;
-  color: var(--text-secondary);
+  color: var(--color-txts);
   font-size: 13px;
   cursor: pointer;
 }
 
 .btn-primary {
   padding: 8px 16px;
-  background: var(--accent);
+  background: var(--color-accent);
   border: none;
   border-radius: 8px;
   color: white;

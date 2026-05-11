@@ -79,19 +79,24 @@
       >
         <label>{{ param.label }}</label>
         <select v-if="param.type === 'select'" v-model="params[param.key]">
-          <option v-for="opt in param.options" :key="opt.value" :value="opt.value">
+          <option v-for="opt in param.options" :key="String(opt.value)" :value="opt.value">
             {{ opt.label }}
           </option>
         </select>
         <input
           v-else-if="param.type === 'number'"
-          v-model.number="params[param.key]"
+          :value="params[param.key]"
+          @input="(e) => { params[param.key] = Number((e.target as HTMLInputElement).value) }"
           type="number"
           :min="param.min"
           :max="param.max"
         />
         <label v-else-if="param.type === 'boolean'" class="checkbox">
-          <input v-model="params[param.key]" type="checkbox" />
+          <input
+            :checked="params[param.key]"
+            @change="(e) => { params[param.key] = (e.target as HTMLInputElement).checked }"
+            type="checkbox"
+          />
           {{ param.description }}
         </label>
       </div>
@@ -113,7 +118,7 @@
 
 <script setup lang="ts">
 import { ref, computed, watch } from 'vue'
-import { Sparkles, X } from 'lucide-vue-next'
+import { Sparkles as SparklesIcon, X as XIcon } from 'lucide-vue-next'
 import api from '@/api'
 import type { TaskMode, TaskParameters, FileItem, ModelInfo } from '@/types'
 
@@ -125,14 +130,14 @@ const props = defineProps<{
   files: FileItem[]
 }>()
 
-const emit = defineEmits<[
-  'update:prompt',
-  'update:mode',
-  'update:model',
-  'update:params',
-  'update:files',
-  'submit'
-]>()
+const emit = defineEmits<{
+  (e: 'update:prompt', value: string): void
+  (e: 'update:mode', value: TaskMode): void
+  (e: 'update:model', value: string): void
+  (e: 'update:params', value: TaskParameters): void
+  (e: 'update:files', value: FileItem[]): void
+  (e: 'submit'): void
+}>()
 
 const promptRef = ref<HTMLElement>()
 const uploadedFiles = computed({
@@ -240,8 +245,8 @@ watch(selectedMode, loadModels, { immediate: true })
   bottom: 20px;
   left: 20px;
   right: 20px;
-  background: var(--bg-secondary);
-  border: 1px solid var(--border);
+  background: var(--color-bg-secondary);
+  border: 1px solid var(--color-border);
   border-radius: 14px;
   padding: 14px;
   z-index: 10;
@@ -260,7 +265,7 @@ watch(selectedMode, loadModels, { immediate: true })
   border-radius: 8px;
   overflow: hidden;
   position: relative;
-  background: var(--bg-tertiary);
+  background: var(--color-bg-tertiary);
 }
 
 .file-thumb img,
@@ -277,7 +282,7 @@ watch(selectedMode, loadModels, { immediate: true })
   align-items: center;
   justify-content: center;
   font-size: 9px;
-  color: var(--text-muted);
+  color: var(--color-text-muted);
 }
 
 .file-remove {
@@ -307,7 +312,7 @@ watch(selectedMode, loadModels, { immediate: true })
   overflow-y: auto;
   background: transparent;
   border: none;
-  color: var(--text-primary);
+  color: var(--color-text-primary);
   font-size: 14px;
   line-height: 1.5;
   outline: none;
@@ -317,7 +322,7 @@ watch(selectedMode, loadModels, { immediate: true })
 
 .prompt-editor:empty::before {
   content: attr(placeholder);
-  color: var(--text-muted);
+  color: var(--color-text-muted);
 }
 
 .action-bar {
@@ -333,18 +338,18 @@ watch(selectedMode, loadModels, { immediate: true })
 
 .action-btn {
   padding: 6px 12px;
-  background: var(--bg-tertiary);
-  border: 1px solid var(--border);
+  background: var(--color-bg-tertiary);
+  border: 1px solid var(--color-border);
   border-radius: 8px;
-  color: var(--text-secondary);
+  color: var(--color-text-secondary);
   font-size: 12px;
   cursor: pointer;
   transition: all 0.2s;
 }
 
 .action-btn:hover {
-  background: var(--bg-hover);
-  color: var(--text-primary);
+  background: var(--color-bg-hover);
+  color: var(--color-text-primary);
 }
 
 .generate-btn {
@@ -352,7 +357,7 @@ watch(selectedMode, loadModels, { immediate: true })
   align-items: center;
   gap: 6px;
   padding: 8px 18px;
-  background: var(--accent);
+  background: var(--color-accent);
   border: none;
   border-radius: 8px;
   color: white;
@@ -363,7 +368,7 @@ watch(selectedMode, loadModels, { immediate: true })
 }
 
 .generate-btn:hover {
-  background: var(--accent-hover);
+  background: var(--color-accent-hover);
 }
 
 .generate-btn:disabled {
@@ -376,8 +381,8 @@ watch(selectedMode, loadModels, { immediate: true })
   bottom: 100%;
   left: 14px;
   margin-bottom: 8px;
-  background: var(--bg-secondary);
-  border: 1px solid var(--border);
+  background: var(--color-bg-secondary);
+  border: 1px solid var(--color-border);
   border-radius: 10px;
   overflow: hidden;
   min-width: 140px;
@@ -387,15 +392,15 @@ watch(selectedMode, loadModels, { immediate: true })
 .dropdown-item {
   padding: 10px 14px;
   font-size: 13px;
-  color: var(--text-secondary);
+  color: var(--color-text-secondary);
   cursor: pointer;
   transition: all 0.15s;
 }
 
 .dropdown-item:hover,
 .dropdown-item.active {
-  background: var(--bg-hover);
-  color: var(--text-primary);
+  background: var(--color-bg-hover);
+  color: var(--color-text-primary);
 }
 
 .params-panel {
@@ -403,8 +408,8 @@ watch(selectedMode, loadModels, { immediate: true })
   bottom: 100%;
   left: 14px;
   margin-bottom: 8px;
-  background: var(--bg-secondary);
-  border: 1px solid var(--border);
+  background: var(--color-bg-secondary);
+  border: 1px solid var(--color-border);
   border-radius: 10px;
   padding: 14px;
   min-width: 220px;
@@ -418,7 +423,7 @@ watch(selectedMode, loadModels, { immediate: true })
 .param-field label {
   display: block;
   font-size: 12px;
-  color: var(--text-secondary);
+  color: var(--color-text-secondary);
   margin-bottom: 4px;
 }
 
@@ -426,10 +431,10 @@ watch(selectedMode, loadModels, { immediate: true })
 .param-field input[type='number'] {
   width: 100%;
   padding: 6px 10px;
-  background: var(--bg-tertiary);
-  border: 1px solid var(--border);
+  background: var(--color-bg-tertiary);
+  border: 1px solid var(--color-border);
   border-radius: 6px;
-  color: var(--text-primary);
+  color: var(--color-text-primary);
   font-size: 13px;
   outline: none;
 }
@@ -439,7 +444,7 @@ watch(selectedMode, loadModels, { immediate: true })
   align-items: center;
   gap: 8px;
   font-size: 13px;
-  color: var(--text-secondary);
+  color: var(--color-text-secondary);
 }
 
 .file-picker {
@@ -447,8 +452,8 @@ watch(selectedMode, loadModels, { immediate: true })
   bottom: 100%;
   left: 14px;
   margin-bottom: 8px;
-  background: var(--bg-secondary);
-  border: 1px solid var(--border);
+  background: var(--color-bg-secondary);
+  border: 1px solid var(--color-border);
   border-radius: 10px;
   overflow: hidden;
   min-width: 140px;
@@ -458,13 +463,13 @@ watch(selectedMode, loadModels, { immediate: true })
 .file-picker-item {
   padding: 10px 14px;
   font-size: 13px;
-  color: var(--text-secondary);
+  color: var(--color-text-secondary);
   cursor: pointer;
   transition: all 0.15s;
 }
 
 .file-picker-item:hover {
-  background: var(--bg-hover);
-  color: var(--text-primary);
+  background: var(--color-bg-hover);
+  color: var(--color-text-primary);
 }
 </style>
