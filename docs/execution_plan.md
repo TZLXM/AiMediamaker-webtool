@@ -292,6 +292,33 @@ Vue 组件 `<style scoped>` 中的旧 CSS 变量已全部替换为 Tailwind v4 `
 
 > **后续开发建议**：新组件优先直接使用 Tailwind v4 utility 类（如 `bg-page text-txtp`），不再使用 `var(--color-xxx)` 形式的 CSS 变量。
 
+### 颜色系统对齐任务清单（纳入执行计划）
+
+颜色系统对齐是前端开发的前置条件，必须在 M3 阶段开始前完成。
+
+#### 阶段 A：基础设施升级（已完成）
+- [x] 将 Tailwind CSS 从 v3 升级到 v4（前台 + 后台）
+- [x] 删除 `tailwind.config.js`，改用 CSS `@theme` 指令配置（v4 方式）
+- [x] Vite 配置添加 `@tailwindcss/vite` 插件，删除 `postcss.config.js`
+
+#### 阶段 B：后台颜色系统对齐（已完成）
+- [x] 提取 `前端后台.zip` 设计系统色值（14 个颜色变量 + 2 个圆角变量）
+- [x] `frontend-admin/src/styles/main.css` 中 `@theme` 定义精确匹配参考实现
+- [x] 所有后台 Vue 组件 `var(--bg-xxx)` → `var(--color-xxx)` 替换完成
+- [x] 后台构建产物 CSS 头部确认为 `tailwindcss v4.3.0`
+
+#### 阶段 C：前台颜色系统对齐（进行中）
+- [x] `frontend/src/styles/main.css` 已改用 `@import "tailwindcss"` + `@theme`
+- [x] 所有前台 Vue 组件 `var(--bg-xxx)` → `var(--color-xxx)` 替换完成
+- [ ] **对齐 `前端前台.zip` 的标准 Tailwind 色板**：当前前台使用自定义 `--color-bg-primary` 等变量，参考实现使用标准 Tailwind 颜色（如 `bg-gray-900`、`text-white`）。需解压 zip 后逐页比对，将自定义变量替换为标准 Tailwind utility 类。
+- [ ] **所有 Vue 组件从 CSS 变量迁移到 Tailwind utility 类**：当前组件在 `<style scoped>` 中使用 `background: var(--color-page)`，应逐步改为在 template 的 `class` 中直接使用 `bg-page`。此工作可与页面功能开发同步进行。
+
+#### 阶段 D：设计系统一致性验收（未开始）
+- [ ] 逐页对比 `前端前台.zip` 与当前前台构建产物，确保颜色、间距、圆角、字体一致
+- [ ] 逐页对比 `前端后台.zip` 与当前后台构建产物，确保颜色、间距、圆角、字体一致
+- [ ] 确保按钮圆角 `6px`、卡片圆角 `10px` 与参考一致
+- [ ] 字体栈统一为 `ui-sans-serif, system-ui, sans-serif, ...`
+
 ### 样式施工检查清单
 
 - [x] 将 Tailwind CSS 从 v3 升级到 v4（前台 + 后台）
@@ -307,15 +334,18 @@ Vue 组件 `<style scoped>` 中的旧 CSS 变量已全部替换为 Tailwind v4 `
 
 ## 当前已知问题清单（待修复）
 
-| 优先级 | 问题 | 影响 | 建议修复方案 |
-|--------|------|------|-------------|
-| 🔴 P0 | Tailwind v3 → v4 升级 | 样式系统与参考实现根本不一致 | 升级依赖并重构 CSS 配置 |
-| 🔴 P0 | 后台颜色系统未对齐 | 视觉效果与参考实现完全不同 | 按上方"后台设计系统"替换所有色值 |
-| 🟡 P1 | Pydantic `model_id` 命名空间冲突 | 运行时 4 条 UserWarning | 在 Schema 中设置 `model_config = ConfigDict(protected_namespaces=())` |
-| 🟡 P1 | 前台颜色系统未对齐 | 页面背景、强调色等色值不同 | 对比 `前端前台.zip` 逐页校对 |
-| 🟡 P2 | `main` 分支缺失 | Git 工作流不完整 | 从 `develop` 创建 `main` 分支 |
-| 🟡 P2 | 前端 admin 构建循环依赖警告 | Rollup chunk 执行顺序可能异常 | 将 `useAdminStore` 的引用从 `stores/index.ts` 改为直接引用 `stores/admin.ts` |
-| 🟢 P3 | 数据库 100 并发压测未执行 | 未验证连接池稳定性 | 使用 `locust` 或 `ab` 压测 `/health` |
+| 优先级 | 问题 | 状态 | 影响 | 建议修复方案 |
+|--------|------|------|------|-------------|
+| ✅ 已完成 | Tailwind v3 → v4 升级 | 已升级 | 样式系统与参考实现根本不一致 | `npm install tailwindcss@latest @tailwindcss/vite`，删除 `tailwind.config.js` + `postcss.config.js` |
+| ✅ 已完成 | 后台颜色系统未对齐 | 已对齐 | 视觉效果与参考实现完全不同 | `@theme` 中定义 14 个精确色值，Vue 组件 `var(--bg-xxx)` → `var(--color-xxx)` |
+| ✅ 已完成 | Vue 组件 CSS 变量迁移 | 已迁移 | 组件样式与 `@theme` 未绑定 | 后台 8 个 + 前台 9 个 `.vue` 文件批量替换 |
+| ✅ 已完成 | Pydantic `model_id` 命名空间冲突 | 已修复 | 运行时 4 条 UserWarning | 全部 Schema 改用 `ConfigDict(protected_namespaces=())` |
+| ✅ 已完成 | Pydantic `class Config` 弃用警告 | 已修复 | 运行时 DeprecationWarning | `core/config.py` 改用 `SettingsConfigDict()` |
+| 🟡 P1 | 前台颜色系统未对齐 | 进行中 | 页面背景、强调色等色值不同 | 对比 `前端前台.zip` 逐页校对，将自定义变量替换为标准 Tailwind utility 类 |
+| 🟡 P1 | Vue 组件从 CSS 变量迁移到 utility 类 | 未开始 | 未充分利用 Tailwind v4 | 新组件优先用 `bg-page text-txtp`，旧组件逐步替换 |
+| 🟡 P2 | `main` 分支缺失 | 未修复 | Git 工作流不完整 | 从 `develop` 创建 `main` 分支 |
+| 🟡 P2 | 前端 admin 构建循环依赖警告 | 未修复 | Rollup chunk 执行顺序可能异常 | 将 `useAdminStore` 的引用从 `stores/index.ts` 改为直接引用 `stores/admin.ts` |
+| 🟢 P3 | 数据库 100 并发压测未执行 | 未执行 | 未验证连接池稳定性 | 使用 `locust` 或 `ab` 压测 `/health` |
 
 ---
 
