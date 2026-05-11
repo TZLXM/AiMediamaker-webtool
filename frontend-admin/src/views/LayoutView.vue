@@ -43,7 +43,7 @@ import {
   Users,
   ListTodo,
   Settings,
-  LogOut,
+  LogOut as LogOutIcon,
 } from 'lucide-vue-next'
 import { useAdminStore } from '@/stores'
 

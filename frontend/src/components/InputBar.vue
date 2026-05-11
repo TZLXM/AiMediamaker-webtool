@@ -79,19 +79,24 @@
       >
         <label>{{ param.label }}</label>
         <select v-if="param.type === 'select'" v-model="params[param.key]">
-          <option v-for="opt in param.options" :key="opt.value" :value="opt.value">
+          <option v-for="opt in param.options" :key="String(opt.value)" :value="opt.value">
             {{ opt.label }}
           </option>
         </select>
         <input
           v-else-if="param.type === 'number'"
-          v-model.number="params[param.key]"
+          :value="params[param.key]"
+          @input="(e) => { params[param.key] = Number((e.target as HTMLInputElement).value) }"
           type="number"
           :min="param.min"
           :max="param.max"
         />
         <label v-else-if="param.type === 'boolean'" class="checkbox">
-          <input v-model="params[param.key]" type="checkbox" />
+          <input
+            :checked="params[param.key]"
+            @change="(e) => { params[param.key] = (e.target as HTMLInputElement).checked }"
+            type="checkbox"
+          />
           {{ param.description }}
         </label>
       </div>
@@ -113,7 +118,7 @@
 
 <script setup lang="ts">
 import { ref, computed, watch } from 'vue'
-import { Sparkles, X } from 'lucide-vue-next'
+import { Sparkles as SparklesIcon, X as XIcon } from 'lucide-vue-next'
 import api from '@/api'
 import type { TaskMode, TaskParameters, FileItem, ModelInfo } from '@/types'
 
@@ -125,14 +130,14 @@ const props = defineProps<{
   files: FileItem[]
 }>()
 
-const emit = defineEmits<[
-  'update:prompt',
-  'update:mode',
-  'update:model',
-  'update:params',
-  'update:files',
-  'submit'
-]>()
+const emit = defineEmits<{
+  (e: 'update:prompt', value: string): void
+  (e: 'update:mode', value: TaskMode): void
+  (e: 'update:model', value: string): void
+  (e: 'update:params', value: TaskParameters): void
+  (e: 'update:files', value: FileItem[]): void
+  (e: 'submit'): void
+}>()
 
 const promptRef = ref<HTMLElement>()
 const uploadedFiles = computed({

@@ -65,7 +65,7 @@
 
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
-import api from '@/api'
+// import api from '@/api'
 import type { ApiConfig } from '@/types'
 
 const apiConfigs = ref<ApiConfig[]>([])
@@ -83,11 +83,11 @@ async function fetchConfigs() {
   // TODO: 接入API配置列表
 }
 
-function editApi(config: ApiConfig) {
+function editApi(_config: ApiConfig) {
   // TODO
 }
 
-async function deleteApi(id: number) {
+async function deleteApi(_id: number) {
   if (!confirm('确定删除该API配置？')) return
   // TODO
 }

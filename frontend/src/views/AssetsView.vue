@@ -44,7 +44,7 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
 import dayjs from 'dayjs'
-import { Download } from 'lucide-vue-next'
+import { Download as DownloadIcon } from 'lucide-vue-next'
 import api from '@/api'
 import { usePreviewStore } from '@/stores'
 import type { FileItem } from '@/types'

@@ -63,7 +63,7 @@
 import { ref, computed, onMounted } from 'vue'
 import { RefreshCw } from 'lucide-vue-next'
 import dayjs from 'dayjs'
-import api from '@/api'
+// import api from '@/api'
 import type { AdminTask } from '@/types'
 
 const RefreshIcon = RefreshCw
@@ -96,7 +96,7 @@ function formatDate(d: string) {
   return dayjs(d).format('MM-DD HH:mm')
 }
 
-async function cancelTask(task: AdminTask) {
+async function cancelTask(_task: AdminTask) {
   if (!confirm('确定要取消该任务吗？')) return
   // TODO: 接入取消任务API
 }

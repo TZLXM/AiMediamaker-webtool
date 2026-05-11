@@ -41,6 +41,8 @@ export interface TaskParameters {
   max_images?: number
   // 通用
   extra?: Record<string, any>
+  // 索引签名，支持动态参数 key
+  [key: string]: any
 }
 
 // 文件

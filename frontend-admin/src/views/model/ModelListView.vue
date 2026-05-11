@@ -64,7 +64,7 @@ function editModel(id: number) {
   router.push(`/models/edit/${id}`)
 }
 
-async function deleteModel(id: number) {
+async function deleteModel(_id: number) {
   if (!confirm('确定要删除该模型配置吗？')) return
   // TODO: 接入删除API
 }

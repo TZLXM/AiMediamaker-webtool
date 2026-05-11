@@ -46,13 +46,13 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import api from '@/api'
+// import api from '@/api'
 
 const route = useRoute()
 const router = useRouter()
 
 const isEdit = computed(() => route.name === 'model-edit')
-const modelId = computed(() => route.params.id)
+// const modelId = computed(() => route.params.id)
 
 const form = ref({
   name: '',

@@ -57,7 +57,7 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import { useRoute } from 'vue-router'
-import { Home, Clock, Image, User, LogOut, LogIn } from 'lucide-vue-next'
+import { Home, Clock, Image, User as UserIcon, LogOut as LogOutIcon, LogIn as LogInIcon } from 'lucide-vue-next'
 import { useUserStore } from '@/stores'
 import type { ViewType } from '@/types'
 

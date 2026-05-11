@@ -3,7 +3,7 @@
 """
 from enum import Enum
 from typing import TYPE_CHECKING, Optional
-from sqlalchemy import String, Text, Integer, ForeignKey
+from sqlalchemy import String, Text, Integer, ForeignKey, JSON
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from .base import Base, TimestampMixin
 
@@ -81,4 +81,3 @@ class FileRecord(Base, TimestampMixin):
         return f"<File {self.file_id} {self.file_type}>"
 
 
-from sqlalchemy import JSON  # noqa

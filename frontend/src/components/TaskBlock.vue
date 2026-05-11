@@ -65,7 +65,7 @@
 
 <script setup lang="ts">
 import { computed } from 'vue'
-import { RefreshCw } from 'lucide-vue-next'
+import { RefreshCw as RefreshIcon } from 'lucide-vue-next'
 import dayjs from 'dayjs'
 import { usePreviewStore } from '@/stores'
 import type { TaskItem } from '@/types'
@@ -75,7 +75,9 @@ const props = defineProps<{
   showReuse?: boolean
 }>()
 
-defineEmits<['reuse']>()
+defineEmits<{
+  (e: 'reuse'): void
+}>()
 
 const previewStore = usePreviewStore()
 

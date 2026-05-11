@@ -75,7 +75,7 @@
 
 <script setup lang="ts">
 import { ref, computed, watch } from 'vue'
-import { X, Download, Play, Pause, Volume2 } from 'lucide-vue-next'
+import { X as XIcon, Download as DownloadIcon, Play as PlayIcon, Pause as PauseIcon, Volume2 as VolumeIcon } from 'lucide-vue-next'
 import { usePreviewStore } from '@/stores'
 
 const previewStore = usePreviewStore()

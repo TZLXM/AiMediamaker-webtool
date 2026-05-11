@@ -1,6 +1,7 @@
 """
 任务模型 - 存储用户提交的任务和历史记录
 """
+from datetime import datetime
 from enum import Enum
 from typing import TYPE_CHECKING, Optional, List
 from sqlalchemy import String, Text, Integer, ForeignKey, JSON, Float
@@ -80,4 +81,3 @@ class Task(Base, TimestampMixin):
         return f"<Task {self.platform_task_id} {self.status}>"
 
 
-from datetime import datetime  # noqa

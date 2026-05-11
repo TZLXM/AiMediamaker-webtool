@@ -75,7 +75,7 @@
 import { ref, onMounted } from 'vue'
 import { Plus } from 'lucide-vue-next'
 import dayjs from 'dayjs'
-import api from '@/api'
+// import api from '@/api'
 import type { AdminUser } from '@/types'
 
 const PlusIcon = Plus
@@ -97,7 +97,7 @@ function formatDate(d: string) {
   return dayjs(d).format('YYYY-MM-DD HH:mm')
 }
 
-async function toggleStatus(user: AdminUser) {
+async function toggleStatus(_user: AdminUser) {
   // TODO: 接入启用/禁用API
 }
 

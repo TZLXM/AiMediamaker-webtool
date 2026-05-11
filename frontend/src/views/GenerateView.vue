@@ -29,7 +29,7 @@
 
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
-import { Plus } from 'lucide-vue-next'
+import { Plus as PlusIcon } from 'lucide-vue-next'
 import { useTaskStore } from '@/stores'
 import type { TaskItem, TaskMode, TaskParameters, FileItem } from '@/types'
 import InputBar from '@/components/InputBar.vue'

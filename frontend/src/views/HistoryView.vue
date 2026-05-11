@@ -61,7 +61,7 @@ async function handleSearch() {
   })
 }
 
-function goToGenerate(task: TaskItem) {
+function goToGenerate(_task: TaskItem) {
   router.push('/generate')
   // TODO: emit event or store to fill input bar
 }
