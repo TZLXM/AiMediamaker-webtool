@@ -188,7 +188,41 @@ sqlite3 backend/app.db "SELECT * FROM users;"
 
 ---
 
-## 六、代码规范（AI 必须遵守）
+## 六、前端样式规范（AI 必须遵守）
+
+### 6.0 设计基准（最高优先级）
+
+**所有前端样式必须以根目录下的两个 zip 文件为唯一设计基准**：
+- `前端前台.zip` — 用户前台（端口 5173）的参考实现
+- `前端后台.zip` — 管理后台（端口 5174）的参考实现
+
+**施工规则**：
+1. 修改任何前端样式前，必须先解压对应的 zip 文件，对比构建产物中的 CSS 和 HTML 结构
+2. 颜色必须使用 zip 中提取的精确色值，禁止自行调整
+3. Tailwind CSS 版本必须与参考实现一致（当前参考实现为 **v4**，项目代码为 v3，需升级）
+4. 组件的 class 命名、DOM 结构、间距、圆角必须与参考实现保持一致
+
+**后台设计系统色值（必须精确匹配）**：
+```css
+--color-page:        #0b0d11   /* 页面背景 */
+--color-card:        #14161c   /* 卡片背景 */
+--color-hover:       #1a1d25   /* 悬停背景 */
+--color-active:      #1e212b   /* 激活背景 */
+--color-borderc:     #252833   /* 边框 */
+--color-border-hover:#353a4a   /* 悬停边框 */
+--color-txtp:        #e1e3e8   /* 主文本 */
+--color-txts:        #8b8f9a   /* 次要文本 */
+--color-txtm:        #5a5e6a   /* 中等文本 */
+--color-accent:      #4f8ff7   /* 强调色 */
+--color-accent-hover:#3a7de8   /* 强调悬停 */
+--color-success:     #34c759
+--color-warning:     #ff9f0a
+--color-danger:      #ff453a
+--radius-btn:  6px
+--radius-card: 10px
+```
+
+> ⚠️ 当前代码中的颜色（如 `#0f0f11`、`#6366f1`）与参考实现完全不同，必须全部替换。
 
 ### 6.1 Python 规范
 
