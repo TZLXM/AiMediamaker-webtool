@@ -1,14 +1,14 @@
 """
-文件路由 - 上传、下载、预览
+文件路由 - 上传、下载、预览、删除
 """
 from typing import List
-from fastapi import APIRouter, UploadFile, File, Depends, HTTPException, status
-from fastapi.responses import FileResponse
+from fastapi import APIRouter, UploadFile, File, Depends, HTTPException, status, Query
+from fastapi.responses import FileResponse, StreamingResponse
 from sqlalchemy import select, and_, desc
 from sqlalchemy.ext.asyncio import AsyncSession
 from ...core.config import settings
 from ...models.user import User
-from ...models.file import FileRecord, FileType
+from ...models.file import FileRecord, FileType, FileSource
 from ...schemas.file import FileUploadResponse, FileResponse as FileSchema
 from ...services.file_manager import file_manager
 from ...api.deps import get_db, get_current_user
@@ -48,7 +48,7 @@ async def upload_file(
     return FileUploadResponse(
         file_id=record.file_id,
         original_name=record.original_name,
-        file_type=record.file_type.value,
+        file_type=record.file_type,
         mime_type=record.mime_type,
         size_bytes=record.size_bytes,
         url=file_manager.get_file_url(record),
@@ -59,6 +59,7 @@ async def upload_file(
 @router.get("/{file_id}")
 async def serve_file(
     file_id: str,
+    download: bool = False,
     db: AsyncSession = Depends(get_db),
     user: User = Depends(get_current_user),
 ):
@@ -80,8 +81,95 @@ async def serve_file(
     return FileResponse(
         path=str(path),
         media_type=record.mime_type,
-        filename=record.original_name,
+        filename=record.original_name if download else None,
     )
+
+
+@router.get("/{file_id}/preview")
+async def preview_file(
+    file_id: str,
+    width: int = Query(default=512, ge=64, le=1920),
+    db: AsyncSession = Depends(get_db),
+    user: User = Depends(get_current_user),
+):
+    """
+    文件预览/缩略图 (仅限自己的文件)
+    - 图片: 返回缩放后的缩略图
+    - 视频: 返回原视频 (前端可自行截取首帧)
+    - 音频: 返回原音频文件
+    """
+    result = await db.execute(
+        select(FileRecord).where(
+            and_(FileRecord.file_id == file_id, FileRecord.user_id == user.id)
+        )
+    )
+    record = result.scalar_one_or_none()
+    
+    if not record:
+        raise HTTPException(status_code=404, detail="File not found")
+    
+    path = file_manager.get_file_path(record)
+    if not path.exists():
+        raise HTTPException(status_code=404, detail="File not found on disk")
+    
+    # 图片文件生成缩略图
+    if record.file_type == FileType.IMAGE:
+        try:
+            from PIL import Image
+            import io
+            
+            img = Image.open(path)
+            img.thumbnail((width, width), Image.LANCZOS)
+            
+            # 保持原格式
+            fmt = record.mime_type.split("/")[-1].upper()
+            if fmt == "JPEG":
+                fmt = "JPEG"
+            elif fmt == "PNG":
+                fmt = "PNG"
+            elif fmt == "WEBP":
+                fmt = "WEBP"
+            else:
+                fmt = "JPEG"
+            
+            buf = io.BytesIO()
+            img.save(buf, format=fmt)
+            buf.seek(0)
+            
+            return StreamingResponse(
+                buf,
+                media_type=record.mime_type,
+            )
+        except Exception:
+            # 缩略图生成失败则返回原文件
+            pass
+    
+    # 视频/音频或缩略图生成失败时返回原文件
+    return FileResponse(
+        path=str(path),
+        media_type=record.mime_type,
+    )
+
+
+@router.delete("/{file_id}", status_code=status.HTTP_204_NO_CONTENT)
+async def delete_file(
+    file_id: str,
+    db: AsyncSession = Depends(get_db),
+    user: User = Depends(get_current_user),
+):
+    """删除文件 (仅限自己的文件)"""
+    result = await db.execute(
+        select(FileRecord).where(
+            and_(FileRecord.file_id == file_id, FileRecord.user_id == user.id)
+        )
+    )
+    record = result.scalar_one_or_none()
+    
+    if not record:
+        raise HTTPException(status_code=404, detail="File not found")
+    
+    await file_manager.delete_file(db, record)
+    return None
 
 
 @router.get("/assets/list", response_model=List[FileSchema])
@@ -94,8 +182,6 @@ async def list_assets(
     user: User = Depends(get_current_user),
 ):
     """获取用户资产列表 (模型生成的文件)"""
-    from ...models.file import FileSource
-    
     query = select(FileRecord).where(
         and_(
             FileRecord.user_id == user.id,
@@ -118,10 +204,10 @@ async def list_assets(
         FileSchema(
             file_id=f.file_id,
             original_name=f.original_name,
-            file_type=f.file_type.value,
+            file_type=f.file_type,
             mime_type=f.mime_type,
             size_bytes=f.size_bytes,
-            source=f.source.value,
+            source=f.source,
             url=file_manager.get_file_url(f),
             created_at=f.created_at,
         )

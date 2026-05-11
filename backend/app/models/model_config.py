@@ -59,7 +59,7 @@ class ModelConfig(Base, TimestampMixin):
     concurrency_limit: Mapped[int] = mapped_column(Integer, default=2)
     
     # 支持的参数 schema (JSON Schema)
-    parameters_schema: Mapped[dict] = mapped_column(JSON, default=dict)
+    parameters_schema: Mapped[list] = mapped_column(JSON, default=list)
     
     # 支持的文件类型
     supported_input_types: Mapped[list] = mapped_column(JSON, default=list)  # ["image", "video", "audio"]
