@@ -6,8 +6,8 @@
         :key="file.file_id"
         class="file-thumb"
       >
-        <img v-if="file.file_type === 'image'" :src="file.url" />
-        <video v-else-if="file.file_type === 'video'" :src="file.url" />
+        <img v-if="file.file_type === 'image'" :src="getFileUrl(file)" />
+        <video v-else-if="file.file_type === 'video'" :src="getFileUrl(file)" />
         <div v-else class="audio-thumb">Audio</div>
         <button class="file-remove" @click="removeFile(idx)">
           <XIcon :size="12" />
@@ -120,6 +120,7 @@
 import { ref, computed, watch } from 'vue'
 import { Sparkles as SparklesIcon, X as XIcon } from 'lucide-vue-next'
 import api from '@/api'
+import { getFileUrl } from '@/utils/fileUrl'
 import type { TaskMode, TaskParameters, FileItem, ModelInfo } from '@/types'
 
 const props = defineProps<{

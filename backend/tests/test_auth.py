@@ -145,6 +145,9 @@ async def test_all_roles_created_correctly(db_session: AsyncSession):
     assert user.role == "user"
 
 
+from unittest.mock import MagicMock
+
+
 @pytest.mark.asyncio
 async def test_expired_token_rejected(db_session: AsyncSession):
     """Test expired token returns 401."""
@@ -153,9 +156,11 @@ async def test_expired_token_rejected(db_session: AsyncSession):
     expired_token = jwt.encode(payload, settings.SECRET_KEY, algorithm=settings.JWT_ALGORITHM)
 
     credentials = HTTPAuthorizationCredentials(scheme="Bearer", credentials=expired_token)
+    mock_request = MagicMock()
+    mock_request.query_params = {}
 
     with pytest.raises(HTTPException) as exc_info:
-        await get_current_user(credentials=credentials, db=db_session)
+        await get_current_user(request=mock_request, credentials=credentials, db=db_session)
     assert exc_info.value.status_code == 401
 
 
@@ -163,15 +168,41 @@ async def test_expired_token_rejected(db_session: AsyncSession):
 async def test_invalid_token_rejected(db_session: AsyncSession):
     """Test invalid token returns 401."""
     credentials = HTTPAuthorizationCredentials(scheme="Bearer", credentials="invalid.token.here")
+    mock_request = MagicMock()
+    mock_request.query_params = {}
 
     with pytest.raises(HTTPException) as exc_info:
-        await get_current_user(credentials=credentials, db=db_session)
+        await get_current_user(request=mock_request, credentials=credentials, db=db_session)
     assert exc_info.value.status_code == 401
 
 
 @pytest.mark.asyncio
 async def test_missing_credentials_rejected(db_session: AsyncSession):
     """Test missing credentials returns 401."""
+    mock_request = MagicMock()
+    mock_request.query_params = {}
+
     with pytest.raises(HTTPException) as exc_info:
-        await get_current_user(credentials=None, db=db_session)
+        await get_current_user(request=mock_request, credentials=None, db=db_session)
     assert exc_info.value.status_code == 401
+
+
+@pytest.mark.asyncio
+async def test_query_param_token_accepted(db_session: AsyncSession):
+    """Test token from query param is accepted."""
+    user = User(
+        username="queryuser",
+        password_hash="hashed",
+        role=UserRole.USER,
+        is_active=True,
+    )
+    db_session.add(user)
+    await db_session.commit()
+    await db_session.refresh(user)
+
+    token = create_access_token(user.id)
+    mock_request = MagicMock()
+    mock_request.query_params = {"token": token}
+
+    result = await get_current_user(request=mock_request, credentials=None, db=db_session)
+    assert result.id == user.id

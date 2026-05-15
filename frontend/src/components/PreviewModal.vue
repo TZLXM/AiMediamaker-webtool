@@ -24,7 +24,7 @@
           @mouseleave="endDrag"
         >
           <img
-            :src="file.url"
+            :src="fileUrl"
             class="preview-image"
             :style="imageStyle"
             alt="Preview"
@@ -37,7 +37,7 @@
         <div v-if="previewStore.preview.isVideo && file" class="video-preview-container">
           <video
             ref="videoRef"
-            :src="file.url"
+            :src="fileUrl"
             class="preview-video"
             @click="togglePlay"
             @timeupdate="onTimeUpdate"
@@ -77,9 +77,11 @@
 import { ref, computed, watch } from 'vue'
 import { X as XIcon, Download as DownloadIcon, Play as PlayIcon, Pause as PauseIcon, Volume2 as VolumeIcon } from 'lucide-vue-next'
 import { usePreviewStore } from '@/stores'
+import { getFileUrl } from '@/utils/fileUrl'
 
 const previewStore = usePreviewStore()
 const file = computed(() => previewStore.preview.file)
+const fileUrl = computed(() => file.value ? getFileUrl(file.value) : '')
 
 // Image zoom & pan
 const scale = ref(1)
@@ -182,7 +184,7 @@ function formatTime(t: number) {
 function downloadFile() {
   if (!file.value) return
   const a = document.createElement('a')
-  a.href = file.value.url
+  a.href = fileUrl.value
   a.download = file.value.original_name
   a.target = '_blank'
   a.click()

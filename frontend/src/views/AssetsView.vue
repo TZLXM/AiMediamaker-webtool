@@ -23,8 +23,8 @@
             @click="openPreview(asset)"
           >
             <div class="asset-thumb-wrap">
-              <img v-if="asset.file_type === 'image'" :src="asset.url" :alt="asset.original_name" />
-              <video v-else-if="asset.file_type === 'video'" :src="asset.url" />
+              <img v-if="asset.file_type === 'image'" :src="getFileUrl(asset)" :alt="asset.original_name" />
+              <video v-else-if="asset.file_type === 'video'" :src="getFileUrl(asset)" />
               <div v-else class="audio-icon">Audio</div>
               <div v-if="asset.file_type === 'video'" class="video-badge">视频</div>
             </div>
@@ -47,6 +47,7 @@ import dayjs from 'dayjs'
 import { Download as DownloadIcon } from 'lucide-vue-next'
 import api from '@/api'
 import { usePreviewStore } from '@/stores'
+import { getFileUrl } from '@/utils/fileUrl'
 import type { FileItem } from '@/types'
 
 const previewStore = usePreviewStore()
@@ -81,7 +82,7 @@ function openPreview(asset: FileItem) {
 
 function downloadAsset(asset: FileItem) {
   const a = document.createElement('a')
-  a.href = asset.url
+  a.href = getFileUrl(asset)
   a.download = asset.original_name
   a.click()
 }

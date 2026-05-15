@@ -9,8 +9,8 @@
         class="task-file-thumb"
         @click="previewStore.openPreview(file)"
       >
-        <img v-if="file.file_type === 'image'" :src="file.url" />
-        <video v-else-if="file.file_type === 'video'" :src="file.url" />
+        <img v-if="file.file_type === 'image'" :src="getFileUrl(file)" />
+        <video v-else-if="file.file_type === 'video'" :src="getFileUrl(file)" />
         <div v-else class="audio-badge">Audio</div>
       </div>
     </div>
@@ -32,8 +32,8 @@
             class="output-thumb"
             @click="previewStore.openPreview(file)"
           >
-            <img v-if="file.file_type === 'image'" :src="file.url" />
-            <video v-else-if="file.file_type === 'video'" :src="file.url" />
+            <img v-if="file.file_type === 'image'" :src="getFileUrl(file)" />
+            <video v-else-if="file.file_type === 'video'" :src="getFileUrl(file)" />
           </div>
         </div>
       </template>
@@ -68,6 +68,7 @@ import { computed } from 'vue'
 import { RefreshCw as RefreshIcon } from 'lucide-vue-next'
 import dayjs from 'dayjs'
 import { usePreviewStore } from '@/stores'
+import { getFileUrl } from '@/utils/fileUrl'
 import type { TaskItem } from '@/types'
 
 const props = defineProps<{
