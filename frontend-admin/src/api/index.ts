@@ -1,5 +1,5 @@
 import axios from 'axios'
-import { useAdminStore } from '@/stores'
+import { useAdminStore } from '@/stores/admin'
 
 const api = axios.create({
   baseURL: '/api/v1',

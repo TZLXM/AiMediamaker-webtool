@@ -110,3 +110,25 @@ class ModelSelectorInfo(BaseModel):
     description: Optional[str]
     parameters: List[ParameterSchema]
     supported_input_types: List[str]
+
+
+# ============== System Config ==============
+
+class SystemConfigResponse(BaseModel):
+    config_key: str
+    config_value: Optional[dict] = None
+    description: Optional[str] = None
+    model_config = ConfigDict(from_attributes=True)
+
+
+class SystemConfigUpdate(BaseModel):
+    config_value: dict
+    description: Optional[str] = None
+
+
+class TosConfigValue(BaseModel):
+    endpoint: str = "tos-cn-beijing.volces.com"
+    region: str = "cn-beijing"
+    bucket: str = ""
+    access_key: str = ""
+    secret_key: str = ""

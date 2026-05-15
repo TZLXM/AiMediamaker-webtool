@@ -67,6 +67,7 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
 import { Activity, Clock, Users, FileText } from 'lucide-vue-next'
+import api from '@/api'
 import type { SystemStatus } from '@/types'
 
 const ActivityIcon = Activity
@@ -84,9 +85,16 @@ const stats = ref<SystemStatus>({
   tos_connected: false,
 })
 
-onMounted(async () => {
-  // TODO: 接入实际API
-})
+async function fetchStatus() {
+  try {
+    const res = await api.get('/admin/status')
+    stats.value = res.data
+  } catch (e: any) {
+    alert(e.response?.data?.detail || '获取系统状态失败')
+  }
+}
+
+onMounted(fetchStatus)
 </script>
 
 <style scoped>
