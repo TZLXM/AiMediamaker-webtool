@@ -35,6 +35,24 @@ class VolcengineClient:
         self.model_id = model_id
         self.api_key = model_manager.get_api_key(model_id)
         self.base_url = model_manager.get_base_url(model_id)
+        
+        if not self.api_key:
+            raise VolcengineAPIError(
+                code="missing_api_key",
+                message="该模型未配置有效的 API Key，请在后台管理系统中配置",
+                status_code=0,
+            )
+        
+        # HTTP header 必须是 ASCII，提前检查避免 UnicodeEncodeError
+        try:
+            self.api_key.encode("ascii")
+        except UnicodeEncodeError:
+            raise VolcengineAPIError(
+                code="invalid_api_key_format",
+                message="API Key 包含非 ASCII 字符（如中文），请检查后台配置",
+                status_code=0,
+            )
+        
         self.headers = {
             "Authorization": f"Bearer {self.api_key}",
             "Content-Type": "application/json",
