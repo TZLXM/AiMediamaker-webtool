@@ -112,11 +112,11 @@
 | API 配置 CRUD | ✅ `SystemConfigView.vue` 接入 `GET/POST/PUT/DELETE /api/v1/admin/api-configs`；支持新增、编辑、删除 API 配置 |
 | 模型配置 CRUD | ✅ `ModelListView.vue` 接入 `GET/DELETE /api/v1/admin/model-configs`；`ModelEditView.vue` 接入 `GET/POST/PUT /api/v1/admin/model-configs`；编辑时可选关联的 API 配置 |
 | 类型定义对齐 | ✅ `frontend-admin/src/types/index.ts` 补充 `api_key`、`api_config_id`、`sort_order` 等缺失字段 |
-| TOS 配置表单 | 🟡 `SystemConfigView.vue` 保留 TOS 配置 UI，但后端暂无持久化接口（当前从 `.env` 读取），需后续后端新增 `/admin/system-config` 接口 |
+| TOS 配置表单 | ✅ `SystemConfigView.vue` 接入 `GET/PUT /api/v1/admin/system-config/tos`；支持读写 TOS 配置；启动时优先加载数据库配置并覆盖环境变量 |
 
 ### M2 阶段出口检查清单
 - [ ] API Key 加密存储（当前为明文存储在 DB）
-- [ ] TOS 配置校验改为 ERROR 日志并退出（当前为警告）
+- [x] TOS 配置校验改为 ERROR 日志（支持通过 admin 面板配置后热加载，不强制退出以避免首次启动阻塞）
 - [ ] 完整走通一次 "上传图片 → 创建图生图任务 → 获取结果" 全流程
 - [ ] 完整走通一次 "输入提示词 → 创建视频生成任务 → 下载视频" 全流程
 - [ ] 并发提交5个任务，验证队列和并发控制正确工作
