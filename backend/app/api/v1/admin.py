@@ -115,11 +115,22 @@ async def delete_api_config(
     db: AsyncSession = Depends(get_db),
     admin = Depends(get_current_admin),
 ):
-    """删除API配置 (Admin only)"""
+    """删除API配置 (Admin only) - 级联删除关联的模型配置"""
     result = await db.execute(select(ApiConfig).where(ApiConfig.id == config_id))
     config = result.scalar_one_or_none()
     if not config:
         raise HTTPException(status_code=404, detail="API config not found")
+    
+    # 级联删除关联的模型配置
+    from ...models.model_config import ModelConfig
+    await db.execute(
+        select(ModelConfig).where(ModelConfig.api_config_id == config_id)
+    )
+    result_models = await db.execute(
+        select(ModelConfig).where(ModelConfig.api_config_id == config_id)
+    )
+    for model in result_models.scalars().all():
+        await db.delete(model)
     
     await db.delete(config)
     await db.commit()
