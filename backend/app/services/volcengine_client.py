@@ -137,11 +137,9 @@ class VolcengineClient:
             payload["duration"] = params["duration"]
         if params.get("resolution"):
             payload["resolution"] = params["resolution"]
-        if params.get("fps"):
-            payload["fps"] = params["fps"]
-        if "generate_audio" in params:
+        if params.get("generate_audio") is not None:
             payload["generate_audio"] = params["generate_audio"]
-        if "watermark" in params:
+        if params.get("watermark") is not None:
             payload["watermark"] = params["watermark"]
         if params.get("seed") is not None:
             payload["seed"] = params["seed"]
@@ -190,7 +188,7 @@ class VolcengineClient:
             payload["sequential_image_generation"] = params["sequential_image_generation"]
         if params.get("max_images"):
             payload["sequential_image_generation_options"] = {"max_images": params["max_images"]}
-        if "watermark" in params:
+        if params.get("watermark") is not None:
             payload["watermark"] = params["watermark"]
         if params.get("response_format"):
             payload["response_format"] = params["response_format"]

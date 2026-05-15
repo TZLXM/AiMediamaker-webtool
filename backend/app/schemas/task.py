@@ -11,7 +11,6 @@ class TaskParameter(BaseModel):
     ratio: Optional[str] = None           # 16:9, 9:16, 1:1, adaptive
     duration: Optional[int] = None        # 视频时长(秒)
     resolution: Optional[str] = None      # 分辨率
-    fps: Optional[int] = None             # 帧率
     generate_audio: Optional[bool] = None # 是否生成音频
     watermark: Optional[bool] = None      # 是否水印
     seed: Optional[int] = None            # 随机种子

@@ -193,6 +193,7 @@ async function loadModels() {
 function selectMode(mode: TaskMode) {
   selectedMode.value = mode
   selectedModel.value = ''
+  params.value = {}
   showModeSelect.value = false
   loadModels()
 }
@@ -200,6 +201,17 @@ function selectMode(mode: TaskMode) {
 function selectModel(modelId: string) {
   selectedModel.value = modelId
   showModelSelect.value = false
+  // 根据模型参数 schema 的默认值初始化 params
+  const model = models.value.find((m) => m.model_id === modelId)
+  if (model) {
+    const defaults: Record<string, any> = {}
+    for (const param of model.parameters) {
+      if (param.default !== undefined) {
+        defaults[param.key] = param.default
+      }
+    }
+    params.value = defaults
+  }
 }
 
 function submit() {

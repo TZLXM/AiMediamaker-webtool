@@ -29,7 +29,7 @@ async def create_task(
         mode=mode,
         model_id=data.model_id,
         prompt=data.prompt,
-        parameters=data.parameters.model_dump() if data.parameters else {},
+        parameters=data.parameters.model_dump(exclude_none=True) if data.parameters else {},
         file_ids=data.file_ids or [],
     )
     
