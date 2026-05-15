@@ -2,8 +2,9 @@
 任务相关 Pydantic Schema
 """
 from datetime import datetime
-from typing import Optional, List, Any
+from typing import Optional, List
 from pydantic import BaseModel, Field, ConfigDict
+from .file import FileResponse
 
 
 class TaskParameter(BaseModel):
@@ -54,8 +55,8 @@ class TaskResponse(BaseModel):
     completed_at: Optional[datetime]
     usage_tokens: Optional[int]
     created_at: datetime
-    input_files: List[Any] = []   # FileResponse simplified
-    output_files: List[Any] = []  # FileResponse simplified
+    input_files: List[FileResponse] = []
+    output_files: List[FileResponse] = []
     
     model_config = ConfigDict(protected_namespaces=(), from_attributes=True)
 
