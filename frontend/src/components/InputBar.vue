@@ -55,19 +55,6 @@
     <!-- 操作栏 -->
     <div class="action-bar">
       <div class="action-left">
-        <!-- 上传按钮 -->
-        <button class="pill-btn upload-btn" title="上传文件" @click="fileInputRef?.click()">
-          <PaperclipIcon :size="16" />
-        </button>
-        <input
-          ref="fileInputRef"
-          type="file"
-          class="hidden-input"
-          multiple
-          accept="image/*,video/*,audio/*"
-          @change="handleFileSelect"
-        />
-
         <!-- 模式选择 -->
         <div class="select-wrapper">
           <button
@@ -75,7 +62,10 @@
             :class="{ active: showModeSelect }"
             @click="showModeSelect = !showModeSelect"
           >
-            {{ modeLabel }}
+            <ImageIcon v-if="selectedMode === 'image'" :size="13" />
+            <VideoIcon v-else :size="13" />
+            <span>{{ modeLabel }}</span>
+            <ChevronDownIcon :size="11" />
           </button>
           <div v-if="showModeSelect" class="dropdown-panel">
             <div
@@ -97,7 +87,8 @@
             :class="{ active: showModelSelect }"
             @click="showModelSelect = !showModelSelect"
           >
-            {{ selectedModelName || '选择模型' }}
+            <span>{{ selectedModelName || '选择模型' }}</span>
+            <ChevronDownIcon :size="11" />
           </button>
           <div v-if="showModelSelect" class="dropdown-panel">
             <div
@@ -113,14 +104,19 @@
         </div>
 
         <!-- 参数选择 -->
-        <div v-if="currentModelParams.length > 0" class="select-wrapper">
+        <div v-if="hasRatioOrResolution" class="select-wrapper">
           <button
             class="pill-btn param-pill"
             :class="{ active: showParams }"
             @click="showParams = !showParams"
           >
-            <span v-if="paramSummary" class="param-summary">{{ paramSummary }}</span>
-            <span v-else>参数</span>
+            <span class="ratio-icon">{{ ratioIcon }}</span>
+            <span>{{ ratioLabel }}</span>
+            <template v-if="resolutionLabel">
+              <span class="param-sep">|</span>
+              <span>{{ resolutionLabel }}</span>
+            </template>
+            <ChevronDownIcon :size="11" />
           </button>
           <div v-if="showParams" class="dropdown-panel unified-params">
             <div
@@ -212,6 +208,43 @@
             </div>
           </div>
         </div>
+
+        <!-- 时长选择（视频模式） -->
+        <div v-if="selectedMode === 'video' && durationOptions.length > 0" class="select-wrapper">
+          <button
+            class="pill-btn"
+            :class="{ active: showDurationSelect }"
+            @click="showDurationSelect = !showDurationSelect"
+          >
+            <ClockIcon :size="13" />
+            <span>{{ durationLabel }}</span>
+            <ChevronDownIcon :size="11" />
+          </button>
+          <div v-if="showDurationSelect" class="dropdown-panel">
+            <div
+              v-for="opt in durationOptions"
+              :key="opt.value"
+              class="dropdown-item"
+              :class="{ active: params.duration === opt.value }"
+              @click="setParam('duration', opt.value)"
+            >
+              {{ opt.label }}
+            </div>
+          </div>
+        </div>
+
+        <!-- 上传按钮 -->
+        <button class="pill-btn upload-btn" title="上传文件" @click="fileInputRef?.click()">
+          <PaperclipIcon :size="13" />
+        </button>
+        <input
+          ref="fileInputRef"
+          type="file"
+          class="hidden-input"
+          multiple
+          accept="image/*,video/*,audio/*"
+          @change="handleFileSelect"
+        />
       </div>
 
       <!-- 生成按钮 -->
@@ -221,7 +254,7 @@
         :title="isUploading ? '文件上传中...' : '生成'"
         @click="submit"
       >
-        <SparklesIcon :size="18" />
+        <SparklesIcon :size="15" />
       </button>
     </div>
 
@@ -243,6 +276,8 @@ import {
   Image as ImageIcon,
   Video as VideoIcon,
   Music as MusicIcon,
+  ChevronDown as ChevronDownIcon,
+  Clock as ClockIcon,
 } from 'lucide-vue-next'
 import api from '@/api'
 import Thumbnail from '@/components/Thumbnail.vue'
@@ -292,6 +327,7 @@ const params = computed({
 const showModeSelect = ref(false)
 const showModelSelect = ref(false)
 const showParams = ref(false)
+const showDurationSelect = ref(false)
 const showFilePicker = ref(false)
 const highlightIndex = ref(0)
 const models = ref<ModelInfo[]>([])
@@ -321,15 +357,55 @@ const currentModel = computed(() =>
 
 const canSubmit = computed(() => !!promptText.value.trim() && !!selectedModel.value)
 
-// 参数摘要显示在 pill 上
-const paramSummary = computed(() => {
-  const p = params.value
-  const parts: string[] = []
-  if (p.ratio) parts.push(p.ratio)
-  if (p.size) parts.push(p.size)
-  if (p.duration) parts.push(`${p.duration}s`)
-  if (p.resolution) parts.push(p.resolution)
-  return parts.join(' · ')
+// 是否有比例或分辨率参数（控制参数pill显示）
+const hasRatioOrResolution = computed(() => {
+  return currentModelParams.value.some((p) =>
+    p.key === 'ratio' || p.key === 'resolution' || p.key === 'size'
+  )
+})
+
+// 比例图形符号（▭横屏 ▯竖屏 □正方形 ◻自适应）
+const ratioIcon = computed(() => {
+  const ratio = params.value.ratio
+  if (!ratio || ratio === 'adaptive' || ratio === '智能') return '◻'
+  const parts = ratio.split(':')
+  if (parts.length !== 2) return '◻'
+  const w = parseInt(parts[0])
+  const h = parseInt(parts[1])
+  if (w > h) return '▭'
+  if (w < h) return '▯'
+  return '□'
+})
+
+// 比例文字标签
+const ratioLabel = computed(() => {
+  const ratio = params.value.ratio
+  if (!ratio || ratio === 'adaptive') return '智能'
+  return ratio
+})
+
+// 分辨率标签
+const resolutionLabel = computed(() => {
+  const res = params.value.resolution
+  if (!res) return ''
+  if (res === '2K') return '高清 2K'
+  if (res === '4K') return '超清 4K'
+  return res
+})
+
+// 时长选项
+const durationOptions = computed(() => {
+  const param = currentModelParams.value.find((p) => p.key === 'duration')
+  if (!param?.options) return []
+  return param.options
+})
+
+// 时长标签
+const durationLabel = computed(() => {
+  const dur = params.value.duration
+  if (!dur) return '5秒'
+  const opt = durationOptions.value.find((o) => o.value === dur)
+  return opt?.label || `${dur}秒`
 })
 
 // 自动调整 textarea 高度
