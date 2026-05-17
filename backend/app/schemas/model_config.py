@@ -28,9 +28,11 @@ class ApiConfigResponse(BaseModel):
     id: int
     name: str
     platform: str
+    api_key: str
     base_url: str
     total_concurrency: int
     is_active: bool
+    extra_config: Optional[dict] = None
 
     model_config = ConfigDict(from_attributes=True)
 

@@ -73,9 +73,8 @@
 | 文件预览 | ✅ GET `/api/v1/files/{file_id}/preview` 图片生成 Pillow 缩略图；视频/音频返回原文件 |
 | 资产列表 | ✅ GET `/api/v1/files/assets/list` 支持 `file_type`/`search`/`page`/`page_size` 筛选分页 |
 | **TOS上传 (必选项)** | ✅ `tos_uploader.upload_file()` 基于 `tos` SDK (`Auth` + `TosClient`) 实现；真实上传至 `tempmedia` bucket 验证通过；与任务队列的 `file_processor.prepare_for_model()` 集成完成 |
-| TOS配置校验 | 🟡 启动时检测 TOS 配置，未完整时输出**警告日志**；按验收标准应为 **ERROR 日志并退出** |
+| TOS配置校验 | ✅ 启动时检测 TOS 配置，未完整时输出 **ERROR 日志**；同时支持通过 admin 面板配置后热加载（`SystemConfig` 表 + `update_config_from_db`） |
 | Base64转换 | ✅ `file_processor` 支持 `prepare_for_model` 策略；小文件可转 Base64；TOS 失败可回退 |
-| 文件删除 | ✅ `DELETE /api/v1/files/{file_id}` 验证归属后删除；本地文件 + DB 记录一并清理 |
 | 文件预览前端 | ❌ 前端缩略图显示未实现 |
 
 ### 里程碑 M2.3: 任务队列模块
@@ -117,11 +116,11 @@
 ### M2 阶段出口检查清单
 - [ ] API Key 加密存储（当前为明文存储在 DB）
 - [x] TOS 配置校验改为 ERROR 日志（支持通过 admin 面板配置后热加载，不强制退出以避免首次启动阻塞）
-- [ ] 完整走通一次 "上传图片 → 创建图生图任务 → 获取结果" 全流程
-- [ ] 完整走通一次 "输入提示词 → 创建视频生成任务 → 下载视频" 全流程
-- [ ] 并发提交5个任务，验证队列和并发控制正确工作
 - [x] TOS桶中可查看到已上传的文件对象（已用真实 AK/SK 验证上传到 `tempmedia` bucket）
-- [ ] 取消一个running状态的任务，验证远端和本地状态一致
+- [ ] 完整走通一次 "上传图片 → 创建图生图任务 → 获取结果" 全流程（🔴 阻塞：缺少 `ARK_API_KEY`，需配置有效的火山方舟 API Key）
+- [ ] 完整走通一次 "输入提示词 → 创建视频生成任务 → 下载视频" 全流程（🔴 阻塞：同上）
+- [ ] 并发提交5个任务，验证队列和并发控制正确工作（🔴 阻塞：同上）
+- [ ] 取消一个running状态的任务，验证远端和本地状态一致（🔴 阻塞：同上）
 
 ---
 

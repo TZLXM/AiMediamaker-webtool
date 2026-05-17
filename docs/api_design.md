@@ -88,6 +88,15 @@
 - 状态码: 204
 - 说明: 删除后自动刷新 model_manager 缓存
 
+### GET /api/v1/admin/system-config/{config_key}
+- 响应: `SystemConfigResponse`
+- 说明: 获取系统配置（如 `tos`）；配置不存在时返回 `.env` 默认值
+
+### PUT /api/v1/admin/system-config/{config_key}
+- 请求: `{ config_value: object, description?: string }`
+- 响应: `SystemConfigResponse`
+- 说明: 更新系统配置；`tos` 配置修改后立即更新运行时 `tos_uploader`
+
 ---
 
 ## 任务管理
