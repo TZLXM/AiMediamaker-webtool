@@ -41,7 +41,7 @@ async def main():
                     {'key': 'resolution', 'label': '分辨率', 'type': 'select', 'required': False, 'default': '1080p',
                      'options': [{'name': '720p', 'value': '720p', 'label': '720p'},
                                  {'name': '1080p', 'value': '1080p', 'label': '1080p'},
-                                 {'name': '2K', 'value': '2K', 'label': '2K'}]},
+                                 {'name': '2K', 'value': '2K', 'label': '2K'}],},
                     {'key': 'generate_audio', 'label': '生成音频', 'type': 'boolean', 'required': False, 'default': True},
                     {'key': 'watermark', 'label': '添加水印', 'type': 'boolean', 'required': False, 'default': False},
                     {'key': 'seed', 'label': '随机种子', 'type': 'number', 'required': False, 'default': None},
