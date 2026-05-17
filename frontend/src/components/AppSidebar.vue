@@ -78,18 +78,20 @@ const navItems = [
   width: var(--sidebar-width);
   height: 100vh;
   background-color: var(--color-bg-primary);
-  border-right: 1px solid var(--color-border);
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: 16px 0;
   flex-shrink: 0;
   z-index: 100;
 }
 
 .sidebar-top {
   flex-shrink: 0;
-  margin-bottom: 32px;
+  justify-content: center;
+  align-items: center;
+  height: 72px;
+  padding: 16px 0;
+  display: flex;
 }
 
 .logo-icon {
@@ -98,24 +100,30 @@ const navItems = [
   display: flex;
   align-items: center;
   justify-content: center;
+  background: #6366f11a;
+  border-radius: 10px;
 }
 
 .sidebar-nav {
   flex: 1;
   display: flex;
   flex-direction: column;
+  justify-content: center;
+  align-items: center;
   gap: 8px;
   width: 100%;
-  padding: 0 10px;
+  padding: 16px 0;
 }
 
 .nav-item {
   display: flex;
   flex-direction: column;
   align-items: center;
+  justify-content: center;
   gap: 4px;
-  padding: 10px 0;
-  border-radius: 10px;
+  width: 56px;
+  height: 56px;
+  border-radius: 12px;
   color: var(--color-text-muted);
   text-decoration: none;
   transition: all 0.2s ease;
@@ -127,35 +135,39 @@ const navItems = [
 }
 
 .nav-item.active {
-  background-color: var(--color-accent);
-  color: white;
+  background-color: var(--color-bg-active);
+  color: var(--color-accent);
 }
 
 .nav-label {
   font-size: 11px;
+  font-weight: 400;
+  line-height: 1;
 }
 
 .sidebar-bottom {
   width: 100%;
-  padding: 0 10px;
+  padding: 12px 0;
   display: flex;
   flex-direction: column;
+  align-items: center;
   gap: 8px;
 }
 
 .user-info {
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 6px;
-  padding: 8px;
+  gap: 4px;
+  padding: 4px;
   color: var(--color-text-secondary);
   font-size: 12px;
 }
 
 .user-avatar {
-  width: 24px;
-  height: 24px;
+  width: 28px;
+  height: 28px;
   border-radius: 50%;
   background: var(--color-bg-tertiary);
   display: flex;
@@ -163,26 +175,37 @@ const navItems = [
   justify-content: center;
 }
 
+.user-name {
+  font-size: 10px;
+  max-width: 60px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  overflow: hidden;
+}
+
 .logout-btn,
 .login-btn {
-  width: 100%;
-  padding: 8px;
+  width: 56px;
+  padding: 8px 4px;
   border-radius: 8px;
   border: none;
-  background: var(--color-bg-tertiary);
+  background: transparent;
   color: var(--color-text-secondary);
   font-size: 12px;
   cursor: pointer;
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 6px;
+  gap: 4px;
   transition: all 0.2s ease;
 }
 
-.logout-btn:hover,
 .login-btn:hover {
-  background: var(--color-bg-hover);
-  color: var(--color-text-primary);
+  color: var(--color-accent);
+}
+
+.logout-btn:hover {
+  color: var(--color-error);
 }
 </style>

@@ -102,7 +102,6 @@ defineEmits<{
 const previewStore = usePreviewStore()
 
 const modelName = computed(() => {
-  // 简化显示，实际应从模型列表匹配
   return props.task.model_id
 })
 
@@ -216,7 +215,8 @@ function formatTime(t: string) {
 }
 
 .param-dot {
-  opacity: 0.3;
+  color: var(--color-text-muted);
+  font-size: 11px;
 }
 
 .task-results {
@@ -234,6 +234,8 @@ function formatTime(t: string) {
   cursor: pointer;
   border-radius: 8px;
   overflow: hidden;
+  background: var(--color-bg-tertiary);
+  position: relative;
 }
 
 .status-loading {
@@ -306,7 +308,7 @@ function formatTime(t: string) {
   color: var(--color-text-muted);
   font-size: 11px;
   cursor: pointer;
-  transition: all 0.2s;
+  transition: color 0.2s;
 }
 
 .reuse-btn:hover {

@@ -26,13 +26,11 @@ onMounted(() => {
     userStore.showLogin = true
   } else {
     userStore.fetchProfile().catch(() => {
-      // token 失效，显示登录弹窗
       userStore.showLogin = true
     })
   }
 })
 
-// 全局路由错误处理：未登录时显示弹窗而非阻止导航
 router.beforeEach((to, _from, next) => {
   const token = localStorage.getItem('token')
   if (to.meta.requiresAuth && !token) {
@@ -45,8 +43,8 @@ router.beforeEach((to, _from, next) => {
 <style scoped>
 .app-layout {
   display: flex;
+  width: 100%;
   height: 100vh;
-  width: 100vw;
   background-color: var(--color-bg-primary);
   overflow: hidden;
 }
