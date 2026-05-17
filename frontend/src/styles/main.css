@@ -1,41 +1,59 @@
 @import "tailwindcss";
 
 @theme {
-  /* 前台设计系统 - 保留当前变量并生成对应 utility 类 */
-  --color-bg-primary:   #0f0f11;
-  --color-bg-secondary: #1a1a1f;
-  --color-bg-tertiary:  #25252b;
-  --color-bg-hover:     #2a2a32;
-  --color-bg-card:      #1e1e24;
+  /* 前台设计系统 - 对齐前端前台.zip 参考实现 */
+  --color-bg-primary:   #111114;
+  --color-bg-secondary: #1a1a20;
+  --color-bg-tertiary:  #23232b;
+  --color-bg-hover:     #2a2a34;
+  --color-bg-active:    #32323e;
+  --color-bg-card:      #1a1a20;
   --color-accent:       #6366f1;
   --color-accent-hover: #818cf8;
   --color-accent-danger:#ef4444;
   --color-accent-success:#22c55e;
   --color-accent-warning:#f59e0b;
-  --color-text-primary: #f1f1f4;
-  --color-text-secondary:#a1a1aa;
-  --color-text-muted:   #71717a;
-  --color-border:       rgba(255, 255, 255, 0.08);
+  --color-text-primary: #f0f0f5;
+  --color-text-secondary:#9ca3af;
+  --color-text-muted:   #6b7280;
+  --color-border:       #ffffff0f;
+  --color-border-hover: #ffffff1f;
+  --color-input-bg:     #ffffff0a;
+  --color-error:        #ef4444;
+  --color-success:      #22c55e;
+  --color-warning:      #f59e0b;
+  --color-processing:   #3b82f6;
+  --color-mode-image:   #f59e0b;
+  --color-mode-video:   #6366f1;
 
   --sidebar-width: 72px;
 }
 
-/* 兼容性变量：Vue 组件 scoped style 中仍使用旧变量名 */
+/* 兼容性变量：Vue 组件 scoped style 中使用 */
 :root {
-  --bg-primary:   #0f0f11;
-  --bg-secondary: #1a1a1f;
-  --bg-tertiary:  #25252b;
-  --bg-hover:     #2a2a32;
-  --bg-card:      #1e1e24;
+  --bg-primary:   #111114;
+  --bg-secondary: #1a1a20;
+  --bg-tertiary:  #23232b;
+  --bg-hover:     #2a2a34;
+  --bg-active:    #32323e;
+  --bg-card:      #1a1a20;
   --accent:       #6366f1;
   --accent-hover: #818cf8;
   --accent-danger:#ef4444;
   --accent-success:#22c55e;
   --accent-warning:#f59e0b;
-  --text-primary: #f1f1f4;
-  --text-secondary:#a1a1aa;
-  --text-muted:   #71717a;
-  --border:       rgba(255, 255, 255, 0.08);
+  --text-primary: #f0f0f5;
+  --text-secondary:#9ca3af;
+  --text-muted:   #6b7280;
+  --text-tertiary:#6b7280;
+  --border:       #ffffff0f;
+  --border-default:#ffffff0f;
+  --border-hover: #ffffff1f;
+  --input-bg:     #ffffff0a;
+  --error:        #ef4444;
+  --success:      #22c55e;
+  --warning:      #f59e0b;
+  --processing:   #3b82f6;
   --sidebar-width: 72px;
 }
 
@@ -50,20 +68,24 @@ body {
   background-color: var(--bg-primary);
   color: var(--text-primary);
   -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  font-size: 14px;
+  line-height: 1.6;
 }
 
 ::-webkit-scrollbar {
-  width: 6px;
+  width: 5px;
+  height: 5px;
 }
 ::-webkit-scrollbar-track {
   background: transparent;
 }
 ::-webkit-scrollbar-thumb {
-  background: var(--bg-tertiary);
+  background: var(--text-tertiary);
   border-radius: 3px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: var(--text-muted);
+  background: var(--text-secondary);
 }
 
 @keyframes fadeIn {

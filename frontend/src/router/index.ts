@@ -31,17 +31,4 @@ const router = createRouter({
   routes,
 })
 
-router.beforeEach((to, _from, next) => {
-  // pinia 默认不持久化到 localStorage，直接读取 token
-  const token = localStorage.getItem('token')
-  const isLoggedIn = !!token
-
-  if (to.meta.requiresAuth && !isLoggedIn) {
-    // 取消导航，避免无限重定向（因为 / 会 redirect 回 /generate）
-    next(false)
-  } else {
-    next()
-  }
-})
-
 export default router

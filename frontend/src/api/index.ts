@@ -20,6 +20,7 @@ api.interceptors.response.use(
     if (err.response?.status === 401) {
       const userStore = useUserStore()
       userStore.logout()
+      userStore.showLogin = true
     }
     return Promise.reject(err)
   }

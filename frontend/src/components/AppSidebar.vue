@@ -7,7 +7,7 @@
             <defs>
               <linearGradient id="logoGrad" x1="0" y1="0" x2="28" y2="28">
                 <stop offset="0%" stop-color="var(--color-accent)" />
-                <stop offset="100%" stop-color="#a855f7" />
+                <stop offset="100%" stop-color="#8b5cf6" />
               </linearGradient>
             </defs>
             <path d="M14 2L24 8.5V19.5L14 26L4 19.5V8.5L14 2Z" fill="url(#logoGrad)" opacity="0.9" />
@@ -77,16 +77,18 @@ const navItems = [
 .sidebar {
   width: var(--sidebar-width);
   height: 100vh;
-  background-color: var(--color-bg-secondary);
+  background-color: var(--color-bg-primary);
   border-right: 1px solid var(--color-border);
   display: flex;
   flex-direction: column;
   align-items: center;
   padding: 16px 0;
   flex-shrink: 0;
+  z-index: 100;
 }
 
 .sidebar-top {
+  flex-shrink: 0;
   margin-bottom: 32px;
 }
 

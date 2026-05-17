@@ -96,7 +96,8 @@ const imageStyle = computed(() => ({
 }))
 
 function handleZoom(e: WheelEvent) {
-  const delta = e.deltaY > 0 ? -0.1 : 0.1
+  // 滚轮向上滚动(deltaY < 0)为缩小，向下滚动(deltaY > 0)为放大
+  const delta = e.deltaY > 0 ? 0.1 : -0.1
   scale.value = Math.max(0.1, Math.min(5, scale.value + delta))
 }
 
