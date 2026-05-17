@@ -6,6 +6,7 @@ from .user import User, UserRole
 from .task import Task, TaskMode, TaskStatus
 from .file import FileRecord, FileType, FileSource, StorageStatus
 from .model_config import ApiConfig, ModelConfig, PlatformType, GenerationMode
+from .system_config import SystemConfig
 
 __all__ = [
     "Base",
@@ -13,4 +14,5 @@ __all__ = [
     "Task", "TaskMode", "TaskStatus",
     "FileRecord", "FileType", "FileSource", "StorageStatus",
     "ApiConfig", "ModelConfig", "PlatformType", "GenerationMode",
+    "SystemConfig",
 ]

@@ -159,7 +159,7 @@ class FileManager:
     
     def get_file_url(self, file_record: FileRecord) -> str:
         """获取文件的访问URL"""
-        return f"/api/files/{file_record.file_id}"
+        return f"/api/v1/files/{file_record.file_id}"
     
     async def delete_file(self, db: AsyncSession, file_record: FileRecord):
         """删除文件"""

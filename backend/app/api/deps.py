@@ -22,19 +22,27 @@ async def get_db():
             await session.close()
 
 
+from fastapi import Request
+
 async def get_current_user(
+    request: Request,
     credentials: Optional[HTTPAuthorizationCredentials] = Depends(security),
     db: AsyncSession = Depends(get_db),
 ) -> User:
-    """获取当前登录用户"""
-    if not credentials:
+    """获取当前登录用户（支持 Bearer Header 或 query param token）"""
+    token = None
+    if credentials:
+        token = credentials.credentials
+    else:
+        # 从 query param 获取 token（用于 img/video 标签等直接访问）
+        token = request.query_params.get("token")
+    
+    if not token:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Not authenticated",
             headers={"WWW-Authenticate": "Bearer"},
         )
-    
-    token = credentials.credentials
     try:
         payload = jwt.decode(token, settings.SECRET_KEY, algorithms=[settings.JWT_ALGORITHM])
         user_id: int = payload.get("sub")

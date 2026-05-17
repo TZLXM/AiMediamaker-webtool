@@ -35,6 +35,24 @@ class VolcengineClient:
         self.model_id = model_id
         self.api_key = model_manager.get_api_key(model_id)
         self.base_url = model_manager.get_base_url(model_id)
+        
+        if not self.api_key:
+            raise VolcengineAPIError(
+                code="missing_api_key",
+                message="该模型未配置有效的 API Key，请在后台管理系统中配置",
+                status_code=0,
+            )
+        
+        # HTTP header 必须是 ASCII，提前检查避免 UnicodeEncodeError
+        try:
+            self.api_key.encode("ascii")
+        except UnicodeEncodeError:
+            raise VolcengineAPIError(
+                code="invalid_api_key_format",
+                message="API Key 包含非 ASCII 字符（如中文），请检查后台配置",
+                status_code=0,
+            )
+        
         self.headers = {
             "Authorization": f"Bearer {self.api_key}",
             "Content-Type": "application/json",
@@ -119,11 +137,9 @@ class VolcengineClient:
             payload["duration"] = params["duration"]
         if params.get("resolution"):
             payload["resolution"] = params["resolution"]
-        if params.get("fps"):
-            payload["fps"] = params["fps"]
-        if "generate_audio" in params:
+        if params.get("generate_audio") is not None:
             payload["generate_audio"] = params["generate_audio"]
-        if "watermark" in params:
+        if params.get("watermark") is not None:
             payload["watermark"] = params["watermark"]
         if params.get("seed") is not None:
             payload["seed"] = params["seed"]
@@ -172,7 +188,7 @@ class VolcengineClient:
             payload["sequential_image_generation"] = params["sequential_image_generation"]
         if params.get("max_images"):
             payload["sequential_image_generation_options"] = {"max_images": params["max_images"]}
-        if "watermark" in params:
+        if params.get("watermark") is not None:
             payload["watermark"] = params["watermark"]
         if params.get("response_format"):
             payload["response_format"] = params["response_format"]

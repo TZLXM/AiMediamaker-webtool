@@ -267,7 +267,7 @@ pytest tests/ -v --tb=short
 pytest tests/ --cov=app --cov-report=html
 ```
 
-当前测试覆盖：69 passed（database 8 + auth 10 + admin 12 + file_processor 6 + files 12 + model_manager 5 + task_queue 9 + volcengine_client 7）
+当前测试覆盖：70 passed（database 8 + auth 11 + admin 12 + file_processor 6 + files 12 + model_manager 5 + task_queue 9 + volcengine_client 7）
 
 ### 前端构建测试
 

@@ -38,6 +38,16 @@ class RedisClient:
     def is_connected(self) -> bool:
         return self._client is not None
     
+    async def ping(self) -> bool:
+        """测试 Redis 连接是否可用"""
+        if not self.is_connected():
+            return False
+        try:
+            await self._client.ping()
+            return True
+        except Exception:
+            return False
+    
     # --- 并发控制 ---
     
     async def incr_model_active(self, model_id: str) -> int:

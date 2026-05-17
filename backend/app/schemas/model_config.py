@@ -2,7 +2,7 @@
 模型配置 Pydantic Schema
 """
 from typing import Optional, List, Any
-from pydantic import BaseModel, Field, ConfigDict
+from pydantic import BaseModel, Field, ConfigDict, field_validator
 
 
 class ParameterOption(BaseModel):
@@ -28,9 +28,11 @@ class ApiConfigResponse(BaseModel):
     id: int
     name: str
     platform: str
+    api_key: str
     base_url: str
     total_concurrency: int
     is_active: bool
+    extra_config: Optional[dict] = None
 
     model_config = ConfigDict(from_attributes=True)
 
@@ -43,6 +45,15 @@ class ApiConfigCreate(BaseModel):
     total_concurrency: int = Field(default=5, ge=1, le=100)
     is_active: bool = True
     extra_config: Optional[dict] = None
+    
+    @field_validator("api_key")
+    @classmethod
+    def validate_api_key_ascii(cls, v: str) -> str:
+        try:
+            v.encode("ascii")
+        except UnicodeEncodeError:
+            raise ValueError("API Key 只能包含 ASCII 字符，不能包含中文或其他特殊字符")
+        return v
 
 
 class ApiConfigUpdate(BaseModel):
@@ -53,6 +64,17 @@ class ApiConfigUpdate(BaseModel):
     total_concurrency: Optional[int] = Field(default=None, ge=1, le=100)
     is_active: Optional[bool] = None
     extra_config: Optional[dict] = None
+    
+    @field_validator("api_key")
+    @classmethod
+    def validate_api_key_ascii(cls, v: Optional[str]) -> Optional[str]:
+        if v is None:
+            return v
+        try:
+            v.encode("ascii")
+        except UnicodeEncodeError:
+            raise ValueError("API Key 只能包含 ASCII 字符，不能包含中文或其他特殊字符")
+        return v
 
 
 class ModelConfigResponse(BaseModel):
@@ -110,3 +132,25 @@ class ModelSelectorInfo(BaseModel):
     description: Optional[str]
     parameters: List[ParameterSchema]
     supported_input_types: List[str]
+
+
+# ============== System Config ==============
+
+class SystemConfigResponse(BaseModel):
+    config_key: str
+    config_value: Optional[dict] = None
+    description: Optional[str] = None
+    model_config = ConfigDict(from_attributes=True)
+
+
+class SystemConfigUpdate(BaseModel):
+    config_value: dict
+    description: Optional[str] = None
+
+
+class TosConfigValue(BaseModel):
+    endpoint: str = "tos-cn-beijing.volces.com"
+    region: str = "cn-beijing"
+    bucket: str = ""
+    access_key: str = ""
+    secret_key: str = ""

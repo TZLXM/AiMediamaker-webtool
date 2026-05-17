@@ -75,7 +75,7 @@
 import { ref, onMounted } from 'vue'
 import { Plus } from 'lucide-vue-next'
 import dayjs from 'dayjs'
-// import api from '@/api'
+import api from '@/api'
 import type { AdminUser } from '@/types'
 
 const PlusIcon = Plus
@@ -85,7 +85,12 @@ const showCreate = ref(false)
 const newUser = ref({ username: '', password: '', role: 'user' as 'user' | 'leader' | 'admin' })
 
 async function fetchUsers() {
-  // TODO: 接入获取用户列表API
+  try {
+    const res = await api.get('/admin/users')
+    users.value = res.data
+  } catch (e: any) {
+    alert(e.response?.data?.detail || '获取用户列表失败')
+  }
 }
 
 function roleLabel(role: string) {
@@ -97,14 +102,30 @@ function formatDate(d: string) {
   return dayjs(d).format('YYYY-MM-DD HH:mm')
 }
 
-async function toggleStatus(_user: AdminUser) {
-  // TODO: 接入启用/禁用API
+async function toggleStatus(user: AdminUser) {
+  try {
+    await api.put(`/admin/users/${user.id}`, {
+      is_active: !user.is_active,
+    })
+    await fetchUsers()
+  } catch (e: any) {
+    alert(e.response?.data?.detail || '操作失败')
+  }
 }
 
 async function createUser() {
-  // TODO: 接入创建用户API
-  showCreate.value = false
-  fetchUsers()
+  if (!newUser.value.username || !newUser.value.password) {
+    alert('请填写用户名和密码')
+    return
+  }
+  try {
+    await api.post('/admin/users', newUser.value)
+    showCreate.value = false
+    newUser.value = { username: '', password: '', role: 'user' }
+    await fetchUsers()
+  } catch (e: any) {
+    alert(e.response?.data?.detail || '创建失败')
+  }
 }
 
 onMounted(fetchUsers)

@@ -63,7 +63,7 @@
 import { ref, computed, onMounted } from 'vue'
 import { RefreshCw } from 'lucide-vue-next'
 import dayjs from 'dayjs'
-// import api from '@/api'
+import api from '@/api'
 import type { AdminTask } from '@/types'
 
 const RefreshIcon = RefreshCw
@@ -81,7 +81,15 @@ const filteredTasks = computed(() => {
 })
 
 async function fetchTasks() {
-  // TODO: 接入管理端任务列表API
+  try {
+    const params: Record<string, any> = {}
+    if (filterMode.value) params.mode = filterMode.value
+    if (filterStatus.value) params.status = filterStatus.value
+    const res = await api.get('/admin/tasks', { params })
+    tasks.value = res.data
+  } catch (e: any) {
+    alert(e.response?.data?.detail || '获取任务列表失败')
+  }
 }
 
 function statusLabel(status: string) {
@@ -96,9 +104,14 @@ function formatDate(d: string) {
   return dayjs(d).format('MM-DD HH:mm')
 }
 
-async function cancelTask(_task: AdminTask) {
+async function cancelTask(task: AdminTask) {
   if (!confirm('确定要取消该任务吗？')) return
-  // TODO: 接入取消任务API
+  try {
+    await api.post(`/admin/tasks/${task.platform_task_id}/cancel`)
+    await fetchTasks()
+  } catch (e: any) {
+    alert(e.response?.data?.detail || '取消失败')
+  }
 }
 
 onMounted(fetchTasks)

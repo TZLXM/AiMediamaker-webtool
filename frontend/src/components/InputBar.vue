@@ -6,8 +6,8 @@
         :key="file.file_id"
         class="file-thumb"
       >
-        <img v-if="file.file_type === 'image'" :src="file.url" />
-        <video v-else-if="file.file_type === 'video'" :src="file.url" />
+        <img v-if="file.file_type === 'image'" :src="getFileUrl(file)" />
+        <video v-else-if="file.file_type === 'video'" :src="getFileUrl(file)" />
         <div v-else class="audio-thumb">Audio</div>
         <button class="file-remove" @click="removeFile(idx)">
           <XIcon :size="12" />
@@ -120,6 +120,7 @@
 import { ref, computed, watch } from 'vue'
 import { Sparkles as SparklesIcon, X as XIcon } from 'lucide-vue-next'
 import api from '@/api'
+import { getFileUrl } from '@/utils/fileUrl'
 import type { TaskMode, TaskParameters, FileItem, ModelInfo } from '@/types'
 
 const props = defineProps<{
@@ -192,6 +193,7 @@ async function loadModels() {
 function selectMode(mode: TaskMode) {
   selectedMode.value = mode
   selectedModel.value = ''
+  params.value = {}
   showModeSelect.value = false
   loadModels()
 }
@@ -199,6 +201,17 @@ function selectMode(mode: TaskMode) {
 function selectModel(modelId: string) {
   selectedModel.value = modelId
   showModelSelect.value = false
+  // 根据模型参数 schema 的默认值初始化 params
+  const model = models.value.find((m) => m.model_id === modelId)
+  if (model) {
+    const defaults: Record<string, any> = {}
+    for (const param of model.parameters) {
+      if (param.default !== undefined) {
+        defaults[param.key] = param.default
+      }
+    }
+    params.value = defaults
+  }
 }
 
 function submit() {
@@ -272,7 +285,8 @@ watch(selectedMode, loadModels, { immediate: true })
 .file-thumb video {
   width: 100%;
   height: 100%;
-  object-fit: cover;
+  object-fit: contain;
+  background: var(--color-bg-tertiary);
 }
 
 .audio-thumb {

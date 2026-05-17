@@ -75,28 +75,33 @@
 
       <!-- TOS配置 -->
       <div class="config-card">
-        <h2>TOS 对象存储配置</h2>
-        <p class="form-tip">TOS 配置当前从服务器环境变量读取，暂不支持通过前端修改。</p>
+        <div class="card-header">
+          <h2>TOS 对象存储配置</h2>
+          <button class="btn-primary" @click="saveTos" :disabled="savingTos">
+            {{ savingTos ? '保存中...' : '保存配置' }}
+          </button>
+        </div>
+        <p class="form-tip">修改后将覆盖服务器环境变量中的 TOS 配置。</p>
         <div class="form-grid">
           <div class="form-field">
             <label>Endpoint</label>
-            <input v-model="tosForm.endpoint" placeholder="tos-cn-beijing.volces.com" disabled />
+            <input v-model="tosForm.endpoint" placeholder="tos-cn-beijing.volces.com" />
           </div>
           <div class="form-field">
             <label>Region</label>
-            <input v-model="tosForm.region" placeholder="cn-beijing" disabled />
+            <input v-model="tosForm.region" placeholder="cn-beijing" />
           </div>
           <div class="form-field">
-            <label>Bucket</label>
-            <input v-model="tosForm.bucket" disabled />
+            <label>Bucket <span class="required">*</span></label>
+            <input v-model="tosForm.bucket" placeholder="bucket-name" />
           </div>
           <div class="form-field">
-            <label>Access Key</label>
-            <input v-model="tosForm.access_key" type="password" disabled />
+            <label>Access Key <span class="required">*</span></label>
+            <input v-model="tosForm.access_key" type="password" placeholder="AK..." />
           </div>
           <div class="form-field">
-            <label>Secret Key</label>
-            <input v-model="tosForm.secret_key" type="password" disabled />
+            <label>Secret Key <span class="required">*</span></label>
+            <input v-model="tosForm.secret_key" type="password" placeholder="SK..." />
           </div>
         </div>
       </div>
@@ -113,6 +118,7 @@ const apiConfigs = ref<ApiConfig[]>([])
 const showApiForm = ref(false)
 const editingApiId = ref<number | null>(null)
 const savingApi = ref(false)
+const savingTos = ref(false)
 
 const apiForm = ref({
   name: '',
@@ -137,6 +143,41 @@ async function fetchConfigs() {
     apiConfigs.value = res.data
   } catch (e) {
     alert('获取 API 配置失败')
+  }
+}
+
+async function fetchTosConfig() {
+  try {
+    const res = await api.get('/admin/system-config/tos')
+    const data = res.data.config_value || {}
+    tosForm.value = {
+      endpoint: data.endpoint || '',
+      region: data.region || '',
+      bucket: data.bucket || '',
+      access_key: data.access_key || '',
+      secret_key: data.secret_key || '',
+    }
+  } catch (e: any) {
+    alert(e.response?.data?.detail || '获取 TOS 配置失败')
+  }
+}
+
+async function saveTos() {
+  if (!tosForm.value.bucket || !tosForm.value.access_key || !tosForm.value.secret_key) {
+    alert('请填写 Bucket、Access Key 和 Secret Key')
+    return
+  }
+  savingTos.value = true
+  try {
+    await api.put('/admin/system-config/tos', {
+      config_value: { ...tosForm.value },
+      description: 'TOS对象存储配置',
+    })
+    alert('TOS 配置已保存')
+  } catch (e: any) {
+    alert(e.response?.data?.detail || '保存失败')
+  } finally {
+    savingTos.value = false
   }
 }
 
@@ -201,7 +242,10 @@ async function deleteApi(id: number) {
   }
 }
 
-onMounted(fetchConfigs)
+onMounted(() => {
+  fetchConfigs()
+  fetchTosConfig()
+})
 </script>
 
 <style scoped>

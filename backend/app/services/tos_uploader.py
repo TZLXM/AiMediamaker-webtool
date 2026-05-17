@@ -31,6 +31,20 @@ class TOSUploader:
         self.expires = settings.TOS_EXPIRES
         self.base_url = f"https://{self.bucket}.{self.endpoint}"
         
+    def update_config_from_db(self, config: dict) -> None:
+        """从数据库更新TOS配置（Admin修改后调用）"""
+        if config.get("endpoint"):
+            self.endpoint = config["endpoint"]
+        if config.get("region"):
+            self.region = config["region"]
+        if config.get("bucket"):
+            self.bucket = config["bucket"]
+        if config.get("access_key"):
+            self.access_key = config["access_key"]
+        if config.get("secret_key"):
+            self.secret_key = config["secret_key"]
+        self.base_url = f"https://{self.bucket}.{self.endpoint}"
+    
     def _is_configured(self) -> bool:
         """检查TOS配置是否完整"""
         return all([

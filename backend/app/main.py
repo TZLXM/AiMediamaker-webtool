@@ -6,6 +6,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 import logging
+from sqlalchemy import select
 
 from .core.config import settings
 from .core.database import init_db, close_db, async_session_maker
@@ -37,12 +38,26 @@ async def lifespan(app: FastAPI):
         except Exception as e:
             logger.warning(f"Failed to load model configs on startup: {e}")
     
+    # 加载数据库中的系统配置（覆盖环境变量）
+    from .models.system_config import SystemConfig
+    async with async_session_maker() as db:
+        try:
+            result = await db.execute(select(SystemConfig).where(SystemConfig.config_key == "tos"))
+            tos_db_config = result.scalar_one_or_none()
+            if tos_db_config and tos_db_config.config_value:
+                from .services.tos_uploader import tos_uploader
+                tos_uploader.update_config_from_db(tos_db_config.config_value)
+                logger.info("TOS configuration loaded from database.")
+        except Exception as e:
+            logger.warning(f"Failed to load TOS config from database: {e}")
+    
     # TOS配置校验 (必选项)
     from .services.tos_uploader import tos_uploader
     if not tos_uploader._is_configured():
-        logger.warning(
+        logger.error(
             "TOS configuration incomplete. "
-            "Please set TOS_ENDPOINT, TOS_ACCESS_KEY, TOS_SECRET_KEY, TOS_BUCKET. "
+            "Please set TOS_ENDPOINT, TOS_ACCESS_KEY, TOS_SECRET_KEY, TOS_BUCKET "
+            "or configure via admin panel. "
             "TOS upload is required for model reference files."
         )
     else:

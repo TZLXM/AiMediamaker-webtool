@@ -53,6 +53,9 @@ async def test_api_config(db_session: AsyncSession):
 @pytest_asyncio.fixture
 async def test_video_model(db_session: AsyncSession, test_api_config):
     """Create a test video model config."""
+    from app.services.model_manager import model_manager
+    original_api_cache = model_manager._api_cache.copy()
+    
     model_id = f"doubao-seedance-2-0-{uuid.uuid4().hex[:8]}"
     model = ModelConfig(
         name="Seedance 2.0",
@@ -68,12 +71,19 @@ async def test_video_model(db_session: AsyncSession, test_api_config):
     db_session.add(model)
     await db_session.commit()
     await db_session.refresh(model)
-    return model
+    
+    model_manager._api_cache[test_api_config.id] = test_api_config
+    yield model
+    
+    model_manager._api_cache = original_api_cache
 
 
 @pytest_asyncio.fixture
 async def test_image_model(db_session: AsyncSession, test_api_config):
     """Create a test image model config."""
+    from app.services.model_manager import model_manager
+    original_api_cache = model_manager._api_cache.copy()
+    
     model_id = f"doubao-seedream-5-0-{uuid.uuid4().hex[:8]}"
     model = ModelConfig(
         name="Seedream 5.0 Lite",
@@ -89,7 +99,11 @@ async def test_image_model(db_session: AsyncSession, test_api_config):
     db_session.add(model)
     await db_session.commit()
     await db_session.refresh(model)
-    return model
+    
+    model_manager._api_cache[test_api_config.id] = test_api_config
+    yield model
+    
+    model_manager._api_cache = original_api_cache
 
 
 @pytest_asyncio.fixture

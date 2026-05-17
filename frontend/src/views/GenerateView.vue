@@ -70,9 +70,9 @@ async function handleSubmit() {
 
 function reuseTask(task: TaskItem) {
   selectedMode.value = task.mode
+  parameters.value = task.parameters || {}
   selectedModel.value = task.model_id
   prompt.value = task.prompt
-  parameters.value = task.parameters || {}
   // uploadedFiles 需要重新获取
 }
 
