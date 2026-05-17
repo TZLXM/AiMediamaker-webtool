@@ -179,7 +179,8 @@ onMounted(handleSearch)
 .asset-thumb-wrap video {
   width: 100%;
   height: 100%;
-  object-fit: cover;
+  object-fit: contain;
+  background: var(--color-bg-tertiary);
 }
 
 .audio-icon {

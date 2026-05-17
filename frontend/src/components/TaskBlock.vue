@@ -144,7 +144,8 @@ function formatTime(t: string) {
 .task-file-thumb video {
   width: 100%;
   height: 100%;
-  object-fit: cover;
+  object-fit: contain;
+  background: var(--color-bg-tertiary);
 }
 
 .audio-badge {
@@ -203,7 +204,8 @@ function formatTime(t: string) {
 .output-thumb video {
   width: 100%;
   height: 100%;
-  object-fit: cover;
+  object-fit: contain;
+  background: var(--color-bg-tertiary);
 }
 
 .status-display {

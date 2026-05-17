@@ -285,7 +285,8 @@ watch(selectedMode, loadModels, { immediate: true })
 .file-thumb video {
   width: 100%;
   height: 100%;
-  object-fit: cover;
+  object-fit: contain;
+  background: var(--color-bg-tertiary);
 }
 
 .audio-thumb {
