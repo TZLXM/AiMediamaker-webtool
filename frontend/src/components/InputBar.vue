@@ -406,7 +406,9 @@ const resolutionParam = computed(() => {
 const resolutionLabel = computed(() => {
   const res = params.value.resolution
   if (!res) return ''
+  if (res === '1K') return '标清 1K'
   if (res === '2K') return '高清 2K'
+  if (res === '3K') return '超清 3K'
   if (res === '4K') return '超清 4K'
   return res
 })

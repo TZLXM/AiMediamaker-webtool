@@ -34,6 +34,11 @@ SEEDREAM_SIZE_MAP = {
         "2K": {"1:1": "2048x2048", "3:4": "1728x2304", "4:3": "2304x1728", "16:9": "2848x1600", "9:16": "1600x2848", "3:2": "2496x1664", "2:3": "1664x2496", "21:9": "3136x1344"},
         "4K": {"1:1": "4096x4096", "3:4": "3520x4704", "4:3": "4704x3520", "16:9": "5504x3040", "9:16": "3040x5504", "2:3": "3328x4992", "3:2": "4992x3328", "21:9": "6240x2656"},
     },
+    "doubao-seedream-4-0-250828": {
+        "1K": {"1:1": "1024x1024", "3:4": "864x1152", "4:3": "1152x864", "16:9": "1312x736", "9:16": "736x1312", "3:2": "1248x832", "2:3": "832x1248", "21:9": "1568x672"},
+        "2K": {"1:1": "2048x2048", "3:4": "1728x2304", "4:3": "2304x1728", "16:9": "2848x1600", "9:16": "1600x2848", "3:2": "2496x1664", "2:3": "1664x2496", "21:9": "3136x1344"},
+        "4K": {"1:1": "4096x4096", "3:4": "3520x4704", "4:3": "4704x3520", "16:9": "5504x3040", "9:16": "3040x5504", "2:3": "3328x4992", "3:2": "4992x3328", "21:9": "6240x2656"},
+    },
 }
 
 
@@ -180,7 +185,6 @@ class VolcengineClient:
             return self._parse_task_response(resp)
     
 
-
     async def _create_image_task(self, task, db: Optional[AsyncSession] = None) -> Dict[str, Any]:
         """创建图片生成任务 (Seedream)，返回完整响应数据"""
         payload = {
@@ -204,21 +208,26 @@ class VolcengineClient:
         # size 处理：有具体比例时发送像素值，否则发送分辨率值
         resolution = params.get("resolution")
         aspect_ratio = params.get("aspectRatio")
+        logger.info(f"[Seedream] Task params: resolution={resolution}, aspectRatio={aspect_ratio}, model_id={self.model_id}")
         if resolution and aspect_ratio and aspect_ratio != "adaptive":
             # 根据模型ID + 分辨率 + 比例 查找对应像素值
             model_map = SEEDREAM_SIZE_MAP.get(self.model_id, {})
             res_map = model_map.get(resolution, {})
             pixel_size = res_map.get(aspect_ratio)
+            logger.info(f"[Seedream] Lookup: model_map keys={list(model_map.keys()) if model_map else 'EMPTY'}, res_map keys={list(res_map.keys()) if res_map else 'EMPTY'}")
             if pixel_size:
                 payload["size"] = pixel_size
                 logger.info(f"[Seedream] Mapped {resolution}+{aspect_ratio} -> {pixel_size}")
             else:
                 # 未找到映射，回退到分辨率值
                 payload["size"] = resolution
+                logger.warning(f"[Seedream] No mapping for {self.model_id}/{resolution}/{aspect_ratio}, fallback to {resolution}")
         elif resolution:
             payload["size"] = resolution
+            logger.info(f"[Seedream] No aspectRatio, using resolution={resolution}")
         elif params.get("size"):
-            payload["size"] = params["size"]
+            payload["size"] = params.get("size")
+            logger.info(f"[Seedream] Using explicit size={params.get('size')}")
         if params.get("output_format"):
             payload["output_format"] = params["output_format"]
         if params.get("sequential_image_generation"):

@@ -108,7 +108,8 @@ const modelName = computed(() => {
 const displayParams = computed(() => {
   const p = props.task.parameters || {}
   const result: Record<string, string> = {}
-  if (p.ratio) result['比例'] = p.ratio
+  if (p.aspectRatio) result['比例'] = p.aspectRatio
+  else if (p.ratio) result['比例'] = p.ratio
   if (p.duration) result['时长'] = `${p.duration}s`
   if (p.size) result['尺寸'] = p.size
   if (p.output_format) result['格式'] = p.output_format
