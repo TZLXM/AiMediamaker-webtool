@@ -119,8 +119,8 @@
             <ChevronDownIcon :size="11" />
           </button>
           <div v-if="showParams && currentModel" class="dropdown-panel unified-params">
-            <!-- 比例选择：固定选项网格 -->
-            <div class="param-section">
+            <!-- 比例选择：固定选项网格（仅当模型有 ratio/aspectRatio 参数时显示） -->
+            <div v-if="hasRatioParam" class="param-section">
               <label>选择比例</label>
               <div class="ratio-grid">
                 <button
@@ -369,6 +369,11 @@ const fixedRatioOptions = [
   { value: '9:16', label: '9:16' },
 ]
 
+// 模型是否有比例参数
+const hasRatioParam = computed(() => {
+  return currentModelParams.value.some((p) => p.key === 'aspectRatio' || p.key === 'ratio')
+})
+
 // 比例参数的 key（支持 aspectRatio 或 ratio）
 const ratioParamKey = computed(() => {
   return currentModelParams.value.find((p) => p.key === 'aspectRatio' || p.key === 'ratio')?.key || 'aspectRatio'
@@ -411,25 +416,32 @@ const resolutionLabel = computed(() => {
   return res
 })
 
-// 其他参数（过滤掉比例和分辨率）
+// 其他参数（过滤掉比例、分辨率、时长）
 const otherParams = computed(() => {
   return currentModelParams.value.filter(
-    (p) => p.key !== 'aspectRatio' && p.key !== 'ratio' && p.key !== 'resolution'
+    (p) => p.key !== 'aspectRatio' && p.key !== 'ratio' && p.key !== 'resolution' && p.key !== 'duration'
   )
 })
 
+// 固定时长选项（和参考实现一致）
+const fixedDurationOptions = [
+  { value: -1, label: '自动' },
+  { value: 4, label: '4秒' },
+  { value: 5, label: '5秒' },
+  { value: 6, label: '6秒' },
+  { value: 8, label: '8秒' },
+  { value: 10, label: '10秒' },
+  { value: 15, label: '15秒' },
+]
+
 // 时长选项
-const durationOptions = computed(() => {
-  const param = currentModelParams.value.find((p) => p.key === 'duration')
-  if (!param?.options) return []
-  return param.options
-})
+const durationOptions = computed(() => fixedDurationOptions)
 
 // 时长标签
 const durationLabel = computed(() => {
   const dur = params.value.duration
-  if (!dur) return '5秒'
-  const opt = durationOptions.value.find((o) => o.value === dur)
+  if (dur == null) return '5秒'
+  const opt = fixedDurationOptions.find((o) => o.value === dur)
   return opt?.label || `${dur}秒`
 })
 
