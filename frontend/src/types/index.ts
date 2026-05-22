@@ -35,6 +35,7 @@ export interface TaskParameters {
   watermark?: boolean
   seed?: number
   // 图片
+  aspectRatio?: string
   size?: string
   output_format?: string
   sequential_image_generation?: string
