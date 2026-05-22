@@ -18,6 +18,24 @@ from ..services.file_processor import file_processor
 
 logger = logging.getLogger(__name__)
 
+# Seedream 官方文档推荐像素值映射表
+# 模型ID -> 分辨率档位 -> 比例 -> 像素值
+SEEDREAM_SIZE_MAP = {
+    "doubao-seedream-5-0-lite-260128": {
+        "2K": {"1:1": "2048x2048", "3:4": "1728x2304", "4:3": "2304x1728", "16:9": "2848x1600", "9:16": "1600x2848", "3:2": "2496x1664", "2:3": "1664x2496", "21:9": "3136x1344"},
+        "3K": {"1:1": "3072x3072", "3:4": "2592x3456", "4:3": "3456x2592", "16:9": "4096x2304", "9:16": "2304x4096", "2:3": "2496x3744", "3:2": "3744x2496", "21:9": "4704x2016"},
+        "4K": {"1:1": "4096x4096", "3:4": "3520x4704", "4:3": "4704x3520", "16:9": "5504x3040", "9:16": "3040x5504", "2:3": "3328x4992", "3:2": "4992x3328", "21:9": "6240x2656"},
+    },
+    "doubao-seedream-4-5-260128": {
+        "2K": {"1:1": "2048x2048", "3:4": "1728x2304", "4:3": "2304x1728", "16:9": "2848x1600", "9:16": "1600x2848", "3:2": "2496x1664", "2:3": "1664x2496", "21:9": "3136x1344"},
+        "4K": {"1:1": "4096x4096", "3:4": "3520x4704", "4:3": "4704x3520", "16:9": "5504x3040", "9:16": "3040x5504", "2:3": "3328x4992", "3:2": "4992x3328", "21:9": "6240x2656"},
+    },
+    "doubao-seedream-4-5-251128": {
+        "2K": {"1:1": "2048x2048", "3:4": "1728x2304", "4:3": "2304x1728", "16:9": "2848x1600", "9:16": "1600x2848", "3:2": "2496x1664", "2:3": "1664x2496", "21:9": "3136x1344"},
+        "4K": {"1:1": "4096x4096", "3:4": "3520x4704", "4:3": "4704x3520", "16:9": "5504x3040", "9:16": "3040x5504", "2:3": "3328x4992", "3:2": "4992x3328", "21:9": "6240x2656"},
+    },
+}
+
 
 class VolcengineAPIError(Exception):
     """火山方舟API业务错误"""
@@ -161,6 +179,8 @@ class VolcengineClient:
             )
             return self._parse_task_response(resp)
     
+
+
     async def _create_image_task(self, task, db: Optional[AsyncSession] = None) -> Dict[str, Any]:
         """创建图片生成任务 (Seedream)，返回完整响应数据"""
         payload = {
@@ -180,9 +200,23 @@ class VolcengineClient:
         
         # 参数
         params = task.parameters or {}
-        # resolution 映射为 size（参考实现使用 resolution，Seedream API 使用 size）
-        if params.get("resolution"):
-            payload["size"] = params["resolution"]
+        
+        # size 处理：有具体比例时发送像素值，否则发送分辨率值
+        resolution = params.get("resolution")
+        aspect_ratio = params.get("aspectRatio")
+        if resolution and aspect_ratio and aspect_ratio != "adaptive":
+            # 根据模型ID + 分辨率 + 比例 查找对应像素值
+            model_map = SEEDREAM_SIZE_MAP.get(self.model_id, {})
+            res_map = model_map.get(resolution, {})
+            pixel_size = res_map.get(aspect_ratio)
+            if pixel_size:
+                payload["size"] = pixel_size
+                logger.info(f"[Seedream] Mapped {resolution}+{aspect_ratio} -> {pixel_size}")
+            else:
+                # 未找到映射，回退到分辨率值
+                payload["size"] = resolution
+        elif resolution:
+            payload["size"] = resolution
         elif params.get("size"):
             payload["size"] = params["size"]
         if params.get("output_format"):
