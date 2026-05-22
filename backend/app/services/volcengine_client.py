@@ -180,7 +180,10 @@ class VolcengineClient:
         
         # 参数
         params = task.parameters or {}
-        if params.get("size"):
+        # resolution 映射为 size（参考实现使用 resolution，Seedream API 使用 size）
+        if params.get("resolution"):
+            payload["size"] = params["resolution"]
+        elif params.get("size"):
             payload["size"] = params["size"]
         if params.get("output_format"):
             payload["output_format"] = params["output_format"]

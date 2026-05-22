@@ -119,8 +119,8 @@
             <ChevronDownIcon :size="11" />
           </button>
           <div v-if="showParams && currentModel" class="dropdown-panel unified-params">
-            <!-- 比例选择：固定选项网格（仅当模型有 ratio/aspectRatio 参数时显示） -->
-            <div v-if="hasRatioParam" class="param-section">
+            <!-- 比例选择：固定选项网格（始终显示，对齐参考实现） -->
+            <div class="param-section">
               <label>选择比例</label>
               <div class="ratio-grid">
                 <button
@@ -141,18 +141,18 @@
               </div>
             </div>
 
-            <!-- 分辨率/size 选择：按钮组 -->
-            <div v-if="effectiveResParam" class="param-section">
+            <!-- 分辨率选择：按钮组 -->
+            <div v-if="resolutionParam" class="param-section">
               <label>选择分辨率</label>
               <div class="res-options">
                 <button
-                  v-for="opt in effectiveResParam.options"
+                  v-for="opt in resolutionParam.options"
                   :key="String(opt.value)"
                   class="res-btn"
-                  :class="{ active: params[effectiveResParam.key] === opt.value }"
-                  @click="setParam(effectiveResParam.key, opt.value)"
+                  :class="{ active: params[resolutionParam.key] === opt.value }"
+                  @click="setParam(resolutionParam.key, opt.value)"
                 >
-                  {{ effectiveResParam.key === 'size' ? opt.value : opt.label }}
+                  {{ opt.label }}
                 </button>
               </div>
             </div>
@@ -369,11 +369,6 @@ const fixedRatioOptions = [
   { value: '9:16', label: '9:16' },
 ]
 
-// 模型是否有比例参数
-const hasRatioParam = computed(() => {
-  return currentModelParams.value.some((p) => p.key === 'aspectRatio' || p.key === 'ratio')
-})
-
 // 比例参数的 key（支持 aspectRatio 或 ratio）
 const ratioParamKey = computed(() => {
   return currentModelParams.value.find((p) => p.key === 'aspectRatio' || p.key === 'ratio')?.key || 'aspectRatio'
@@ -407,29 +402,19 @@ const resolutionParam = computed(() => {
   return currentModelParams.value.find((p) => p.key === 'resolution') || null
 })
 
-// size 参数（当模型没有 resolution 时，size 当作分辨率显示）
-const sizeParam = computed(() => {
-  return currentModelParams.value.find((p) => p.key === 'size') || null
-})
-
-// 实际使用的分辨率参数（优先 resolution，其次 size）
-const effectiveResParam = computed(() => {
-  return resolutionParam.value || sizeParam.value || null
-})
-
-// 分辨率标签（优先 resolution，其次 size）
+// 分辨率标签
 const resolutionLabel = computed(() => {
-  const res = params.value.resolution ?? params.value.size
+  const res = params.value.resolution
   if (!res) return ''
   if (res === '2K') return '高清 2K'
   if (res === '4K') return '超清 4K'
   return res
 })
 
-// 其他参数（过滤掉比例、分辨率、size、时长）
+// 其他参数（过滤掉比例、分辨率、时长）
 const otherParams = computed(() => {
   return currentModelParams.value.filter(
-    (p) => p.key !== 'aspectRatio' && p.key !== 'ratio' && p.key !== 'resolution' && p.key !== 'size' && p.key !== 'duration'
+    (p) => p.key !== 'aspectRatio' && p.key !== 'ratio' && p.key !== 'resolution' && p.key !== 'duration'
   )
 })
 
