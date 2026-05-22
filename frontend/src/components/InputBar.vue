@@ -141,18 +141,18 @@
               </div>
             </div>
 
-            <!-- 分辨率选择：按钮组 -->
-            <div v-if="resolutionParam" class="param-section">
+            <!-- 分辨率/size 选择：按钮组 -->
+            <div v-if="effectiveResParam" class="param-section">
               <label>选择分辨率</label>
               <div class="res-options">
                 <button
-                  v-for="opt in resolutionParam.options"
+                  v-for="opt in effectiveResParam.options"
                   :key="String(opt.value)"
                   class="res-btn"
-                  :class="{ active: params[resolutionParam.key] === opt.value }"
-                  @click="setParam(resolutionParam.key, opt.value)"
+                  :class="{ active: params[effectiveResParam.key] === opt.value }"
+                  @click="setParam(effectiveResParam.key, opt.value)"
                 >
-                  {{ opt.label }}
+                  {{ effectiveResParam.key === 'size' ? opt.value : opt.label }}
                 </button>
               </div>
             </div>
@@ -407,19 +407,29 @@ const resolutionParam = computed(() => {
   return currentModelParams.value.find((p) => p.key === 'resolution') || null
 })
 
-// 分辨率标签
+// size 参数（当模型没有 resolution 时，size 当作分辨率显示）
+const sizeParam = computed(() => {
+  return currentModelParams.value.find((p) => p.key === 'size') || null
+})
+
+// 实际使用的分辨率参数（优先 resolution，其次 size）
+const effectiveResParam = computed(() => {
+  return resolutionParam.value || sizeParam.value || null
+})
+
+// 分辨率标签（优先 resolution，其次 size）
 const resolutionLabel = computed(() => {
-  const res = params.value.resolution
+  const res = params.value.resolution ?? params.value.size
   if (!res) return ''
   if (res === '2K') return '高清 2K'
   if (res === '4K') return '超清 4K'
   return res
 })
 
-// 其他参数（过滤掉比例、分辨率、时长）
+// 其他参数（过滤掉比例、分辨率、size、时长）
 const otherParams = computed(() => {
   return currentModelParams.value.filter(
-    (p) => p.key !== 'aspectRatio' && p.key !== 'ratio' && p.key !== 'resolution' && p.key !== 'duration'
+    (p) => p.key !== 'aspectRatio' && p.key !== 'ratio' && p.key !== 'resolution' && p.key !== 'size' && p.key !== 'duration'
   )
 })
 
