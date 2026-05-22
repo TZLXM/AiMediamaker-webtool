@@ -181,6 +181,12 @@ onMounted(handleSearch)
   height: 100%;
   object-fit: contain;
   background: var(--color-bg-tertiary);
+  transition: transform 0.3s ease;
+}
+
+.asset-item:hover .asset-thumb-wrap img,
+.asset-item:hover .asset-thumb-wrap video {
+  transform: scale(1.05);
 }
 
 .audio-icon {

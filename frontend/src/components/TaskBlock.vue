@@ -2,7 +2,25 @@
   <div class="task-block" :class="`status-${task.status}`">
     <!-- 提示词 -->
     <div class="task-prompt">
-      <p class="prompt-text">{{ task.prompt }}</p>
+      <p
+        class="prompt-text"
+        :class="{ expanded: isPromptExpanded }"
+        :title="isPromptExpanded ? '点击收起' : '点击展开'"
+        @click="isPromptExpanded = !isPromptExpanded"
+      >
+        {{ task.prompt }}
+      </p>
+      <button
+        v-if="task.prompt.length > 60"
+        class="prompt-toggle"
+        @click="isPromptExpanded = !isPromptExpanded"
+      >
+        {{ isPromptExpanded ? '收起' : '展开' }}
+      </button>
+      <button class="prompt-copy" @click="copyPrompt">
+        <CopyIcon :size="12" />
+        <span>{{ copyLabel }}</span>
+      </button>
     </div>
 
     <!-- 输入文件 -->
@@ -81,8 +99,8 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
-import { RefreshCw as RefreshIcon } from 'lucide-vue-next'
+import { computed, ref } from 'vue'
+import { RefreshCw as RefreshIcon, Copy as CopyIcon } from 'lucide-vue-next'
 import dayjs from 'dayjs'
 import { usePreviewStore } from '@/stores'
 import Thumbnail from '@/components/Thumbnail.vue'
@@ -100,6 +118,24 @@ defineEmits<{
 }>()
 
 const previewStore = usePreviewStore()
+
+const isPromptExpanded = ref(false)
+const copyLabel = ref('复制')
+
+async function copyPrompt() {
+  try {
+    await navigator.clipboard.writeText(props.task.prompt)
+    copyLabel.value = '已复制'
+    setTimeout(() => {
+      copyLabel.value = '复制'
+    }, 1500)
+  } catch {
+    copyLabel.value = '失败'
+    setTimeout(() => {
+      copyLabel.value = '复制'
+    }, 1500)
+  }
+}
 
 const modelName = computed(() => {
   return props.task.model_id
@@ -170,6 +206,40 @@ function formatTime(t: string) {
   -webkit-line-clamp: 3;
   -webkit-box-orient: vertical;
   overflow: hidden;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.prompt-text:hover {
+  color: var(--color-text-primary);
+}
+
+.prompt-text.expanded {
+  -webkit-line-clamp: unset;
+  display: block;
+}
+
+.prompt-toggle,
+.prompt-copy {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  margin-top: 4px;
+  margin-right: 8px;
+  padding: 2px 6px;
+  background: transparent;
+  border: none;
+  border-radius: 4px;
+  color: var(--color-text-muted);
+  font-size: 11px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.prompt-toggle:hover,
+.prompt-copy:hover {
+  color: var(--color-text-secondary);
+  background: #ffffff08;
 }
 
 .task-files {
@@ -237,6 +307,12 @@ function formatTime(t: string) {
   overflow: hidden;
   background: var(--color-bg-tertiary);
   position: relative;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.result-item:hover {
+  transform: scale(1.02);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
 }
 
 .status-loading {

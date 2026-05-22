@@ -2,7 +2,11 @@
   <div class="app-layout">
     <AppSidebar />
     <main class="main-area">
-      <router-view />
+      <router-view v-slot="{ Component }">
+        <Transition name="page-fade" mode="out-in">
+          <component :is="Component" />
+        </Transition>
+      </router-view>
     </main>
     <LoginModal v-if="userStore.showLogin" />
     <PreviewModal />
@@ -53,5 +57,14 @@ router.beforeEach((to, _from, next) => {
   flex: 1;
   min-width: 0;
   overflow: hidden auto;
+}
+
+.page-fade-enter-active,
+.page-fade-leave-active {
+  transition: opacity 0.2s ease;
+}
+.page-fade-enter-from,
+.page-fade-leave-to {
+  opacity: 0;
 }
 </style>

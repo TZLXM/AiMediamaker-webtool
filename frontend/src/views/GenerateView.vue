@@ -28,7 +28,7 @@
       </div>
 
       <!-- 任务列表 -->
-      <div v-else class="tasks-list">
+      <TransitionGroup v-else name="task-list" tag="div" class="tasks-list">
         <TaskBlock
           v-for="task in taskStore.tasks"
           :key="task.platform_task_id"
@@ -38,7 +38,7 @@
           @reuse="reuseTask(task)"
           @cancel="cancelTask(task.platform_task_id)"
         />
-      </div>
+      </TransitionGroup>
     </div>
 
     <InputBar
@@ -255,5 +255,19 @@ onUnmounted(() => {
   flex-direction: column;
   max-width: 960px;
   margin: 0 auto;
+}
+
+.task-list-move,
+.task-list-enter-active,
+.task-list-leave-active {
+  transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.task-list-enter-from,
+.task-list-leave-to {
+  opacity: 0;
+  transform: translateY(20px);
+}
+.task-list-leave-active {
+  position: absolute;
 }
 </style>
