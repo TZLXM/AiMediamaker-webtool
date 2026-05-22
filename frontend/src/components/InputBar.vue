@@ -104,7 +104,7 @@
         </div>
 
         <!-- 参数选择 -->
-        <div v-if="hasRatioOrResolution" class="select-wrapper">
+        <div v-if="currentModel" class="select-wrapper">
           <button
             class="pill-btn param-pill"
             :class="{ active: showParams }"
@@ -118,35 +118,53 @@
             </template>
             <ChevronDownIcon :size="11" />
           </button>
-          <div v-if="showParams" class="dropdown-panel unified-params">
-            <div
-              v-for="param in currentModelParams"
-              :key="param.key"
-              class="param-section"
-            >
-              <label>{{ param.label }}</label>
-
-              <!-- 比例选择：网格按钮 -->
-              <div v-if="param.key === 'ratio' && param.options" class="ratio-grid">
+          <div v-if="showParams && currentModel" class="dropdown-panel unified-params">
+            <!-- 比例选择：固定选项网格 -->
+            <div class="param-section">
+              <label>选择比例</label>
+              <div class="ratio-grid">
                 <button
-                  v-for="opt in param.options"
-                  :key="String(opt.value)"
+                  v-for="opt in fixedRatioOptions"
+                  :key="opt.value"
                   class="ratio-btn"
-                  :class="{ active: params[param.key] === opt.value }"
-                  @click="setParam(param.key, opt.value)"
+                  :class="{ active: ratioValue === opt.value }"
+                  @click="setRatioParam(opt.value)"
                 >
                   <div class="ratio-shape">
                     <div
                       class="ratio-inner"
-                      :style="getRatioStyle(String(opt.value))"
+                      :style="getRatioStyle(opt.value)"
                     />
                   </div>
                   <span>{{ opt.label }}</span>
                 </button>
               </div>
+            </div>
 
-              <!-- 分辨率选择：按钮组 -->
-              <div v-else-if="param.key === 'resolution' && param.options" class="res-options">
+            <!-- 分辨率选择：按钮组 -->
+            <div v-if="resolutionParam" class="param-section">
+              <label>选择分辨率</label>
+              <div class="res-options">
+                <button
+                  v-for="opt in resolutionParam.options"
+                  :key="String(opt.value)"
+                  class="res-btn"
+                  :class="{ active: params[resolutionParam.key] === opt.value }"
+                  @click="setParam(resolutionParam.key, opt.value)"
+                >
+                  {{ opt.label }}
+                </button>
+              </div>
+            </div>
+
+            <!-- 其他参数 -->
+            <div
+              v-for="param in otherParams"
+              :key="param.key"
+              class="param-section"
+            >
+              <label>{{ param.label }}</label>
+              <div v-if="param.type === 'select' && param.options" class="res-options">
                 <button
                   v-for="opt in param.options"
                   :key="String(opt.value)"
@@ -157,21 +175,6 @@
                   {{ opt.label }}
                 </button>
               </div>
-
-              <!-- 尺寸选择：按钮组 -->
-              <div v-else-if="param.key === 'size' && param.options" class="res-options">
-                <button
-                  v-for="opt in param.options"
-                  :key="String(opt.value)"
-                  class="res-btn"
-                  :class="{ active: params[param.key] === opt.value }"
-                  @click="setParam(param.key, opt.value)"
-                >
-                  {{ opt.label }}
-                </button>
-              </div>
-
-              <!-- 下拉选择 -->
               <select
                 v-else-if="param.type === 'select' && param.options"
                 :value="params[param.key]"
@@ -185,8 +188,6 @@
                   {{ opt.label }}
                 </option>
               </select>
-
-              <!-- 数字输入 -->
               <input
                 v-else-if="param.type === 'number'"
                 :value="params[param.key]"
@@ -195,8 +196,6 @@
                 :max="param.max"
                 @input="(e) => setParam(param.key, Number((e.target as HTMLInputElement).value))"
               />
-
-              <!-- 布尔值 -->
               <label v-else-if="param.type === 'boolean'" class="checkbox">
                 <input
                   :checked="params[param.key]"
@@ -357,18 +356,36 @@ const currentModel = computed(() =>
 
 const canSubmit = computed(() => !!promptText.value.trim() && !!selectedModel.value)
 
-// 是否有比例或分辨率参数（控制参数pill显示）
-const hasRatioOrResolution = computed(() => {
-  return currentModelParams.value.some((p) =>
-    p.key === 'ratio' || p.key === 'resolution' || p.key === 'size'
-  )
+// 固定比例选项（和参考实现一致）
+const fixedRatioOptions = [
+  { value: '智能', label: '智能' },
+  { value: '21:9', label: '21:9' },
+  { value: '16:9', label: '16:9' },
+  { value: '3:2', label: '3:2' },
+  { value: '4:3', label: '4:3' },
+  { value: '1:1', label: '1:1' },
+  { value: '3:4', label: '3:4' },
+  { value: '2:3', label: '2:3' },
+  { value: '9:16', label: '9:16' },
+]
+
+// 比例参数的 key（支持 aspectRatio 或 ratio）
+const ratioParamKey = computed(() => {
+  return currentModelParams.value.find((p) => p.key === 'aspectRatio' || p.key === 'ratio')?.key || 'aspectRatio'
+})
+
+// 当前比例值（显示用，adaptive/null 映射为 '智能'）
+const ratioValue = computed(() => {
+  const val = params.value[ratioParamKey.value]
+  if (val === 'adaptive' || val == null) return '智能'
+  return String(val)
 })
 
 // 比例图形符号（▭横屏 ▯竖屏 □正方形 ◻自适应）
 const ratioIcon = computed(() => {
-  const ratio = params.value.ratio
-  if (!ratio || ratio === 'adaptive' || ratio === '智能') return '◻'
-  const parts = ratio.split(':')
+  const val = ratioValue.value
+  if (val === '智能') return '◻'
+  const parts = val.split(':')
   if (parts.length !== 2) return '◻'
   const w = parseInt(parts[0])
   const h = parseInt(parts[1])
@@ -378,10 +395,11 @@ const ratioIcon = computed(() => {
 })
 
 // 比例文字标签
-const ratioLabel = computed(() => {
-  const ratio = params.value.ratio
-  if (!ratio || ratio === 'adaptive') return '智能'
-  return ratio
+const ratioLabel = computed(() => ratioValue.value)
+
+// 分辨率参数
+const resolutionParam = computed(() => {
+  return currentModelParams.value.find((p) => p.key === 'resolution') || null
 })
 
 // 分辨率标签
@@ -391,6 +409,13 @@ const resolutionLabel = computed(() => {
   if (res === '2K') return '高清 2K'
   if (res === '4K') return '超清 4K'
   return res
+})
+
+// 其他参数（过滤掉比例和分辨率）
+const otherParams = computed(() => {
+  return currentModelParams.value.filter(
+    (p) => p.key !== 'aspectRatio' && p.key !== 'ratio' && p.key !== 'resolution'
+  )
 })
 
 // 时长选项
@@ -456,10 +481,21 @@ function selectModel(modelId: string) {
         defaults[param.key] = param.default
       }
     }
+    // 确保比例参数有默认值（adaptive）
+    const ratioKey = model.parameters.find((p) => p.key === 'aspectRatio' || p.key === 'ratio')?.key
+    if (ratioKey && defaults[ratioKey] == null) {
+      defaults[ratioKey] = 'adaptive'
+    }
     params.value = defaults
     // 过滤掉不兼容的文件
     filterIncompatibleFiles()
   }
+}
+
+function setRatioParam(value: string) {
+  const key = ratioParamKey.value
+  const storedValue = value === '智能' ? 'adaptive' : value
+  params.value = { ...params.value, [key]: storedValue }
 }
 
 function setParam(key: string, value: any) {
@@ -609,18 +645,24 @@ function handleDrop(e: DragEvent) {
   uploadFiles(e.dataTransfer?.files || null)
 }
 
-// 比例图形样式
+// 比例图形样式（在 28x18 容器内按比例显示）
 function getRatioStyle(ratio: string) {
-  const map: Record<string, string> = {
-    '16:9': 'width:100%;height:56%',
-    '9:16': 'width:56%;height:100%',
-    '1:1': 'width:80%;height:80%',
-    '4:3': 'width:100%;height:75%',
-    '3:4': 'width:75%;height:100%',
-    '2.39:1': 'width:100%;height:42%',
-    '1.85:1': 'width:100%;height:54%',
+  if (ratio === '智能') return ''
+  const parts = ratio.split(':')
+  if (parts.length !== 2) return ''
+  const w = parseInt(parts[0])
+  const h = parseInt(parts[1])
+  if (isNaN(w) || isNaN(h) || h === 0) return ''
+  const containerW = 28
+  const containerH = 18
+  let rw = containerW
+  let rh = containerH
+  if (w / h > containerW / containerH) {
+    rh = (containerW * h) / w
+  } else {
+    rw = (containerH * w) / h
   }
-  return map[ratio] || 'width:80%;height:80%'
+  return `width:${rw}px;height:${rh}px`
 }
 
 watch(selectedMode, loadModels, { immediate: true })
