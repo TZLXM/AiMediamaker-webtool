@@ -23,7 +23,7 @@
     </div>
 
     <!-- 提示词输入 -->
-    <div class="prompt-area">
+    <div ref="filePickerWrapRef" class="prompt-area">
       <textarea
         ref="promptRef"
         v-model="promptText"
@@ -56,7 +56,7 @@
     <div class="action-bar">
       <div class="action-left">
         <!-- 模式选择 -->
-        <div class="select-wrapper">
+        <div ref="modeSelectWrapRef" class="select-wrapper">
           <button
             class="pill-btn mode-pill"
             :class="{ active: showModeSelect }"
@@ -81,7 +81,7 @@
         </div>
 
         <!-- 模型选择 -->
-        <div class="select-wrapper">
+        <div ref="modelSelectWrapRef" class="select-wrapper">
           <button
             class="pill-btn"
             :class="{ active: showModelSelect }"
@@ -104,7 +104,7 @@
         </div>
 
         <!-- 参数选择 -->
-        <div v-if="currentModel" class="select-wrapper">
+        <div v-if="currentModel" ref="paramsWrapRef" class="select-wrapper">
           <button
             class="pill-btn param-pill"
             :class="{ active: showParams }"
@@ -209,7 +209,7 @@
         </div>
 
         <!-- 时长选择（视频模式） -->
-        <div v-if="selectedMode === 'video' && durationOptions.length > 0" class="select-wrapper">
+        <div v-if="selectedMode === 'video' && durationOptions.length > 0" ref="durationSelectWrapRef" class="select-wrapper">
           <button
             class="pill-btn"
             :class="{ active: showDurationSelect }"
@@ -268,7 +268,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch, nextTick } from 'vue'
+import { ref, computed, watch, nextTick, onMounted, onUnmounted } from 'vue'
 import {
   Sparkles as SparklesIcon,
   Paperclip as PaperclipIcon,
@@ -330,6 +330,41 @@ const showDurationSelect = ref(false)
 const showFilePicker = ref(false)
 const highlightIndex = ref(0)
 const models = ref<ModelInfo[]>([])
+
+// 下拉面板容器 refs（用于点击外部关闭）
+const modeSelectWrapRef = ref<HTMLElement>()
+const modelSelectWrapRef = ref<HTMLElement>()
+const paramsWrapRef = ref<HTMLElement>()
+const durationSelectWrapRef = ref<HTMLElement>()
+const filePickerWrapRef = ref<HTMLElement>()
+
+const dropdownRefs = [
+  { show: showModeSelect, el: modeSelectWrapRef },
+  { show: showModelSelect, el: modelSelectWrapRef },
+  { show: showParams, el: paramsWrapRef },
+  { show: showDurationSelect, el: durationSelectWrapRef },
+  { show: showFilePicker, el: filePickerWrapRef },
+]
+
+function closeDropdownsOnClickOutside(e: MouseEvent) {
+  const target = e.target as Node
+  for (const item of dropdownRefs) {
+    if (item.show.value) {
+      const el = item.el.value
+      if (el && !el.contains(target)) {
+        item.show.value = false
+      }
+    }
+  }
+}
+
+onMounted(() => {
+  document.addEventListener('click', closeDropdownsOnClickOutside)
+})
+
+onUnmounted(() => {
+  document.removeEventListener('click', closeDropdownsOnClickOutside)
+})
 
 const modes = [
   { value: 'image' as TaskMode, label: '图片生成' },
