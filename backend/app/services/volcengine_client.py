@@ -208,26 +208,26 @@ class VolcengineClient:
         # size 处理：有具体比例时发送像素值，否则发送分辨率值
         resolution = params.get("resolution")
         aspect_ratio = params.get("aspectRatio")
-        logger.info(f"[Seedream] Task params: resolution={resolution}, aspectRatio={aspect_ratio}, model_id={self.model_id}")
+        logger.warning(f"[Seedream] Task params: resolution={resolution}, aspectRatio={aspect_ratio}, model_id={self.model_id}")
         if resolution and aspect_ratio and aspect_ratio != "adaptive":
             # 根据模型ID + 分辨率 + 比例 查找对应像素值
             model_map = SEEDREAM_SIZE_MAP.get(self.model_id, {})
             res_map = model_map.get(resolution, {})
             pixel_size = res_map.get(aspect_ratio)
-            logger.info(f"[Seedream] Lookup: model_map keys={list(model_map.keys()) if model_map else 'EMPTY'}, res_map keys={list(res_map.keys()) if res_map else 'EMPTY'}")
+            logger.warning(f"[Seedream] Lookup: model_map keys={list(model_map.keys()) if model_map else 'EMPTY'}, res_map keys={list(res_map.keys()) if res_map else 'EMPTY'}")
             if pixel_size:
                 payload["size"] = pixel_size
-                logger.info(f"[Seedream] Mapped {resolution}+{aspect_ratio} -> {pixel_size}")
+                logger.warning(f"[Seedream] Mapped {resolution}+{aspect_ratio} -> {pixel_size}")
             else:
                 # 未找到映射，回退到分辨率值
                 payload["size"] = resolution
                 logger.warning(f"[Seedream] No mapping for {self.model_id}/{resolution}/{aspect_ratio}, fallback to {resolution}")
         elif resolution:
             payload["size"] = resolution
-            logger.info(f"[Seedream] No aspectRatio, using resolution={resolution}")
+            logger.warning(f"[Seedream] No aspectRatio, using resolution={resolution}")
         elif params.get("size"):
             payload["size"] = params.get("size")
-            logger.info(f"[Seedream] Using explicit size={params.get('size')}")
+            logger.warning(f"[Seedream] Using explicit size={params.get('size')}")
         if params.get("output_format"):
             payload["output_format"] = params["output_format"]
         if params.get("sequential_image_generation"):
