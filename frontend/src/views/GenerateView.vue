@@ -53,13 +53,16 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted, nextTick } from 'vue'
+import { ref, onMounted, onUnmounted, nextTick, watch } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
 import { Plus as PlusIcon, Sparkles as SparklesIcon, Image as ImageIcon, Video as VideoIcon } from 'lucide-vue-next'
 import { useTaskStore } from '@/stores'
 import type { TaskItem, TaskMode, TaskParameters, FileItem } from '@/types'
 import InputBar from '@/components/InputBar.vue'
 import TaskBlock from '@/components/TaskBlock.vue'
 
+const route = useRoute()
+const router = useRouter()
 const taskStore = useTaskStore()
 
 const prompt = ref('')
@@ -128,6 +131,30 @@ async function cancelTask(platformTaskId: string) {
   if (!confirm('确定要取消该任务吗？')) return
   await taskStore.cancelTask(platformTaskId)
 }
+
+async function loadAndReuseTask(taskId: string) {
+  try {
+    const task = await taskStore.fetchTask(taskId)
+    if (task) {
+      reuseTask(task)
+    }
+  } catch {
+    // 任务不存在或已删除，忽略
+  }
+}
+
+// 监听 query 参数中的复用任务
+watch(
+  () => route.query.reuse_task_id,
+  (taskId) => {
+    if (taskId && typeof taskId === 'string') {
+      loadAndReuseTask(taskId)
+      // 清除 query 参数，避免刷新时重复填充
+      router.replace({ path: '/generate', query: {} })
+    }
+  },
+  { immediate: true }
+)
 
 // 轮询进行中任务状态
 let pollInterval: ReturnType<typeof setInterval>
