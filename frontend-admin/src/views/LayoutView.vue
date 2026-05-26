@@ -1,34 +1,34 @@
 <template>
-  <div class="admin-layout">
-    <aside class="sidebar">
-      <div class="sidebar-header">
-        <h2>AiMediaMaker</h2>
-        <span class="badge">管理后台</span>
+  <div class="flex h-screen w-screen">
+    <aside class="w-[var(--sidebar-width)] bg-card border-r border-borderc flex flex-col shrink-0">
+      <div class="p-5 border-b border-borderc">
+        <h2 class="text-lg font-semibold">AiMediaMaker</h2>
+        <span class="inline-block mt-1 px-2 py-0.5 bg-accent text-white text-[11px] rounded">管理后台</span>
       </div>
-      <nav class="sidebar-nav">
+      <nav class="flex-1 p-3 flex flex-col gap-1">
         <router-link
           v-for="item in menuItems"
           :key="item.path"
           :to="item.path"
-          class="nav-item"
-          :class="{ active: route.path === item.path }"
+          class="flex items-center gap-2.5 px-3 py-2.5 rounded-btn text-sm transition-all duration-200 no-underline"
+          :class="route.path === item.path ? 'bg-accent text-white' : 'text-txts hover:bg-hover hover:text-txtp'"
         >
           <component :is="item.icon" :size="18" />
           <span>{{ item.label }}</span>
         </router-link>
       </nav>
-      <div class="sidebar-footer">
-        <div class="user-info">
+      <div class="p-4 border-t border-borderc">
+        <div class="flex items-center justify-between mb-3 text-[13px]">
           <span>{{ adminStore.user?.username }}</span>
-          <span class="role">{{ adminStore.user?.role }}</span>
+          <span class="px-2 py-0.5 bg-active rounded text-[11px] text-txtm uppercase">{{ adminStore.user?.role }}</span>
         </div>
-        <button class="logout-btn" @click="handleLogout">
+        <button class="w-full h-9 bg-active border border-borderc rounded-btn text-txts text-[13px] cursor-pointer flex items-center justify-center gap-1.5 transition-all duration-200 hover:bg-danger hover:text-white hover:border-danger" @click="handleLogout">
           <LogOutIcon :size="16" />
           <span>退出登录</span>
         </button>
       </div>
     </aside>
-    <main class="main-content">
+    <main class="flex-1 overflow-auto p-6">
       <router-view />
     </main>
   </div>
@@ -64,120 +64,3 @@ function handleLogout() {
   router.push('/login')
 }
 </script>
-
-<style scoped>
-.admin-layout {
-  display: flex;
-  height: 100vh;
-  width: 100vw;
-}
-
-.sidebar {
-  width: var(--sidebar-width);
-  background: var(--color-card);
-  border-right: 1px solid var(--color-borderc);
-  display: flex;
-  flex-direction: column;
-  flex-shrink: 0;
-}
-
-.sidebar-header {
-  padding: 20px;
-  border-bottom: 1px solid var(--color-borderc);
-}
-
-.sidebar-header h2 {
-  font-size: 18px;
-  font-weight: 600;
-}
-
-.badge {
-  display: inline-block;
-  margin-top: 4px;
-  padding: 2px 8px;
-  background: var(--color-accent);
-  color: white;
-  font-size: 11px;
-  border-radius: 4px;
-}
-
-.sidebar-nav {
-  flex: 1;
-  padding: 12px;
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-
-.nav-item {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 10px 12px;
-  border-radius: 8px;
-  color: var(--color-txts);
-  text-decoration: none;
-  font-size: 14px;
-  transition: all 0.2s;
-}
-
-.nav-item:hover {
-  background: var(--color-hover);
-  color: var(--color-txtp);
-}
-
-.nav-item.active {
-  background: var(--color-accent);
-  color: white;
-}
-
-.sidebar-footer {
-  padding: 16px;
-  border-top: 1px solid var(--color-borderc);
-}
-
-.user-info {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 12px;
-  font-size: 13px;
-}
-
-.role {
-  padding: 2px 8px;
-  background: var(--color-active);
-  border-radius: 4px;
-  font-size: 11px;
-  color: var(--color-txtm);
-  text-transform: uppercase;
-}
-
-.logout-btn {
-  width: 100%;
-  padding: 8px;
-  background: var(--color-active);
-  border: 1px solid var(--color-borderc);
-  border-radius: 6px;
-  color: var(--color-txts);
-  font-size: 13px;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 6px;
-  transition: all 0.2s;
-}
-
-.logout-btn:hover {
-  background: var(--color-danger);
-  color: white;
-  border-color: var(--color-danger);
-}
-
-.main-content {
-  flex: 1;
-  overflow: auto;
-  padding: 24px;
-}
-</style>

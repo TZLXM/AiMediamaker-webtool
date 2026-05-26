@@ -1,39 +1,39 @@
 <template>
-  <div class="page-container">
-    <div class="page-header">
-      <h1>用户管理</h1>
-      <button class="btn-primary" @click="showCreate = true">
+  <div class="max-w-[1200px]">
+    <div class="flex justify-between items-center mb-6">
+      <h1 class="text-xl font-semibold">用户管理</h1>
+      <button class="flex items-center gap-1.5 px-4 h-9 bg-accent border-none rounded-btn text-white text-[13px] cursor-pointer hover:bg-accent-hover" @click="showCreate = true">
         <PlusIcon :size="16" />
         创建用户
       </button>
     </div>
-    <div class="table-container">
-      <table class="data-table">
+    <div class="bg-card border border-borderc rounded-card overflow-hidden">
+      <table class="w-full border-collapse text-sm">
         <thead>
           <tr>
-            <th>ID</th>
-            <th>用户名</th>
-            <th>角色</th>
-            <th>状态</th>
-            <th>创建时间</th>
-            <th>操作</th>
+            <th class="text-left px-4 py-3 bg-active text-txtm uppercase tracking-wider font-medium text-xs">ID</th>
+            <th class="text-left px-4 py-3 bg-active text-txtm uppercase tracking-wider font-medium text-xs">用户名</th>
+            <th class="text-left px-4 py-3 bg-active text-txtm uppercase tracking-wider font-medium text-xs">角色</th>
+            <th class="text-left px-4 py-3 bg-active text-txtm uppercase tracking-wider font-medium text-xs">状态</th>
+            <th class="text-left px-4 py-3 bg-active text-txtm uppercase tracking-wider font-medium text-xs">创建时间</th>
+            <th class="text-left px-4 py-3 bg-active text-txtm uppercase tracking-wider font-medium text-xs">操作</th>
           </tr>
         </thead>
         <tbody>
           <tr v-for="user in users" :key="user.id">
-            <td>{{ user.id }}</td>
-            <td>{{ user.username }}</td>
-            <td>
-              <span class="tag" :class="user.role">{{ roleLabel(user.role) }}</span>
+            <td class="px-4 py-3 border-t border-borderc">{{ user.id }}</td>
+            <td class="px-4 py-3 border-t border-borderc">{{ user.username }}</td>
+            <td class="px-4 py-3 border-t border-borderc">
+              <span class="px-2 py-0.5 rounded text-xs font-medium" :class="roleClass(user.role)">{{ roleLabel(user.role) }}</span>
             </td>
-            <td>
-              <span class="status-dot" :class="user.is_active ? 'active' : 'inactive'">
+            <td class="px-4 py-3 border-t border-borderc">
+              <span class="px-2 py-0.5 rounded text-xs" :class="user.is_active ? 'bg-success/15 text-success' : 'bg-txtm/15 text-txtm'">
                 {{ user.is_active ? '正常' : '禁用' }}
               </span>
             </td>
-            <td>{{ formatDate(user.created_at) }}</td>
-            <td>
-              <button class="btn-text" @click="toggleStatus(user)">
+            <td class="px-4 py-3 border-t border-borderc">{{ formatDate(user.created_at) }}</td>
+            <td class="px-4 py-3 border-t border-borderc">
+              <button class="px-2 py-1 bg-transparent border-none text-accent text-[13px] cursor-pointer" @click="toggleStatus(user)">
                 {{ user.is_active ? '禁用' : '启用' }}
               </button>
             </td>
@@ -43,28 +43,28 @@
     </div>
 
     <!-- 创建用户弹窗 -->
-    <div v-if="showCreate" class="modal-overlay" @click.self="showCreate = false">
-      <div class="modal-card">
-        <h3>创建新用户</h3>
-        <div class="form-field">
-          <label>用户名</label>
-          <input v-model="newUser.username" placeholder="输入用户名" />
+    <div v-if="showCreate" class="fixed inset-0 bg-black/70 flex items-center justify-center z-[1000]" @click.self="showCreate = false">
+      <div class="bg-card border border-borderc rounded-card p-6 w-[400px]">
+        <h3 class="text-base font-semibold mb-4">创建新用户</h3>
+        <div class="flex flex-col gap-1.5 mb-3">
+          <label class="text-[13px] text-txts">用户名</label>
+          <input v-model="newUser.username" placeholder="输入用户名" class="h-9 px-3 bg-active border border-borderc rounded-btn text-txtp text-sm outline-none focus:border-accent" />
         </div>
-        <div class="form-field">
-          <label>密码</label>
-          <input v-model="newUser.password" type="password" placeholder="输入密码" />
+        <div class="flex flex-col gap-1.5 mb-3">
+          <label class="text-[13px] text-txts">密码</label>
+          <input v-model="newUser.password" type="password" placeholder="输入密码" class="h-9 px-3 bg-active border border-borderc rounded-btn text-txtp text-sm outline-none focus:border-accent" />
         </div>
-        <div class="form-field">
-          <label>角色</label>
-          <select v-model="newUser.role">
+        <div class="flex flex-col gap-1.5 mb-3">
+          <label class="text-[13px] text-txts">角色</label>
+          <select v-model="newUser.role" class="h-9 px-3 bg-active border border-borderc rounded-btn text-txtp text-sm outline-none focus:border-accent">
             <option value="user">普通用户</option>
             <option value="leader">组长</option>
             <option value="admin">管理员</option>
           </select>
         </div>
-        <div class="modal-actions">
-          <button class="btn-secondary" @click="showCreate = false">取消</button>
-          <button class="btn-primary" @click="createUser">创建</button>
+        <div class="flex justify-end gap-3 mt-4">
+          <button class="px-4 h-9 bg-active border border-borderc rounded-btn text-txts text-[13px] cursor-pointer" @click="showCreate = false">取消</button>
+          <button class="px-4 h-9 bg-accent border-none rounded-btn text-white text-[13px] cursor-pointer hover:bg-accent-hover" @click="createUser">创建</button>
         </div>
       </div>
     </div>
@@ -96,6 +96,15 @@ async function fetchUsers() {
 function roleLabel(role: string) {
   const map: Record<string, string> = { admin: '管理员', leader: '组长', user: '普通用户' }
   return map[role] || role
+}
+
+function roleClass(role: string) {
+  const map: Record<string, string> = {
+    admin: 'bg-danger/15 text-danger',
+    leader: 'bg-warning/15 text-warning',
+    user: 'bg-accent/15 text-accent',
+  }
+  return map[role] || ''
 }
 
 function formatDate(d: string) {
@@ -130,88 +139,3 @@ async function createUser() {
 
 onMounted(fetchUsers)
 </script>
-
-<style scoped>
-.page-container { max-width: 1200px; }
-.page-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 24px;
-}
-.page-header h1 { font-size: 20px; font-weight: 600; }
-
-.btn-primary {
-  display: flex; align-items: center; gap: 6px;
-  padding: 8px 16px; background: var(--color-accent);
-  border: none; border-radius: 8px; color: white;
-  font-size: 13px; cursor: pointer;
-}
-
-.table-container {
-  background: var(--color-card);
-  border: 1px solid var(--color-borderc);
-  border-radius: 12px;
-  overflow: hidden;
-}
-
-.data-table {
-  width: 100%; border-collapse: collapse; font-size: 14px;
-}
-.data-table th {
-  text-align: left; padding: 12px 16px;
-  background: var(--color-active); color: var(--color-txts);
-  font-weight: 500; font-size: 13px;
-}
-.data-table td {
-  padding: 12px 16px; border-top: 1px solid var(--color-borderc);
-}
-
-.tag {
-  padding: 2px 8px; border-radius: 4px; font-size: 12px; font-weight: 500;
-}
-.tag.admin { background: rgba(239, 68, 68, 0.15); color: var(--color-danger); }
-.tag.leader { background: rgba(245, 158, 11, 0.15); color: var(--color-warning); }
-.tag.user { background: rgba(99, 102, 241, 0.15); color: var(--color-accent); }
-
-.status-dot {
-  padding: 2px 8px; border-radius: 4px; font-size: 12px;
-}
-.status-dot.active { background: rgba(34, 197, 94, 0.15); color: var(--color-success); }
-.status-dot.inactive { background: rgba(113, 113, 122, 0.15); color: var(--color-txtm); }
-
-.btn-text {
-  padding: 4px 8px; background: transparent; border: none;
-  color: var(--color-accent); font-size: 13px; cursor: pointer;
-}
-
-.modal-overlay {
-  position: fixed; inset: 0; background: rgba(0, 0, 0, 0.7);
-  display: flex; align-items: center; justify-content: center;
-  z-index: 1000;
-}
-.modal-card {
-  background: var(--color-card); border: 1px solid var(--color-borderc);
-  border-radius: 12px; padding: 24px; width: 400px;
-}
-.modal-card h3 { font-size: 16px; margin-bottom: 16px; }
-.form-field {
-  display: flex; flex-direction: column; gap: 6px;
-  margin-bottom: 12px;
-}
-.form-field label { font-size: 13px; color: var(--color-txts); }
-.form-field input, .form-field select {
-  padding: 10px 12px; background: var(--color-active);
-  border: 1px solid var(--color-borderc); border-radius: 8px;
-  color: var(--color-txtp); font-size: 14px; outline: none;
-}
-.modal-actions {
-  display: flex; justify-content: flex-end; gap: 12px;
-  margin-top: 16px;
-}
-.btn-secondary {
-  padding: 8px 16px; background: var(--color-active);
-  border: 1px solid var(--color-borderc); border-radius: 8px;
-  color: var(--color-txts); font-size: 13px; cursor: pointer;
-}
-</style>

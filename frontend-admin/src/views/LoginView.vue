@@ -1,20 +1,22 @@
 <template>
-  <div class="login-page">
-    <div class="login-card">
-      <div class="login-header">
-        <h1>AiMediaMaker</h1>
-        <p>管理后台登录</p>
+  <div class="h-screen flex items-center justify-center bg-page">
+    <div class="bg-card border border-borderc rounded-card p-10 w-[400px]">
+      <div class="text-center mb-8">
+        <h1 class="text-2xl mb-2 font-semibold">AiMediaMaker</h1>
+        <p class="text-txts text-sm">管理后台登录</p>
       </div>
-      <form class="login-form" @submit.prevent="handleLogin">
-        <div class="form-field">
-          <label>用户名</label>
-          <input v-model="username" type="text" placeholder="请输入用户名" required />
+      <form class="flex flex-col" @submit.prevent="handleLogin">
+        <div class="mb-4">
+          <label class="block text-[13px] text-txts mb-1.5">用户名</label>
+          <input v-model="username" type="text" placeholder="请输入用户名" required
+            class="w-full h-9 px-3 bg-active border border-borderc rounded-btn text-txtp text-sm outline-none focus:border-accent" />
         </div>
-        <div class="form-field">
-          <label>密码</label>
-          <input v-model="password" type="password" placeholder="请输入密码" required />
+        <div class="mb-4">
+          <label class="block text-[13px] text-txts mb-1.5">密码</label>
+          <input v-model="password" type="password" placeholder="请输入密码" required
+            class="w-full h-9 px-3 bg-active border border-borderc rounded-btn text-txtp text-sm outline-none focus:border-accent" />
         </div>
-        <button type="submit" class="login-btn" :disabled="loading">
+        <button type="submit" class="w-full h-9 bg-accent border-none rounded-btn text-white text-sm font-medium cursor-pointer transition-colors duration-200 hover:bg-accent-hover disabled:opacity-60 disabled:cursor-not-allowed" :disabled="loading">
           {{ loading ? '登录中...' : '登录' }}
         </button>
       </form>
@@ -46,84 +48,3 @@ async function handleLogin() {
   }
 }
 </script>
-
-<style scoped>
-.login-page {
-  height: 100vh;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: var(--color-page);
-}
-
-.login-card {
-  background: var(--color-card);
-  border: 1px solid var(--color-borderc);
-  border-radius: 16px;
-  padding: 40px;
-  width: 400px;
-}
-
-.login-header {
-  text-align: center;
-  margin-bottom: 32px;
-}
-
-.login-header h1 {
-  font-size: 24px;
-  margin-bottom: 8px;
-}
-
-.login-header p {
-  color: var(--color-txts);
-  font-size: 14px;
-}
-
-.form-field {
-  margin-bottom: 16px;
-}
-
-.form-field label {
-  display: block;
-  font-size: 13px;
-  color: var(--color-txts);
-  margin-bottom: 6px;
-}
-
-.form-field input {
-  width: 100%;
-  padding: 10px 12px;
-  background: var(--color-active);
-  border: 1px solid var(--color-borderc);
-  border-radius: 8px;
-  color: var(--color-txtp);
-  font-size: 14px;
-  outline: none;
-}
-
-.form-field input:focus {
-  border-color: var(--color-accent);
-}
-
-.login-btn {
-  width: 100%;
-  padding: 12px;
-  background: var(--color-accent);
-  border: none;
-  border-radius: 8px;
-  color: white;
-  font-size: 14px;
-  font-weight: 500;
-  cursor: pointer;
-  transition: background 0.2s;
-}
-
-.login-btn:hover {
-  background: var(--color-accent-hover);
-}
-
-.login-btn:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-}
-</style>
