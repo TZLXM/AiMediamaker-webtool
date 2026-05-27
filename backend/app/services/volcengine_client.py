@@ -205,32 +205,38 @@ class VolcengineClient:
         # 参数
         params = task.parameters or {}
         
-        # size 处理：有具体比例时发送像素值，adaptive 时发送 adaptive，否则发送分辨率值
+        # size 处理：
+        # - 有具体比例时发送像素值 (WIDTHxHEIGHT)
+        # - adaptive 时只传分辨率档位 (1k/2k/4k)，让 API 自动决定比例
+        # - API 要求小写 k，所以统一 lower()
         resolution = params.get("resolution")
         aspect_ratio = params.get("aspectRatio")
-        logger.warning(f"[Seedream] Task params: resolution={resolution}, aspectRatio={aspect_ratio}, model_id={self.model_id}")
+        logger.info(f"[Seedream] Task params: resolution={resolution}, aspectRatio={aspect_ratio}, model_id={self.model_id}")
         if aspect_ratio == "adaptive":
-            payload["size"] = "adaptive"
-            logger.warning(f"[Seedream] aspectRatio=adaptive, using size=adaptive")
+            if resolution:
+                payload["size"] = resolution.lower()
+                logger.info(f"[Seedream] aspectRatio=adaptive, using size={payload['size']}")
+            else:
+                logger.info(f"[Seedream] aspectRatio=adaptive, no resolution, omitting size")
         elif resolution and aspect_ratio:
             # 根据模型ID + 分辨率 + 比例 查找对应像素值
             model_map = SEEDREAM_SIZE_MAP.get(self.model_id, {})
             res_map = model_map.get(resolution, {})
             pixel_size = res_map.get(aspect_ratio)
-            logger.warning(f"[Seedream] Lookup: model_map keys={list(model_map.keys()) if model_map else 'EMPTY'}, res_map keys={list(res_map.keys()) if res_map else 'EMPTY'}")
+            logger.info(f"[Seedream] Lookup: model_map keys={list(model_map.keys()) if model_map else 'EMPTY'}, res_map keys={list(res_map.keys()) if res_map else 'EMPTY'}")
             if pixel_size:
                 payload["size"] = pixel_size
-                logger.warning(f"[Seedream] Mapped {resolution}+{aspect_ratio} -> {pixel_size}")
+                logger.info(f"[Seedream] Mapped {resolution}+{aspect_ratio} -> {pixel_size}")
             else:
-                # 未找到映射，回退到分辨率值
-                payload["size"] = resolution
-                logger.warning(f"[Seedream] No mapping for {self.model_id}/{resolution}/{aspect_ratio}, fallback to {resolution}")
+                # 未找到映射，回退到分辨率档位
+                payload["size"] = resolution.lower()
+                logger.info(f"[Seedream] No mapping for {self.model_id}/{resolution}/{aspect_ratio}, fallback to {payload['size']}")
         elif resolution:
-            payload["size"] = resolution
-            logger.warning(f"[Seedream] No aspectRatio, using resolution={resolution}")
+            payload["size"] = resolution.lower()
+            logger.info(f"[Seedream] No aspectRatio, using size={payload['size']}")
         elif params.get("size"):
             payload["size"] = params.get("size")
-            logger.warning(f"[Seedream] Using explicit size={params.get('size')}")
+            logger.info(f"[Seedream] Using explicit size={params.get('size')}")
         if params.get("output_format"):
             payload["output_format"] = params["output_format"]
         if params.get("sequential_image_generation"):
