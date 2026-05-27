@@ -67,6 +67,11 @@ export const useTaskStore = defineStore('task', () => {
     }
   }
 
+  function clearTasks() {
+    tasks.value = []
+    currentTask.value = null
+  }
+
   return {
     tasks,
     currentTask,
@@ -77,5 +82,6 @@ export const useTaskStore = defineStore('task', () => {
     fetchAssets,
     deleteFile,
     addOrUpdateTask,
+    clearTasks,
   }
 })
