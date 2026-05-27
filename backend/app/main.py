@@ -128,6 +128,17 @@ app.include_router(api_v1_router, prefix="/api")
 
 # 静态文件 (前端构建产物) - 必须放在最后，避免覆盖API路由
 import os
-frontend_dist = os.path.join(os.path.dirname(os.path.dirname(__file__)), "..", "frontend", "dist")
+backend_dir = os.path.dirname(os.path.dirname(__file__))
+project_root = os.path.dirname(backend_dir)
+
+# 后台管理 (挂载到 /admin)
+admin_dist = os.path.join(project_root, "frontend-admin", "dist")
+if os.path.exists(admin_dist):
+    app.mount("/admin", StaticFiles(directory=admin_dist, html=True), name="admin")
+    logger.info(f"Admin frontend mounted at /admin from {admin_dist}")
+
+# 用户前台 (挂载到根路径 /)
+frontend_dist = os.path.join(project_root, "frontend", "dist")
 if os.path.exists(frontend_dist):
     app.mount("/", StaticFiles(directory=frontend_dist, html=True), name="frontend")
+    logger.info(f"User frontend mounted at / from {frontend_dist}")
