@@ -205,11 +205,14 @@ class VolcengineClient:
         # 参数
         params = task.parameters or {}
         
-        # size 处理：有具体比例时发送像素值，否则发送分辨率值
+        # size 处理：有具体比例时发送像素值，adaptive 时发送 adaptive，否则发送分辨率值
         resolution = params.get("resolution")
         aspect_ratio = params.get("aspectRatio")
         logger.warning(f"[Seedream] Task params: resolution={resolution}, aspectRatio={aspect_ratio}, model_id={self.model_id}")
-        if resolution and aspect_ratio and aspect_ratio != "adaptive":
+        if aspect_ratio == "adaptive":
+            payload["size"] = "adaptive"
+            logger.warning(f"[Seedream] aspectRatio=adaptive, using size=adaptive")
+        elif resolution and aspect_ratio:
             # 根据模型ID + 分辨率 + 比例 查找对应像素值
             model_map = SEEDREAM_SIZE_MAP.get(self.model_id, {})
             res_map = model_map.get(resolution, {})
