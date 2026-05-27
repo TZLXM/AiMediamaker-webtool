@@ -174,10 +174,14 @@
 | 预览下载 | ✅ 点击资产打开 `PreviewModal.vue`（图片缩放拖拽、视频控制条）；下载按钮通过 `getFileUrl()` 下载 |
 | 后端接入 | ✅ `taskStore.fetchAssets()` → `GET /files/assets/list`，支持 `file_type`/`search`/`start_date`/`end_date`/`page`/`page_size` 参数 |
 
-### 里程碑 M3.5: 后台 UI 对齐与补全 (Admin Frontend Polish)
+### 里程碑 M3.5: 后台 UI 对齐与补全 (Admin Frontend Polish) ✅
 **目标**: 后台代码与 `前端后台.zip` 参考设计完全一致
 
-> **背景**: 经逐项对比 `前端后台.zip` 解压后的构建产物与 `frontend-admin/` 实际代码，发现以下系统性差距。M3.5 专门用于补齐这些差异。
+> **状态**: 已完成（约 95%）。经逐项核对，M3.5.3 / M3.5.5 / M3.5.6 全部完成；M3.5.1 / M3.5.2 / M3.5.4 基本完成，剩余 2 个微调项（见下方 ⚠️）纳入 M4 维护期处理。
+>
+> **已知遗留（非阻塞）**:
+> - M3.5.1: 输入框高度统一为 `h-9`（36px），参考设计约 40px（`h-10`）
+> - M3.5.4: Dashboard 模板未渲染 `redis_connected` / `tos_connected`（数据已返回，仅缺模板绑定）
 
 #### M3.5.1 全局样式对齐（🔴 高优先级）
 **目标**: 后台所有组件从 scoped CSS 迁移到 Tailwind v4 工具类，修复颜色/圆角/间距偏差
