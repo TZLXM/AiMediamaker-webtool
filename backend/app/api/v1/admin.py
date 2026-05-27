@@ -584,10 +584,6 @@ async def update_model_config(
     
     update_data = data.model_dump(exclude_unset=True)
     
-    # 特殊处理 parameters_schema
-    if "parameters_schema" in update_data and update_data["parameters_schema"] is not None:
-        update_data["parameters_schema"] = [s.model_dump() for s in update_data["parameters_schema"]]
-    
     # 如果更新 model_id，检查唯一性
     if "model_id" in update_data and update_data["model_id"] != model.model_id:
         existing = await db.execute(
