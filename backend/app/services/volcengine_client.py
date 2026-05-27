@@ -262,6 +262,19 @@ class VolcengineClient:
                 json=payload,
                 timeout=120,
             )
+            # 自动处理 output_format 不被支持的情况（部分旧模型不支持）
+            if resp.status_code == 400:
+                error_text = resp.text
+                if "output_format" in error_text and "not supported" in error_text:
+                    logger.warning(f"[Seedream] output_format not supported by {self.model_id}, retrying without it")
+                    payload.pop("output_format", None)
+                    resp = await client.post(
+                        f"{self.base_url}/images/generations",
+                        headers=self.headers,
+                        json=payload,
+                        timeout=120,
+                    )
+            
             try:
                 resp.raise_for_status()
             except httpx.HTTPStatusError as e:
