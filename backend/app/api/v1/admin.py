@@ -584,10 +584,13 @@ async def update_model_config(
     
     update_data = data.model_dump(exclude_unset=True)
     
-    # 如果更新 model_id，检查唯一性
+    # 如果更新 model_id，检查唯一性（排除当前模型自身）
     if "model_id" in update_data and update_data["model_id"] != model.model_id:
         existing = await db.execute(
-            select(ModelConfig).where(ModelConfig.model_id == update_data["model_id"])
+            select(ModelConfig).where(
+                ModelConfig.model_id == update_data["model_id"],
+                ModelConfig.id != model_config_id,
+            )
         )
         if existing.scalar_one_or_none() is not None:
             raise HTTPException(status_code=400, detail="Model ID already exists")
