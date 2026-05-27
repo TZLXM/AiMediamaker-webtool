@@ -368,7 +368,8 @@ async def get_system_status(
         )
     )
     finished_count = finished_tasks.scalar() or 0
-    success_rate = round((completed_tasks.scalar() or 0) / finished_count * 100, 1) if finished_count > 0 else 0.0
+    completed_count = completed_tasks.scalar() or 0
+    success_rate = round(completed_count / finished_count * 100, 1) if finished_count > 0 else 0.0
     
     # 平均响应时间（completed_at - created_at 的平均秒数）
     avg_res = await db.execute(
@@ -381,6 +382,9 @@ async def get_system_status(
     # 磁盘使用率 (%)
     disk = shutil.disk_usage(settings.STORAGE_PATH)
     disk_usage = round((disk.used / disk.total) * 100, 1)
+    disk_total = disk.total
+    disk_used = disk.used
+    disk_free = disk.free
     
     # Redis 连接状态
     redis_connected = False
@@ -421,7 +425,7 @@ async def get_system_status(
         "total_users": total_users.scalar(),
         "total_tasks": total_tasks.scalar(),
         "today_tasks": today_tasks.scalar(),
-        "completed_tasks": completed_tasks.scalar(),
+        "completed_tasks": completed_count,
         "failed_tasks": failed_tasks.scalar(),
         "success_rate": success_rate,
         "total_files": total_files.scalar(),
