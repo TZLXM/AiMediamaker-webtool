@@ -248,7 +248,12 @@ class VolcengineClient:
             if key not in payload:
                 payload[key] = value
         
-        logger.info(f"[Seedream] Creating image task with model={self.model_id}, refs={len(images)}")
+        # sequential_image_generation: disabled 时直接省略该字段
+        if payload.get("sequential_image_generation") == "disabled":
+            payload.pop("sequential_image_generation", None)
+            payload.pop("sequential_image_generation_options", None)
+        
+        logger.warning(f"[Seedream] Full payload: {payload}")
         
         async with httpx.AsyncClient() as client:
             resp = await client.post(
@@ -257,7 +262,16 @@ class VolcengineClient:
                 json=payload,
                 timeout=120,
             )
-            resp.raise_for_status()
+            try:
+                resp.raise_for_status()
+            except httpx.HTTPStatusError as e:
+                error_body = e.response.text
+                logger.error(f"[Seedream] API error {e.response.status_code}: {error_body}")
+                raise VolcengineAPIError(
+                    code="http_error",
+                    message=f"{e.response.status_code}: {error_body[:500]}",
+                    status_code=e.response.status_code,
+                )
             data = resp.json()
             
             # 检查API返回的业务错误
