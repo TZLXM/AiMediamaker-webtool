@@ -109,8 +109,16 @@
         <div class="flex items-center justify-between mb-4">
           <h3 class="text-sm font-semibold text-txtp">API 状态</h3>
           <div class="flex items-center gap-1.5">
-            <span class="w-2 h-2 rounded-full bg-success animate-pulse" />
-            <span class="text-xs text-success">在线</span>
+            <span
+              class="w-2 h-2 rounded-full animate-pulse"
+              :class="stats.api_status === 'online' ? 'bg-success' : 'bg-danger'"
+            />
+            <span
+              class="text-xs"
+              :class="stats.api_status === 'online' ? 'text-success' : 'text-danger'"
+            >
+              {{ stats.api_status === 'online' ? '在线' : '离线' }}
+            </span>
           </div>
         </div>
         <div class="space-y-2">
@@ -121,6 +129,24 @@
               :class="stats.volcengine_status === 'online' ? 'text-success' : 'text-danger'"
             >
               {{ stats.volcengine_status === 'online' ? '已连接' : '未连接' }}
+            </span>
+          </div>
+          <div class="flex items-center justify-between">
+            <span class="text-xs text-txts">Redis</span>
+            <span
+              class="text-xs font-medium"
+              :class="stats.redis_connected ? 'text-success' : 'text-danger'"
+            >
+              {{ stats.redis_connected ? '已连接' : '未连接' }}
+            </span>
+          </div>
+          <div class="flex items-center justify-between">
+            <span class="text-xs text-txts">TOS 存储</span>
+            <span
+              class="text-xs font-medium"
+              :class="stats.tos_connected ? 'text-success' : 'text-danger'"
+            >
+              {{ stats.tos_connected ? '已配置' : '未配置' }}
             </span>
           </div>
           <div class="flex items-center justify-between">
@@ -142,7 +168,7 @@
         </div>
         <div class="w-full h-2 bg-page rounded-full overflow-hidden mb-3">
           <div
-            class="h-full rounded-full"
+            class="h-full rounded-full bg-accent transition-all duration-500"
             :style="{ width: stats.disk_total ? `${(stats.disk_used / stats.disk_total) * 100}%` : '0%' }"
           />
         </div>
@@ -200,10 +226,10 @@ const stats = ref<SystemStatus>({
 })
 
 const statCards = computed(() => [
-  { label: '今日任务', value: String(stats.value.today_tasks), change: '+12%', up: true, color: 'text-accent' },
-  { label: '进行中', value: String(stats.value.active_tasks), change: '队列深度', up: true, color: 'text-warning' },
+  { label: '今日任务', value: String(stats.value.today_tasks), change: `累计 ${stats.value.total_tasks}`, up: true, color: 'text-accent' },
+  { label: '进行中', value: String(stats.value.active_tasks), change: `排队 ${stats.value.queued_tasks}`, up: true, color: 'text-warning' },
   { label: '已完成', value: String(stats.value.completed_tasks), change: `成功率 ${stats.value.success_rate}%`, up: true, color: 'text-success' },
-  { label: '失败', value: String(stats.value.failed_tasks), change: '需关注', up: false, color: 'text-danger' },
+  { label: '失败', value: String(stats.value.failed_tasks), change: `成功率 ${stats.value.success_rate}%`, up: false, color: 'text-danger' },
 ])
 
 const currentTime = ref('')
@@ -293,13 +319,17 @@ async function fetchStatus() {
   }
 }
 
+let statusTimer: ReturnType<typeof setInterval> | null = null
+
 onMounted(() => {
   updateTime()
   timer = setInterval(updateTime, 1000)
   fetchStatus()
+  statusTimer = setInterval(fetchStatus, 30000)
 })
 
 onUnmounted(() => {
   if (timer) clearInterval(timer)
+  if (statusTimer) clearInterval(statusTimer)
 })
 </script>
