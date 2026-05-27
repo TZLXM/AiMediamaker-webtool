@@ -301,6 +301,12 @@ const emit = defineEmits<{
 
 const promptRef = ref<HTMLTextAreaElement>()
 const fileInputRef = ref<HTMLInputElement>()
+
+function focus() {
+  promptRef.value?.focus()
+}
+
+defineExpose({ focus })
 const promptText = ref(props.prompt)
 const isDragOver = ref(false)
 const isUploading = ref(false)

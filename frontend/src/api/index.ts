@@ -1,5 +1,4 @@
 import axios from 'axios'
-import { useUserStore } from '@/stores/user'
 
 const api = axios.create({
   baseURL: '/api/v1',
@@ -7,9 +6,9 @@ const api = axios.create({
 })
 
 api.interceptors.request.use((config) => {
-  const userStore = useUserStore()
-  if (userStore.token) {
-    config.headers.Authorization = `Bearer ${userStore.token}`
+  const token = localStorage.getItem('token')
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`
   }
   return config
 })
@@ -18,9 +17,9 @@ api.interceptors.response.use(
   (res) => res,
   (err) => {
     if (err.response?.status === 401) {
-      const userStore = useUserStore()
-      userStore.logout()
-      userStore.showLogin = true
+      localStorage.removeItem('token')
+      // 触发全局未授权事件，由 App.vue 等监听处理
+      window.dispatchEvent(new CustomEvent('api:unauthorized'))
     }
     return Promise.reject(err)
   }

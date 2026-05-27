@@ -138,7 +138,7 @@ async function copyPrompt() {
 }
 
 const modelName = computed(() => {
-  return props.task.model_id
+  return props.task.model_name || props.task.model_id
 })
 
 const displayParams = computed(() => {

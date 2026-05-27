@@ -54,6 +54,10 @@ export const useTaskStore = defineStore('task', () => {
     return res.data as FileItem[]
   }
 
+  async function deleteFile(fileId: string) {
+    await api.delete(`/files/${fileId}`)
+  }
+
   function addOrUpdateTask(task: TaskItem) {
     const idx = tasks.value.findIndex((t) => t.platform_task_id === task.platform_task_id)
     if (idx >= 0) {
@@ -71,6 +75,7 @@ export const useTaskStore = defineStore('task', () => {
     cancelTask,
     fetchHistory,
     fetchAssets,
+    deleteFile,
     addOrUpdateTask,
   }
 })

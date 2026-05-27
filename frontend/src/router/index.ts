@@ -24,11 +24,25 @@ const routes: RouteRecordRaw[] = [
     component: AssetsView,
     meta: { view: 'assets', requiresAuth: true },
   },
+  {
+    path: '/:pathMatch(.*)*',
+    name: 'not-found',
+    redirect: '/generate',
+  },
 ]
 
 const router = createRouter({
   history: createWebHistory(),
   routes,
+})
+
+router.beforeEach((to, _from, next) => {
+  const token = localStorage.getItem('token')
+  if (to.meta.requiresAuth && !token) {
+    // 通过事件通知 App.vue 显示登录弹窗
+    window.dispatchEvent(new CustomEvent('auth:required'))
+  }
+  next()
 })
 
 export default router

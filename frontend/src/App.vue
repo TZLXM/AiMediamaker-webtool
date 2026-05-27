@@ -14,15 +14,22 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted } from 'vue'
-import { useRouter } from 'vue-router'
+import { onMounted, onUnmounted } from 'vue'
 import AppSidebar from '@/components/AppSidebar.vue'
 import LoginModal from '@/components/LoginModal.vue'
 import PreviewModal from '@/components/PreviewModal.vue'
 import { useUserStore } from '@/stores'
 
 const userStore = useUserStore()
-const router = useRouter()
+
+function handleUnauthorized() {
+  userStore.logout()
+  userStore.showLogin = true
+}
+
+function handleAuthRequired() {
+  userStore.showLogin = true
+}
 
 onMounted(() => {
   const token = localStorage.getItem('token')
@@ -33,14 +40,14 @@ onMounted(() => {
       userStore.showLogin = true
     })
   }
+
+  window.addEventListener('api:unauthorized', handleUnauthorized)
+  window.addEventListener('auth:required', handleAuthRequired)
 })
 
-router.beforeEach((to, _from, next) => {
-  const token = localStorage.getItem('token')
-  if (to.meta.requiresAuth && !token) {
-    userStore.showLogin = true
-  }
-  next()
+onUnmounted(() => {
+  window.removeEventListener('api:unauthorized', handleUnauthorized)
+  window.removeEventListener('auth:required', handleAuthRequired)
 })
 </script>
 

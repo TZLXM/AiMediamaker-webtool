@@ -42,6 +42,7 @@
     </div>
 
     <InputBar
+      ref="inputBarRef"
       v-model:prompt="prompt"
       v-model:mode="selectedMode"
       v-model:model="selectedModel"
@@ -64,6 +65,7 @@ import TaskBlock from '@/components/TaskBlock.vue'
 const route = useRoute()
 const router = useRouter()
 const taskStore = useTaskStore()
+const inputBarRef = ref<InstanceType<typeof InputBar>>()
 
 const prompt = ref('')
 const selectedMode = ref<TaskMode>('image')
@@ -121,9 +123,7 @@ function quickStart(mode: TaskMode) {
   selectedMode.value = mode
   prompt.value = ''
   nextTick(() => {
-    // 聚焦输入框
-    const textarea = document.querySelector('.prompt-input') as HTMLTextAreaElement
-    textarea?.focus()
+    inputBarRef.value?.focus()
   })
 }
 

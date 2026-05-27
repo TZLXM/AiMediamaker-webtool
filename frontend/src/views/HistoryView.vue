@@ -126,7 +126,6 @@
 import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
 import dayjs from 'dayjs'
-import isSameOrAfter from 'dayjs/plugin/isSameOrAfter'
 import {
   ChevronDown as ChevronDownIcon,
   Search as SearchIcon,
@@ -137,8 +136,6 @@ import {
 import { useTaskStore } from '@/stores'
 import type { TaskItem } from '@/types'
 import TaskBlock from '@/components/TaskBlock.vue'
-
-dayjs.extend(isSameOrAfter)
 
 const router = useRouter()
 const taskStore = useTaskStore()

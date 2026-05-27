@@ -117,7 +117,9 @@
               <Thumbnail
                 :file="asset"
                 show-download
+                show-delete
                 @click="openPreview(asset)"
+                @delete="handleDelete(asset)"
               />
             </div>
           </div>
@@ -281,6 +283,17 @@ const groupedAssets = computed(() => {
 
 function openPreview(asset: FileItem) {
   previewStore.openPreview(asset)
+}
+
+async function handleDelete(asset: FileItem) {
+  if (!confirm('确定要删除该文件吗？')) return
+  try {
+    await taskStore.deleteFile(asset.file_id)
+    // 从当前列表中移除
+    assets.value = assets.value.filter((a) => a.file_id !== asset.file_id)
+  } catch {
+    alert('删除失败')
+  }
 }
 
 function handleClickOutside(event: MouseEvent) {
