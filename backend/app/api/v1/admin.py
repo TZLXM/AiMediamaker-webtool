@@ -335,14 +335,50 @@ async def get_system_status(
 ):
     """获取系统状态 Dashboard (Admin only)"""
     from ...services.tos_uploader import tos_uploader
+    from ...models.file import FileRecord
+    from datetime import datetime, timedelta
+    import shutil
+    import httpx
     
+    # 基础计数
     active_tasks = await db.execute(select(func.count()).select_from(Task).where(Task.status == TaskStatus.RUNNING))
     queued_tasks = await db.execute(select(func.count()).select_from(Task).where(Task.status == TaskStatus.QUEUED))
     total_users = await db.execute(select(func.count()).select_from(User))
     total_tasks = await db.execute(select(func.count()).select_from(Task))
+    total_files = await db.execute(select(func.count()).select_from(FileRecord))
+    
+    # 今日任务
+    today_start = datetime.now().replace(hour=0, minute=0, second=0, microsecond=0)
+    today_tasks = await db.execute(
+        select(func.count()).select_from(Task).where(Task.created_at >= today_start)
+    )
+    
+    # 已完成 / 失败
+    completed_tasks = await db.execute(
+        select(func.count()).select_from(Task).where(Task.status == TaskStatus.SUCCEEDED)
+    )
+    failed_tasks = await db.execute(
+        select(func.count()).select_from(Task).where(Task.status == TaskStatus.FAILED)
+    )
+    
+    # 成功率
+    finished_tasks = await db.execute(
+        select(func.count()).select_from(Task).where(
+            (Task.status == TaskStatus.SUCCEEDED) | (Task.status == TaskStatus.FAILED)
+        )
+    )
+    finished_count = finished_tasks.scalar() or 0
+    success_rate = round((completed_tasks.scalar() or 0) / finished_count * 100, 1) if finished_count > 0 else 0.0
+    
+    # 平均响应时间（completed_at - created_at 的平均秒数）
+    avg_res = await db.execute(
+        select(func.avg(
+            func.julianday(Task.completed_at) - func.julianday(Task.created_at)
+        ) * 86400).where(Task.status == TaskStatus.SUCCEEDED)
+    )
+    avg_response_time = round(avg_res.scalar() or 0, 1)
     
     # 磁盘使用率 (%)
-    import shutil
     disk = shutil.disk_usage(settings.STORAGE_PATH)
     disk_usage = round((disk.used / disk.total) * 100, 1)
     
@@ -353,14 +389,49 @@ async def get_system_status(
     except Exception:
         pass
     
+    # API 状态（检查火山方舟 API 是否可达）
+    api_status = "offline"
+    volcengine_status = "offline"
+    if settings.ARK_API_KEY:
+        try:
+            async with httpx.AsyncClient(timeout=5.0) as client:
+                resp = await client.get(
+                    f"{settings.ARK_BASE_URL}/models",
+                    headers={"Authorization": f"Bearer {settings.ARK_API_KEY}"}
+                )
+                if resp.status_code < 500:
+                    api_status = "online"
+                    volcengine_status = "online"
+        except Exception:
+            pass
+    
+    # 最近 10 条任务
+    recent_query = select(Task, User.username).join(User, Task.user_id == User.id).order_by(desc(Task.created_at)).limit(10)
+    recent_result = await db.execute(recent_query)
+    recent_tasks = []
+    for task, username in recent_result.all():
+        t = TaskResponse.model_validate(task)
+        d = t.model_dump()
+        d["username"] = username
+        recent_tasks.append(d)
+    
     return {
         "active_tasks": active_tasks.scalar(),
         "queued_tasks": queued_tasks.scalar(),
         "total_users": total_users.scalar(),
         "total_tasks": total_tasks.scalar(),
+        "today_tasks": today_tasks.scalar(),
+        "completed_tasks": completed_tasks.scalar(),
+        "failed_tasks": failed_tasks.scalar(),
+        "success_rate": success_rate,
+        "total_files": total_files.scalar(),
+        "avg_response_time": avg_response_time,
         "disk_usage": disk_usage,
         "redis_connected": redis_connected,
         "tos_connected": tos_uploader._is_configured(),
+        "api_status": api_status,
+        "volcengine_status": volcengine_status,
+        "recent_tasks": recent_tasks,
     }
 
 

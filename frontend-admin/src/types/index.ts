@@ -76,9 +76,18 @@ export interface SystemStatus {
   queued_tasks: number
   total_users: number
   total_tasks: number
+  today_tasks: number
+  completed_tasks: number
+  failed_tasks: number
+  success_rate: number
+  total_files: number
+  avg_response_time: number
   disk_usage: number
   redis_connected: boolean
   tos_connected: boolean
+  api_status: string
+  volcengine_status: string
+  recent_tasks: AdminTask[]
 }
 
 // 菜单
