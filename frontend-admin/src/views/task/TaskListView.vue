@@ -9,12 +9,12 @@
           class="h-9 px-3 bg-card border border-borderc rounded-btn text-txtp text-[13px] outline-none focus:border-accent w-56"
           @keyup.enter="fetchTasks"
         />
-        <select v-model="filterMode" class="h-9 px-3 bg-card border border-borderc rounded-btn text-txtp text-[13px] outline-none">
+        <select v-model="filterMode" class="h-9 px-3 bg-card border border-borderc rounded-btn text-txtp text-[13px] outline-none" @change="handleFilterChange">
           <option value="">全部模式</option>
           <option value="image">图片</option>
           <option value="video">视频</option>
         </select>
-        <select v-model="filterStatus" class="h-9 px-3 bg-card border border-borderc rounded-btn text-txtp text-[13px] outline-none">
+        <select v-model="filterStatus" class="h-9 px-3 bg-card border border-borderc rounded-btn text-txtp text-[13px] outline-none" @change="handleFilterChange">
           <option value="">全部状态</option>
           <option value="running">进行中</option>
           <option value="queued">排队中</option>
@@ -191,6 +191,11 @@ async function fetchTasks() {
   }
 }
 
+function handleFilterChange() {
+  page.value = 1
+  fetchTasks()
+}
+
 function prevPage() {
   if (page.value <= 1) return
   page.value--
@@ -206,6 +211,7 @@ function statusLabel(status: string) {
   const map: Record<string, string> = {
     pending: '等待中', queued: '排队中', running: '进行中',
     succeeded: '已完成', failed: '失败', cancelled: '已取消',
+    cancelling: '取消中', downloading: '下载中',
   }
   return map[status] || status
 }
@@ -218,6 +224,8 @@ function statusClass(status: string) {
     succeeded: 'bg-success/15 text-success',
     failed: 'bg-danger/15 text-danger',
     cancelled: 'bg-txtm/15 text-txtm',
+    cancelling: 'bg-warning/15 text-warning',
+    downloading: 'bg-accent/15 text-accent',
   }
   return map[status] || ''
 }
@@ -230,6 +238,8 @@ function statusDotClass(status: string) {
     succeeded: 'bg-success',
     failed: 'bg-danger',
     cancelled: 'bg-txtm',
+    cancelling: 'bg-warning',
+    downloading: 'bg-accent',
   }
   return map[status] || 'bg-txtm'
 }
