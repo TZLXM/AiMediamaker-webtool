@@ -56,6 +56,7 @@ export interface ApiConfig {
 export interface AdminTask {
   id: number
   platform_task_id: string
+  remote_task_id?: string
   user_id: number
   username: string
   mode: 'image' | 'video'

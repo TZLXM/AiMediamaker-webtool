@@ -271,6 +271,7 @@ async def update_user(
 async def list_tasks(
     mode: Optional[str] = None,
     status: Optional[str] = None,
+    search: Optional[str] = None,
     page: int = 1,
     page_size: int = 50,
     db: AsyncSession = Depends(get_db),
@@ -283,6 +284,12 @@ async def list_tasks(
         query = query.where(Task.mode == mode)
     if status:
         query = query.where(Task.status == status)
+    if search:
+        search_term = f"%{search}%"
+        query = query.where(
+            (Task.platform_task_id.ilike(search_term)) |
+            (Task.prompt.ilike(search_term))
+        )
     
     query = query.order_by(desc(Task.created_at))
     query = query.offset((page - 1) * page_size).limit(page_size)
