@@ -265,6 +265,8 @@ async function loadAssets() {
       search: search.value || undefined,
       start_date,
       end_date,
+      page: 1,
+      page_size: 999,
     })
   } finally {
     loading.value = false
