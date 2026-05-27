@@ -23,6 +23,7 @@ class TOSUploader:
     """火山引擎TOS上传器 - 基于HTTP预签名URL方式"""
     
     def __init__(self):
+        self.enabled = settings.TOS_ENABLED
         self.endpoint = settings.TOS_ENDPOINT
         self.access_key = settings.TOS_ACCESS_KEY
         self.secret_key = settings.TOS_SECRET_KEY
@@ -33,6 +34,8 @@ class TOSUploader:
         
     def update_config_from_db(self, config: dict) -> None:
         """从数据库更新TOS配置（Admin修改后调用）"""
+        if "enabled" in config:
+            self.enabled = config["enabled"]
         if config.get("endpoint"):
             self.endpoint = config["endpoint"]
         if config.get("region"):
@@ -46,7 +49,9 @@ class TOSUploader:
         self.base_url = f"https://{self.bucket}.{self.endpoint}"
     
     def _is_configured(self) -> bool:
-        """检查TOS配置是否完整"""
+        """检查TOS配置是否完整且已启用"""
+        if not self.enabled:
+            return False
         return all([
             self.access_key,
             self.secret_key,

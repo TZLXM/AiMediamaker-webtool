@@ -15,6 +15,13 @@ class UserCreate(UserBase):
     password: str = Field(..., min_length=6, max_length=128)
 
 
+class UserUpdate(BaseModel):
+    username: Optional[str] = Field(None, min_length=1, max_length=64)
+    password: Optional[str] = Field(None, min_length=6, max_length=128)
+    role: Optional[str] = None
+    is_active: Optional[bool] = None
+
+
 class UserResponse(UserBase):
     id: int
     is_active: bool

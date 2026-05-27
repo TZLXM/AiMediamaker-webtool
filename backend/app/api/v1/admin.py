@@ -10,6 +10,7 @@ from ...models.model_config import ApiConfig, ModelConfig
 from ...models.system_config import SystemConfig
 from ...models.user import User, UserRole
 from ...models.task import Task, TaskStatus
+from ...models.file import FileRecord
 from ...schemas.model_config import (
     ApiConfigResponse,
     ApiConfigCreate,
@@ -20,7 +21,7 @@ from ...schemas.model_config import (
     SystemConfigResponse,
     SystemConfigUpdate,
 )
-from ...schemas.user import UserResponse, UserCreate
+from ...schemas.user import UserResponse, UserCreate, UserUpdate
 from ...schemas.task import TaskResponse
 from ...services.model_manager import model_manager
 from ...api.deps import get_db, get_current_admin
@@ -153,11 +154,12 @@ async def get_system_config(
     result = await db.execute(select(SystemConfig).where(SystemConfig.config_key == config_key))
     config = result.scalar_one_or_none()
     if not config:
-        # TOS 配置不存在时返回 .env 默认值
+        # 各配置不存在时返回 .env 默认值
         if config_key == "tos":
             return SystemConfigResponse(
                 config_key="tos",
                 config_value={
+                    "enabled": settings.TOS_ENABLED,
                     "endpoint": settings.TOS_ENDPOINT,
                     "region": settings.TOS_REGION,
                     "bucket": settings.TOS_BUCKET,
@@ -165,6 +167,26 @@ async def get_system_config(
                     "secret_key": settings.TOS_SECRET_KEY,
                 },
                 description="TOS对象存储配置",
+            )
+        if config_key == "storage":
+            return SystemConfigResponse(
+                config_key="storage",
+                config_value={
+                    "max_storage_value": settings.MAX_STORAGE_GB,
+                    "max_storage_unit": "GB",
+                    "file_retention_days": settings.FILE_RETENTION_DAYS,
+                },
+                description="存储配置",
+            )
+        if config_key == "task_queue":
+            return SystemConfigResponse(
+                config_key="task_queue",
+                config_value={
+                    "poll_interval": settings.TASK_POLL_INTERVAL,
+                    "max_retries": settings.TASK_MAX_RETRIES,
+                    "max_user_concurrent_tasks": settings.MAX_USER_CONCURRENT_TASKS,
+                },
+                description="任务队列配置",
             )
         raise HTTPException(status_code=404, detail="Config not found")
     return SystemConfigResponse.model_validate(config)
@@ -207,11 +229,15 @@ async def update_system_config(
 
 @router.get("/users", response_model=List[UserResponse])
 async def list_users(
+    search: Optional[str] = None,
     db: AsyncSession = Depends(get_db),
     admin = Depends(get_current_admin),
 ):
-    """获取所有用户 (Admin only)"""
-    result = await db.execute(select(User).order_by(User.id))
+    """获取所有用户 (Admin only)，支持按用户名搜索"""
+    query = select(User).order_by(User.id)
+    if search:
+        query = query.where(User.username.ilike(f"%{search}%"))
+    result = await db.execute(query)
     users = result.scalars().all()
     return [UserResponse.model_validate(u) for u in users]
 
@@ -244,25 +270,60 @@ async def create_user(
 @router.put("/users/{user_id}", response_model=UserResponse)
 async def update_user(
     user_id: int,
-    is_active: Optional[bool] = None,
-    role: Optional[str] = None,
+    data: UserUpdate,
     db: AsyncSession = Depends(get_db),
     admin = Depends(get_current_admin),
 ):
-    """更新用户状态/角色 (Admin only)"""
+    """更新用户信息 (Admin only)"""
     result = await db.execute(select(User).where(User.id == user_id))
     user = result.scalar_one_or_none()
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
     
-    if is_active is not None:
-        user.is_active = is_active
-    if role is not None:
-        user.role = role
+    update_data = data.model_dump(exclude_unset=True)
+    
+    # 如果更新用户名，检查唯一性
+    if "username" in update_data and update_data["username"] != user.username:
+        existing = await db.execute(select(User).where(User.username == update_data["username"]))
+        if existing.scalar_one_or_none():
+            raise HTTPException(status_code=400, detail="Username already exists")
+        user.username = update_data["username"]
+    
+    if "password" in update_data:
+        from ...api.v1.auth import get_password_hash
+        user.password_hash = get_password_hash(update_data["password"])
+    
+    if "role" in update_data:
+        user.role = update_data["role"]
+    
+    if "is_active" in update_data:
+        user.is_active = update_data["is_active"]
     
     await db.commit()
     await db.refresh(user)
     return UserResponse.model_validate(user)
+
+
+@router.delete("/users/{user_id}", status_code=status.HTTP_204_NO_CONTENT)
+async def delete_user(
+    user_id: int,
+    db: AsyncSession = Depends(get_db),
+    admin = Depends(get_current_admin),
+):
+    """删除用户 (Admin only) - 级联删除该用户的所有任务和文件"""
+    result = await db.execute(select(User).where(User.id == user_id))
+    user = result.scalar_one_or_none()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    from sqlalchemy import delete
+    
+    # 级联删除该用户的所有文件记录和任务
+    await db.execute(delete(FileRecord).where(FileRecord.user_id == user_id))
+    await db.execute(delete(Task).where(Task.user_id == user_id))
+    await db.delete(user)
+    await db.commit()
+    return None
 
 
 # ============== Admin Task Management ==============
