@@ -441,14 +441,14 @@ Vue 组件 `<style scoped>` 中的旧 CSS 变量已全部替换为 Tailwind v4 `
 | 🟡 P2 | 前端 admin 构建循环依赖警告 | 未修复 | Rollup chunk 执行顺序可能异常 | 将 `useAdminStore` 的引用从 `stores/index.ts` 改为直接引用 `stores/admin.ts` |
 | 🔴 P1 | 前台 Vue 组件全部使用 scoped CSS | 未修复 | 10 个 `.vue` 文件零 Tailwind utility 类使用；`InputBar.vue` 单文件 406 行 scoped CSS；与设计规范严重不符 | 逐组件将 `<style scoped>` 中的布局/颜色/间距样式替换为 Tailwind utility 类；可配合 M3.5.1 或前台样式对齐工作一起执行 |
 | 🔴 P1 | 前台硬编码颜色值（91 处） | 未修复 | `#6366f1`/`#f59e0b`/`#ef4444` 等散落在 10 个组件中；主题替换和维护成本极高 | 提取到 `main.css` 的 `@theme` 中统一定义；组件中替换为 `bg-accent`/`text-danger` 等 utility 类 |
-| 🔴 P1 | API 层循环依赖 | 未修复 | `api/index.ts` 导入 `stores/user.ts`，`stores/user.ts` 又导入 `api/index.ts`；某些构建场景下会导致运行时错误 | 将 401 处理逻辑从 response interceptor 中提取为独立函数，或通过事件总线解耦；或 stores 中不直接导入 api 实例 |
-| 🟡 P2 | 前台缺少 404 路由 | 未修复 | `router/index.ts` 仅 4 条路由，无 `/*` catch-all；非法 URL 显示空白 | 添加 `{ path: '/:pathMatch(.*)*', component: NotFoundView }` |
-| 🟡 P2 | `router.beforeEach` 位置不当 | 未修复 | 全局路由守卫写在 `App.vue` 的 `<script setup>` 中，而非 `router/index.ts` | 将守卫逻辑迁移到 `router/index.ts` 中注册 |
-| 🟡 P2 | `TaskBlock.vue` modelName 显示不友好 | 未修复 | 显示 `model_id`（如 `seedance-v1`）而非友好名称；用户体验差 | 通过 `modelConfigMap` 或后端返回的 `model_name` 字段显示友好名称 |
-| 🟡 P2 | `TaskParameters.sequential_image_generation` 类型错误 | 未修复 | 定义为 `string`，按语义应为 `boolean` | 修正类型定义并检查使用处是否需要转换 |
-| 🟡 P2 | 资产页面删除按钮未启用 | 未修复 | `AssetsView.vue` 调用 `<Thumbnail>` 时未传 `show-delete` prop，也未绑定 `@delete` 事件 | 传入 `show-delete` prop 并添加 `handleDelete` 方法调用 `DELETE /files/{file_id}` |
-| 🟢 P3 | `HistoryView.vue` 未使用导入 | 未修复 | 导入并 `extend` 了 `dayjs/plugin/isSameOrAfter`，但逻辑中未使用 | 移除未使用的导入和 extend 调用 |
-| 🟢 P3 | `GenerateView.vue` 直接操作 DOM | 未修复 | `quickStart()` 使用 `document.querySelector('.prompt-input')` 与组件类名强耦合 | 改用 Vue ref 或 emit 方式操作 |
+| ✅ 已修复 | API 层循环依赖 | 已修复 | `api/index.ts` 导入 `stores/user.ts`，`stores/user.ts` 又导入 `api/index.ts`；某些构建场景下会导致运行时错误 | api/index.ts 不再导入 useUserStore，token 从 localStorage 读取；401 触发 `api:unauthorized` 全局事件；App.vue 监听事件调用 logout |
+| ✅ 已修复 | 前台缺少 404 路由 | 已修复 | `router/index.ts` 仅 4 条路由，无 `/*` catch-all；非法 URL 显示空白 | 添加 `{ path: '/:pathMatch(.*)*', redirect: '/generate' }` catch-all 路由 |
+| ✅ 已修复 | `router.beforeEach` 位置不当 | 已修复 | 全局路由守卫写在 `App.vue` 的 `<script setup>` 中，而非 `router/index.ts` | 将守卫逻辑迁移到 `router/index.ts` 中注册；新增 `auth:required` 全局事件通知 App.vue 显示登录弹窗 |
+| ✅ 已修复 | `TaskBlock.vue` modelName 显示不友好 | 已修复 | 显示 `model_id`（如 `seedance-v1`）而非友好名称；用户体验差 | `types/index.ts` 给 `TaskItem` 新增 `model_name?: string`；`TaskBlock.vue` modelName computed 优先显示 `model_name`，回退到 `model_id` |
+| ✅ 已修复 | `TaskParameters.sequential_image_generation` 类型过于宽泛 | 已修复 | 定义为 `string`，实际值为 `'auto' | 'disabled'`；按语义应为更精确的类型 | 改为 `'auto' | 'disabled'` 字面量联合类型；清理 `any` 类型使用 |
+| ✅ 已修复 | 资产页面删除按钮未启用 | 已修复 | `AssetsView.vue` 调用 `<Thumbnail>` 时未传 `show-delete` prop，也未绑定 `@delete` 事件 | 传入 `show-delete` prop 并添加 `handleDelete` 方法；`taskStore` 新增 `deleteFile` 方法调用 `DELETE /files/{file_id}` |
+| ✅ 已修复 | `HistoryView.vue` 未使用导入 | 已修复 | 导入并 `extend` 了 `dayjs/plugin/isSameOrAfter`，但逻辑中未使用 | 移除未使用的导入和 extend 调用 |
+| ✅ 已修复 | `GenerateView.vue` 直接操作 DOM | 已修复 | `quickStart()` 使用 `document.querySelector('.prompt-input')` 与组件类名强耦合 | `InputBar.vue` expose `focus()` 方法；`GenerateView.vue` 通过 `ref` 调用 `inputBarRef.value?.focus()` |
 | 🟢 P3 | 数据库 100 并发压测未执行 | 未执行 | 未验证连接池稳定性 | 使用 `locust` 或 `ab` 压测 `/health` |
 
 ---
