@@ -83,6 +83,9 @@ export interface SystemStatus {
   total_files: number
   avg_response_time: number
   disk_usage: number
+  disk_total: number
+  disk_used: number
+  disk_free: number
   redis_connected: boolean
   tos_connected: boolean
   api_status: string
