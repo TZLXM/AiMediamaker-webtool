@@ -51,11 +51,14 @@ class RedisClient:
     # --- 并发控制 ---
     
     async def incr_model_active(self, model_id: str) -> int:
-        """增加模型活跃任务计数，返回当前值"""
+        """增加模型活跃任务计数，返回当前值。自动设置 5 分钟 TTL 防止泄漏。"""
         if not self.is_connected():
             return 0
         key = f"task:active:{model_id}"
-        return await self.client.incr(key)
+        val = await self.client.incr(key)
+        # 设置 TTL：5 分钟。即使进程崩溃未释放，计数器也会自动过期
+        await self.client.expire(key, 300)
+        return val
     
     async def decr_model_active(self, model_id: str) -> int:
         """减少模型活跃任务计数，返回当前值"""
@@ -81,6 +84,14 @@ class RedisClient:
         if self.is_connected():
             key = f"task:active:{model_id}"
             await self.client.delete(key)
+    
+    async def reset_all_model_active(self):
+        """重置所有模型的活跃任务计数"""
+        if not self.is_connected():
+            return
+        keys = await self.client.keys("task:active:*")
+        if keys:
+            await self.client.delete(*keys)
 
 
 # 全局实例
