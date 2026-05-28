@@ -7,6 +7,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 from ..models.model_config import ApiConfig, ModelConfig, PlatformType, GenerationMode
 from ..schemas.model_config import ModelConfigResponse, ModelSelectorInfo
+from ..core.config import settings
 
 
 class ModelManager:
@@ -59,11 +60,18 @@ class ModelManager:
         return 1
     
     def get_api_key(self, model_id: str) -> Optional[str]:
-        """获取模型对应的API Key"""
+        """获取模型对应的API Key
+        
+        优先从数据库缓存读取，若无效则回退到 .env 的 ARK_API_KEY
+        """
         model = self._model_cache.get(model_id)
         if model and model.api_config_id in self._api_cache:
-            return self._api_cache[model.api_config_id].api_key
-        return None
+            db_key = self._api_cache[model.api_config_id].api_key
+            # 排除占位符和空值
+            if db_key and not db_key.startswith("请替换"):
+                return db_key
+        # 回退到环境变量
+        return settings.ARK_API_KEY or None
     
     def get_base_url(self, model_id: str) -> str:
         """获取模型对应的Base URL"""

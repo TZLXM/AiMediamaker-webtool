@@ -194,21 +194,24 @@ async def test_video_task_request_format(db_session: AsyncSession, test_user, te
         assert task_id == "cgt-test-123"
         
         # 验证 payload 结构
+        # content 顺序：参考图片 -> 参考视频 -> 参考音频 -> 文本提示词
         content = captured_payload["content"]
-        assert content[0]["type"] == "text"
-        assert content[0]["text"] == "A cute cat playing"
-        
+
         # 图片
-        assert content[1]["type"] == "image_url"
-        assert content[1]["image_url"]["url"] == "https://example.com/ref.png"
+        assert content[0]["type"] == "image_url"
+        assert content[0]["image_url"]["url"] == "https://example.com/ref.png"
 
         # 视频
-        assert content[2]["type"] == "video_url"
-        assert content[2]["video_url"]["url"] == "https://example.com/ref.mp4"
+        assert content[1]["type"] == "video_url"
+        assert content[1]["video_url"]["url"] == "https://example.com/ref.mp4"
 
         # 音频
-        assert content[3]["type"] == "audio_url"
-        assert content[3]["audio_url"]["url"] == "https://example.com/ref.mp3"
+        assert content[2]["type"] == "audio_url"
+        assert content[2]["audio_url"]["url"] == "https://example.com/ref.mp3"
+
+        # 文本提示词
+        assert content[3]["type"] == "text"
+        assert content[3]["text"] == "A cute cat playing"
         
         # 参数
         assert captured_payload["ratio"] == "16:9"

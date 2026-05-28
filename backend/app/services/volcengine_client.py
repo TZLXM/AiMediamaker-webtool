@@ -58,7 +58,7 @@ class VolcengineClient:
         self.model_id = model_id
         self.api_key = model_manager.get_api_key(model_id)
         self.base_url = model_manager.get_base_url(model_id)
-        
+
         if not self.api_key:
             raise VolcengineAPIError(
                 code="missing_api_key",
@@ -116,33 +116,44 @@ class VolcengineClient:
     async def _create_video_task(self, task, db: Optional[AsyncSession] = None) -> str:
         """创建视频生成任务 (Seedance)"""
         contents = []
-        
-        # 添加文本提示词
+
+        # 准备参考文件（图生视频要求参考图片在文本之前，且通常只支持单张图片）
+        image_files = [f for f in task.input_files if str(f.file_type) == "image"]
+        video_files = [f for f in task.input_files if str(f.file_type) == "video"]
+        audio_files = [f for f in task.input_files if str(f.file_type) == "audio"]
+
+        # 参考图片（只取第一张，Seedance 图生视频通常只支持单张）
+        if image_files:
+            file_content = await self._prepare_file_content(image_files[0], db=db)
+            contents.append({
+                "type": "image_url",
+                "image_url": file_content,
+            })
+            logger.info(f"[Seedance] Reference image: {image_files[0].file_id}")
+
+        # 参考视频（视频延长/参考视频）
+        for file_record in video_files:
+            file_content = await self._prepare_file_content(file_record, db=db)
+            contents.append({
+                "type": "video_url",
+                "video_url": file_content,
+            })
+            logger.info(f"[Seedance] Reference video: {file_record.file_id}")
+
+        # 参考音频
+        for file_record in audio_files:
+            file_content = await self._prepare_file_content(file_record, db=db)
+            contents.append({
+                "type": "audio_url",
+                "audio_url": file_content,
+            })
+            logger.info(f"[Seedance] Reference audio: {file_record.file_id}")
+
+        # 文本提示词（必须放在参考文件之后）
         contents.append({
             "type": "text",
             "text": task.prompt,
         })
-        
-        # 添加参考文件
-        for file_record in task.input_files:
-            file_content = await self._prepare_file_content(file_record, db=db)
-            
-            ft = str(file_record.file_type)
-            if ft == "image":
-                contents.append({
-                    "type": "image_url",
-                    "image_url": file_content,
-                })
-            elif ft == "video":
-                contents.append({
-                    "type": "video_url",
-                    "video_url": file_content,
-                })
-            elif ft == "audio":
-                contents.append({
-                    "type": "audio_url",
-                    "audio_url": file_content,
-                })
         
         payload = {
             "model": self.model_id,
