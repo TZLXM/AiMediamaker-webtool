@@ -32,22 +32,29 @@
         rows="1"
         @input="onInput"
         @keydown="onKeydown"
+        @compositionstart="onCompositionStart"
+        @compositionend="onCompositionEnd"
       />
 
       <!-- @ 文件引用面板 -->
       <div v-if="showFilePicker" class="mention-panel">
         <div class="mention-header">引用文件</div>
-        <div
-          v-for="(file, idx) in availableFiles"
-          :key="file.file_id"
-          class="mention-item"
-          :class="{ highlighted: highlightIndex === idx }"
-          @click="insertFileRef(file, idx)"
-        >
-          <ImageIcon v-if="file.file_type === 'image'" :size="14" />
-          <VideoIcon v-else-if="file.file_type === 'video'" :size="14" />
-          <MusicIcon v-else :size="14" />
-          {{ fileTypeLabel(file.file_type) }}{{ idx + 1 }}
+        <template v-if="availableFiles.length > 0">
+          <div
+            v-for="(file, idx) in availableFiles"
+            :key="file.file_id"
+            class="mention-item"
+            :class="{ highlighted: highlightIndex === idx }"
+            @click="insertFileRef(file, idx)"
+          >
+            <ImageIcon v-if="file.file_type === 'image'" :size="14" />
+            <VideoIcon v-else-if="file.file_type === 'video'" :size="14" />
+            <MusicIcon v-else :size="14" />
+            {{ fileTypeLabel(file.file_type) }}{{ idx + 1 }}
+          </div>
+        </template>
+        <div v-else class="mention-empty">
+          暂无可用文件，请先上传
         </div>
       </div>
     </div>
@@ -563,12 +570,45 @@ function removeFile(idx: number) {
   uploadedFiles.value = newFiles
 }
 
+const isComposing = ref(false)
+
 function onInput() {
-  showFilePicker.value = promptText.value.endsWith('@')
-  highlightIndex.value = 0
+  // 直接从 DOM 读取，避免 v-model 响应式延迟
+  const val = promptRef.value?.value || ''
+  showFilePicker.value = val.endsWith('@')
+  if (showFilePicker.value) {
+    highlightIndex.value = 0
+  }
+}
+
+function onCompositionStart() {
+  isComposing.value = true
+}
+
+function onCompositionEnd() {
+  isComposing.value = false
+  // composition 结束后检查是否需要弹出面板
+  onInput()
 }
 
 function onKeydown(e: KeyboardEvent) {
+  // 中文输入法组字过程中忽略非功能键
+  if (isComposing.value && e.key.length === 1) {
+    return
+  }
+
+  // @ 键直接触发文件选择面板（作为 input 事件的可靠备选）
+  if (e.key === '@' || e.key === '2' && e.shiftKey) {
+    nextTick(() => {
+      const val = promptRef.value?.value || ''
+      if (val.endsWith('@')) {
+        showFilePicker.value = true
+        highlightIndex.value = 0
+      }
+    })
+    return
+  }
+
   if (showFilePicker.value) {
     if (e.key === 'ArrowDown') {
       e.preventDefault()
@@ -823,6 +863,12 @@ watch(selectedMode, loadModels, { immediate: true })
 .mention-item.highlighted {
   color: var(--color-text-primary);
   background: #ffffff0a;
+}
+
+.mention-empty {
+  padding: 10px 14px;
+  font-size: 12px;
+  color: var(--color-text-muted);
 }
 
 .action-bar {

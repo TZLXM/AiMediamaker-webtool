@@ -132,19 +132,16 @@ class VolcengineClient:
                 contents.append({
                     "type": "image_url",
                     "image_url": file_content,
-                    "role": "reference_image",
                 })
             elif ft == "video":
                 contents.append({
                     "type": "video_url",
                     "video_url": file_content,
-                    "role": "reference_video",
                 })
             elif ft == "audio":
                 contents.append({
                     "type": "audio_url",
                     "audio_url": file_content,
-                    "role": "reference_audio",
                 })
         
         payload = {
