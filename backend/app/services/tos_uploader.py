@@ -7,6 +7,7 @@ TOS (火山引擎对象存储) 上传服务
 【不做备份】：平台的主文件存储始终在本地文件系统（FileManager），
 TOS 上的对象生命周期由平台策略管理，可设置过期删除，不做长期备份用途。
 """
+import asyncio
 import os
 import hashlib
 import hmac
@@ -15,8 +16,11 @@ import urllib.parse
 from typing import Optional, Tuple
 from pathlib import Path
 import httpx
+import logging
 from ..core.config import settings
 from ..models.file import FileRecord, StorageStatus
+
+logger = logging.getLogger(__name__)
 
 
 class TOSUploader:
@@ -130,81 +134,97 @@ class TOSUploader:
     
     async def upload_file(self, file_record: FileRecord) -> Tuple[Optional[str], StorageStatus]:
         """
-        上传文件到TOS，返回公网URL和状态
-        
+        上传文件到TOS，返回预签名公网URL和状态
+
         Returns:
-            (public_url, storage_status)
-        
+            (presigned_url, storage_status)
+
         流程:
         1. 读取本地文件
         2. 生成对象键
-        3. 使用SDK上传
-        4. 返回公网URL和状态 (不直接修改ORM对象，由调用方持久化)
+        3. 使用TosClientV2上传（线程池包装，不阻塞事件循环）
+        4. 生成预签名URL供外部API访问
+        5. 返回预签名URL和状态
         """
         if not self._is_configured():
             raise RuntimeError(
                 "TOS配置不完整，请设置 TOS_ENDPOINT, TOS_ACCESS_KEY, TOS_SECRET_KEY, TOS_BUCKET"
             )
-        
+
         file_path = Path(file_record.storage_path)
         if not file_path.exists():
             raise FileNotFoundError(f"文件不存在: {file_path}")
-        
+
         object_key = self._generate_object_key(file_record)
         content_type = file_record.mime_type
-        
-        try:
-            # 读取文件内容
-            file_size = file_path.stat().st_size
-            
-            # 使用 tos SDK 上传
-            try:
-                import tos
-                auth = tos.Auth(
-                    access_key_id=self.access_key,
-                    access_key_secret=self.secret_key,
-                    region=self.region,
-                )
-                client = tos.TosClient(auth, endpoint=self.endpoint)
-                with open(file_path, "rb") as f:
-                    client.put_object(
-                        Bucket=self.bucket,
-                        Key=object_key,
-                        Body=f.read(),
-                        ContentType=content_type,
-                    )
-                
-                public_url = f"{self.base_url}/{object_key}"
-                return (public_url, StorageStatus.UPLOADED)
-                
-            except ImportError:
-                # 回退: 使用httpx + 预签名URL方式
-                raise ImportError(
-                    "请安装 tos SDK: pip install tos\n"
-                    "TOS上传是平台的必选项，用于向火山方舟API提供可访问的文件URL。"
-                )
-                
-        except Exception as e:
-            raise RuntimeError(f"TOS上传失败: {e}")
-    
-    async def get_presigned_url(self, object_key: str, expires: int = 3600) -> str:
-        """获取预签名下载URL"""
-        # 生产环境使用tos SDK生成
+        file_size = file_path.stat().st_size
+
+        logger.info(f"[TOS] Starting upload: {file_record.original_name} ({file_size} bytes) -> {object_key}")
+
         try:
             import tos
-            client = tos.TosClient(
+        except ImportError:
+            raise ImportError(
+                "请安装 tos SDK: pip install tos\n"
+                "TOS上传是平台的必选项，用于向火山方舟API提供可访问的文件URL。"
+            )
+
+        # 初始化 TosClientV2（新版API）
+        client = tos.TosClientV2(
+            ak=self.access_key,
+            sk=self.secret_key,
+            endpoint=self.endpoint,
+            region=self.region,
+        )
+
+        try:
+            # 使用线程池包装同步SDK调用，避免阻塞asyncio事件循环
+            with open(file_path, "rb") as f:
+                file_data = f.read()
+
+            await asyncio.to_thread(
+                client.put_object,
+                bucket=self.bucket,
+                key=object_key,
+                body=file_data,
+                content_type=content_type,
+            )
+            logger.info(f"[TOS] Upload succeeded: {object_key}")
+
+            # 生成预签名URL（默认7天有效期，与TOS_EXPIRES一致）
+            presigned_url = await asyncio.to_thread(
+                client.pre_signed_url,
+                http_method=tos.HttpMethodType.GET,
+                bucket=self.bucket,
+                key=object_key,
+                expires=self.expires,
+            )
+            logger.info(f"[TOS] Pre-signed URL generated: {presigned_url[:80]}...")
+
+            return (presigned_url, StorageStatus.UPLOADED)
+
+        except Exception as e:
+            logger.error(f"[TOS] Upload failed: {e}")
+            raise RuntimeError(f"TOS上传失败: {e}")
+
+    async def get_presigned_url(self, object_key: str, expires: int = 3600) -> str:
+        """获取预签名下载URL"""
+        try:
+            import tos
+            client = tos.TosClientV2(
                 ak=self.access_key,
                 sk=self.secret_key,
                 endpoint=self.endpoint,
                 region=self.region,
             )
-            url = client.pre_signed_url(
-                http_method="GET",
+            presigned_url = await asyncio.to_thread(
+                client.pre_signed_url,
+                http_method=tos.HttpMethodType.GET,
                 bucket=self.bucket,
                 key=object_key,
                 expires=expires,
             )
-            return url.signed_url
+            return presigned_url
         except ImportError:
             # 简化回退: 使用手动签名
             return self._sign_request("GET", object_key)

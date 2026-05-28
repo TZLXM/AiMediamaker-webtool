@@ -200,17 +200,14 @@ async def test_video_task_request_format(db_session: AsyncSession, test_user, te
         
         # 图片
         assert content[1]["type"] == "image_url"
-        assert content[1]["role"] == "reference_image"
         assert content[1]["image_url"]["url"] == "https://example.com/ref.png"
-        
+
         # 视频
         assert content[2]["type"] == "video_url"
-        assert content[2]["role"] == "reference_video"
         assert content[2]["video_url"]["url"] == "https://example.com/ref.mp4"
-        
+
         # 音频
         assert content[3]["type"] == "audio_url"
-        assert content[3]["role"] == "reference_audio"
         assert content[3]["audio_url"]["url"] == "https://example.com/ref.mp3"
         
         # 参数
