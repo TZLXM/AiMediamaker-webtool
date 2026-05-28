@@ -197,17 +197,20 @@ async def test_video_task_request_format(db_session: AsyncSession, test_user, te
         # content 顺序：参考图片 -> 参考视频 -> 参考音频 -> 文本提示词
         content = captured_payload["content"]
 
-        # 图片
+        # 图片（单张，role 省略）
         assert content[0]["type"] == "image_url"
         assert content[0]["image_url"]["url"] == "https://example.com/ref.png"
+        assert "role" not in content[0]
 
         # 视频
         assert content[1]["type"] == "video_url"
         assert content[1]["video_url"]["url"] == "https://example.com/ref.mp4"
+        assert content[1]["role"] == "reference_video"
 
         # 音频
         assert content[2]["type"] == "audio_url"
         assert content[2]["audio_url"]["url"] == "https://example.com/ref.mp3"
+        assert content[2]["role"] == "reference_audio"
 
         # 文本提示词
         assert content[3]["type"] == "text"
@@ -218,6 +221,76 @@ async def test_video_task_request_format(db_session: AsyncSession, test_user, te
         assert captured_payload["duration"] == 5
         assert captured_payload["generate_audio"] is True
         assert captured_payload["watermark"] is False
+    finally:
+        model_manager._model_cache = original_cache
+
+
+@pytest.mark.asyncio
+async def test_video_task_multi_images_role(db_session: AsyncSession, test_user, test_video_model, test_input_files):
+    """测试多图片参考视频生成时 role=reference_image"""
+    from app.services.model_manager import model_manager
+    original_cache = model_manager._model_cache.copy()
+    model_manager._model_cache[test_video_model.model_id] = test_video_model
+
+    try:
+        client = VolcengineClient(test_video_model.model_id)
+
+        # 构造第二张图片
+        from app.models.file import FileRecord, FileType, FileSource
+        import uuid
+        image_file2 = FileRecord(
+            file_id=f"file_{uuid.uuid4().hex[:12]}",
+            original_name="ref2.png",
+            storage_name="ref2.png",
+            storage_path="/tmp/ref2.png",
+            file_type=FileType.IMAGE,
+            mime_type="image/png",
+            size_bytes=1024,
+            source=FileSource.UPLOAD,
+            user_id=test_user.id,
+            public_url="https://example.com/ref2.png",
+        )
+        db_session.add(image_file2)
+        await db_session.commit()
+        await db_session.refresh(image_file2)
+
+        task = Task(
+            platform_task_id="task_test_multi_img",
+            user_id=test_user.id,
+            mode=TaskMode.VIDEO,
+            model_id=test_video_model.model_id,
+            prompt="Multi reference images test",
+            parameters={"ratio": "16:9", "duration": 5},
+        )
+        task.input_files = [
+            test_input_files["image"],
+            image_file2,
+        ]
+
+        captured_payload = {}
+
+        async def mock_post(*args, **kwargs):
+            nonlocal captured_payload
+            captured_payload = kwargs.get("json", {})
+            class MockResp:
+                status_code = 200
+                def json(self): return {"id": "cgt-test-multi"}
+                def raise_for_status(self): pass
+            return MockResp()
+
+        with patch("httpx.AsyncClient.post", new=mock_post):
+            task_id = await client._create_video_task(task, db=db_session)
+
+        assert task_id == "cgt-test-multi"
+        content = captured_payload["content"]
+
+        # 两张图片都应带 role=reference_image
+        assert content[0]["type"] == "image_url"
+        assert content[0]["role"] == "reference_image"
+        assert content[1]["type"] == "image_url"
+        assert content[1]["role"] == "reference_image"
+        # 文本在最后
+        assert content[2]["type"] == "text"
     finally:
         model_manager._model_cache = original_cache
 

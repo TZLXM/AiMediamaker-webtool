@@ -66,7 +66,9 @@ class TOSUploader:
     def _generate_object_key(self, file_record: FileRecord) -> str:
         """生成TOS对象键 (按用户/类型/日期组织)"""
         date_str = datetime.datetime.now().strftime("%Y/%m/%d")
-        file_type = file_record.file_type.value
+        # file_type 可能是枚举或字符串
+        ft = file_record.file_type
+        file_type = ft.value if hasattr(ft, 'value') else str(ft)
         # 使用file_id作为对象名保证唯一性
         ext = Path(file_record.original_name).suffix.lower()
         return f"users/{file_record.user_id}/{file_type}/{date_str}/{file_record.file_id}{ext}"
@@ -186,19 +188,20 @@ class TOSUploader:
                 client.put_object,
                 bucket=self.bucket,
                 key=object_key,
-                body=file_data,
+                content=file_data,
                 content_type=content_type,
             )
             logger.info(f"[TOS] Upload succeeded: {object_key}")
 
             # 生成预签名URL（默认7天有效期，与TOS_EXPIRES一致）
-            presigned_url = await asyncio.to_thread(
+            presigned_result = await asyncio.to_thread(
                 client.pre_signed_url,
-                http_method=tos.HttpMethodType.GET,
+                http_method=tos.HttpMethodType.Http_Method_Get,
                 bucket=self.bucket,
                 key=object_key,
                 expires=self.expires,
             )
+            presigned_url = presigned_result.signed_url
             logger.info(f"[TOS] Pre-signed URL generated: {presigned_url[:80]}...")
 
             return (presigned_url, StorageStatus.UPLOADED)
@@ -217,14 +220,14 @@ class TOSUploader:
                 endpoint=self.endpoint,
                 region=self.region,
             )
-            presigned_url = await asyncio.to_thread(
+            presigned_result = await asyncio.to_thread(
                 client.pre_signed_url,
-                http_method=tos.HttpMethodType.GET,
+                http_method=tos.HttpMethodType.Http_Method_Get,
                 bucket=self.bucket,
                 key=object_key,
                 expires=expires,
             )
-            return presigned_url
+            return presigned_result.signed_url
         except ImportError:
             # 简化回退: 使用手动签名
             return self._sign_request("GET", object_key)

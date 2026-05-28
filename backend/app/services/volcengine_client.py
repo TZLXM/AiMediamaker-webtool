@@ -117,19 +117,24 @@ class VolcengineClient:
         """创建视频生成任务 (Seedance)"""
         contents = []
 
-        # 准备参考文件（图生视频要求参考图片在文本之前，且通常只支持单张图片）
+        # 准备参考文件（图生视频要求参考图片在文本之前）
         image_files = [f for f in task.input_files if str(f.file_type) == "image"]
         video_files = [f for f in task.input_files if str(f.file_type) == "video"]
         audio_files = [f for f in task.input_files if str(f.file_type) == "audio"]
 
-        # 参考图片（只取第一张，Seedance 图生视频通常只支持单张）
-        if image_files:
-            file_content = await self._prepare_file_content(image_files[0], db=db)
-            contents.append({
+        # 参考图片（全部传递，API 端会决定接受多少张）
+        # 单张图片可不填 role（默认首帧），多张参考图必填 role=reference_image
+        num_images = len(image_files)
+        for idx, file_record in enumerate(image_files):
+            file_content = await self._prepare_file_content(file_record, db=db)
+            item = {
                 "type": "image_url",
                 "image_url": file_content,
-            })
-            logger.info(f"[Seedance] Reference image: {image_files[0].file_id}")
+            }
+            if num_images >= 2:
+                item["role"] = "reference_image"
+            contents.append(item)
+            logger.info(f"[Seedance] Reference image #{idx + 1}: {file_record.file_id}")
 
         # 参考视频（视频延长/参考视频）
         for file_record in video_files:
@@ -137,6 +142,7 @@ class VolcengineClient:
             contents.append({
                 "type": "video_url",
                 "video_url": file_content,
+                "role": "reference_video",
             })
             logger.info(f"[Seedance] Reference video: {file_record.file_id}")
 
@@ -146,6 +152,7 @@ class VolcengineClient:
             contents.append({
                 "type": "audio_url",
                 "audio_url": file_content,
+                "role": "reference_audio",
             })
             logger.info(f"[Seedance] Reference audio: {file_record.file_id}")
 
