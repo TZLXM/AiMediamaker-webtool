@@ -574,8 +574,12 @@ const isComposing = ref(false)
 
 function onInput() {
   // 直接从 DOM 读取，避免 v-model 响应式延迟
-  const val = promptRef.value?.value || ''
-  showFilePicker.value = val.endsWith('@')
+  const el = promptRef.value
+  if (!el) return
+  const val = el.value
+  const cursorPos = el.selectionStart || 0
+  // 检查光标前一个字符是否是 @（支持在 prompt 任意位置插入）
+  showFilePicker.value = cursorPos > 0 && val[cursorPos - 1] === '@'
   if (showFilePicker.value) {
     highlightIndex.value = 0
   }
@@ -598,10 +602,13 @@ function onKeydown(e: KeyboardEvent) {
   }
 
   // @ 键直接触发文件选择面板（作为 input 事件的可靠备选）
-  if (e.key === '@' || e.key === '2' && e.shiftKey) {
+  if (e.key === '@' || (e.key === '2' && e.shiftKey)) {
     nextTick(() => {
-      const val = promptRef.value?.value || ''
-      if (val.endsWith('@')) {
+      const el = promptRef.value
+      if (!el) return
+      const val = el.value
+      const cursorPos = el.selectionStart || 0
+      if (cursorPos > 0 && val[cursorPos - 1] === '@') {
         showFilePicker.value = true
         highlightIndex.value = 0
       }
@@ -644,11 +651,27 @@ function fileTypeLabel(t: string) {
 }
 
 function insertFileRef(file: FileItem, idx: number) {
-  const prefix = promptText.value.slice(0, -1)
-  const newText = prefix + `@${fileTypeLabel(file.file_type)}${idx + 1} `
+  const el = promptRef.value
+  if (!el) return
+
+  const val = el.value
+  const cursorPos = el.selectionStart || 0
+
+  // 找到光标前最近的 @ 并替换为 @图片1 （支持在 prompt 任意位置插入）
+  const beforeAt = val.slice(0, cursorPos - 1)
+  const afterAt = val.slice(cursorPos)
+  const insertText = `@${fileTypeLabel(file.file_type)}${idx + 1} `
+  const newText = beforeAt + insertText + afterAt
+
   promptText.value = newText
   showFilePicker.value = false
-  nextTick(() => promptRef.value?.focus())
+
+  nextTick(() => {
+    el.focus()
+    // 将光标放到插入文本之后
+    const newCursorPos = beforeAt.length + insertText.length
+    el.setSelectionRange(newCursorPos, newCursorPos)
+  })
 }
 
 // 文件类型校验
