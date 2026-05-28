@@ -74,7 +74,13 @@
 
       <template v-else-if="isError">
         <div class="status-error">
-          <span>生成失败 {{ task.error_code ? `(${task.error_code})` : '' }}</span>
+          <div class="error-main">
+            <span class="error-label">生成失败</span>
+            <span v-if="task.error_code" class="error-code">{{ task.error_code }}</span>
+          </div>
+          <p v-if="task.error_message" class="error-detail" :title="task.error_message">
+            {{ task.error_message }}
+          </p>
         </div>
       </template>
 
@@ -360,11 +366,42 @@ function formatTime(t: string) {
 
 .status-error {
   display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+  padding: 12px 0;
+  color: var(--color-error);
+}
+
+.error-main {
+  display: flex;
   align-items: center;
   gap: 8px;
-  padding: 12px 0;
+}
+
+.error-label {
   font-size: 13px;
+  font-weight: 500;
+}
+
+.error-code {
+  font-size: 11px;
+  padding: 1px 6px;
+  background: #ef44441a;
+  border-radius: 3px;
   color: var(--color-error);
+}
+
+.error-detail {
+  margin: 0;
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--color-text-secondary);
+  word-break: break-word;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
 }
 
 .task-actions {
