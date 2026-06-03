@@ -4,6 +4,18 @@
       <div class="login-overlay" @click.self="userStore.showLogin = false">
         <Transition name="scale-in">
           <div class="login-card">
+            <div class="login-logo">
+              <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
+                <defs>
+                  <linearGradient id="logoGradModal" x1="0" y1="0" x2="28" y2="28">
+                    <stop offset="0%" stop-color="#6366f1" />
+                    <stop offset="100%" stop-color="#8b5cf6" />
+                  </linearGradient>
+                </defs>
+                <path d="M14 2L24 8.5V19.5L14 26L4 19.5V8.5L14 2Z" fill="url(#logoGradModal)" opacity="0.9" />
+                <path d="M14 6L20 10V18L14 22L8 18V10L14 6Z" fill="white" opacity="0.15" />
+              </svg>
+            </div>
             <div class="login-header">
               <h2>账号登录</h2>
               <p>登录后即可使用AI图片视频生成</p>
@@ -58,20 +70,34 @@ async function handleLogin() {
 .login-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.7);
+  background: #0a0a0feb;
+  -webkit-backdrop-filter: blur(12px);
+  backdrop-filter: blur(12px);
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 1000;
+  z-index: 2000;
 }
 
 .login-card {
   background: var(--color-bg-secondary);
   border: 1px solid var(--color-border);
-  border-radius: 16px;
-  padding: 32px;
-  width: 380px;
-  max-width: 90vw;
+  border-radius: 20px;
+  padding: 40px;
+  width: 100%;
+  max-width: 400px;
+  box-shadow: 0 12px 48px #00000080;
+}
+
+.login-logo {
+  width: 56px;
+  height: 56px;
+  border-radius: 14px;
+  background: linear-gradient(135deg, #6366f1, #8b5cf6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 24px;
 }
 
 .login-header {
@@ -82,33 +108,44 @@ async function handleLogin() {
 .login-header h2 {
   font-size: 20px;
   margin-bottom: 8px;
+  color: var(--color-text-primary);
 }
 
 .login-header p {
-  color: var(--color-text-secondary);
-  font-size: 14px;
+  color: var(--color-text-muted);
+  font-size: 13px;
+}
+
+.login-form {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
 }
 
 .form-field {
-  margin-bottom: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
 }
 
 .form-field label {
   display: block;
-  font-size: 13px;
+  font-size: 12px;
+  font-weight: 500;
   color: var(--color-text-secondary);
-  margin-bottom: 6px;
 }
 
 .form-field input {
   width: 100%;
-  padding: 10px 12px;
+  height: 44px;
+  padding: 0 14px;
   background: var(--color-bg-tertiary);
   border: 1px solid var(--color-border);
-  border-radius: 8px;
+  border-radius: 10px;
   color: var(--color-text-primary);
   font-size: 14px;
   outline: none;
+  transition: border-color 0.2s;
 }
 
 .form-field input:focus {
@@ -117,19 +154,19 @@ async function handleLogin() {
 
 .login-submit {
   width: 100%;
-  padding: 12px;
-  background: var(--color-accent);
+  height: 48px;
+  background: linear-gradient(135deg, #6366f1, #8b5cf6);
   border: none;
-  border-radius: 8px;
+  border-radius: 12px;
   color: white;
-  font-size: 14px;
+  font-size: 15px;
   font-weight: 500;
   cursor: pointer;
-  transition: background 0.2s;
+  transition: filter 0.2s;
 }
 
 .login-submit:hover {
-  background: var(--color-accent-hover);
+  filter: brightness(1.1);
 }
 
 .login-submit:disabled {
@@ -138,10 +175,11 @@ async function handleLogin() {
 }
 
 .login-note {
-  margin-top: 16px;
+  margin-top: 20px;
   font-size: 12px;
   color: var(--color-text-muted);
   text-align: center;
+  line-height: 1.5;
 }
 
 .fade-enter-active,

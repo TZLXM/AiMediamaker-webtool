@@ -9,11 +9,14 @@
 供火山方舟 API（Seedance/Seedream）读取。平台主存储始终在本地文件系统。
 """
 import base64
+import logging
 from pathlib import Path
 from typing import Optional, Tuple
 from sqlalchemy.ext.asyncio import AsyncSession
 from ..models.file import FileRecord, StorageStatus
 from ..services.tos_uploader import tos_uploader
+
+logger = logging.getLogger(__name__)
 
 
 class FileProcessor:
@@ -81,8 +84,9 @@ class FileProcessor:
             if db:
                 await db.commit()
             return (url, status)
-        except Exception:
+        except Exception as e:
             # 上传失败但保留本地副本
+            logger.error(f"[FileProcessor] TOS upload failed for {file_record.file_id}: {e}")
             file_record.storage_status = StorageStatus.FAILED
             if db:
                 await db.commit()
@@ -129,7 +133,7 @@ class FileProcessor:
             # 大文件TOS失败无法回退
             raise RuntimeError(
                 f"文件 {file_record.original_name} 大小超过Base64限制 ({cls.BASE64_MAX_SIZE}字节) "
-                "且TOS上传失败。请检查TOS配置。"
+                f"且TOS上传失败: {str(e)}"
             )
         
         # 小文件，先尝试Base64

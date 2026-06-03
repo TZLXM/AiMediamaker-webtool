@@ -1,6 +1,6 @@
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
-import type { TaskItem, TaskMode, TaskParameters } from '@/types'
+import type { TaskItem, TaskMode, TaskParameters, FileItem } from '@/types'
 import api from '@/api'
 
 export const useTaskStore = defineStore('task', () => {
@@ -44,9 +44,18 @@ export const useTaskStore = defineStore('task', () => {
     }
   }
 
-  async function fetchHistory(params?: { mode?: string; search?: string; page?: number; page_size?: number }) {
+  async function fetchHistory(params?: { mode?: string; search?: string; start_date?: string; end_date?: string; page?: number; page_size?: number }) {
     const res = await api.get('/tasks/history/list', { params })
     return res.data as TaskItem[]
+  }
+
+  async function fetchAssets(params?: { file_type?: string; search?: string; start_date?: string; end_date?: string; page?: number; page_size?: number }) {
+    const res = await api.get('/files/assets/list', { params })
+    return res.data as FileItem[]
+  }
+
+  async function deleteFile(fileId: string) {
+    await api.delete(`/files/${fileId}`)
   }
 
   function addOrUpdateTask(task: TaskItem) {
@@ -58,6 +67,11 @@ export const useTaskStore = defineStore('task', () => {
     }
   }
 
+  function clearTasks() {
+    tasks.value = []
+    currentTask.value = null
+  }
+
   return {
     tasks,
     currentTask,
@@ -65,6 +79,9 @@ export const useTaskStore = defineStore('task', () => {
     fetchTask,
     cancelTask,
     fetchHistory,
+    fetchAssets,
+    deleteFile,
     addOrUpdateTask,
+    clearTasks,
   }
 })

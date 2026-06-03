@@ -88,13 +88,35 @@ app = FastAPI(
 )
 
 # CORS
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=settings.CORS_ORIGINS,
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
+if settings.DEBUG:
+    # DEBUG 模式：动态反射 Origin，兼容内网穿透/局域网/任意测试域名
+    from starlette.responses import Response
+
+    @app.middleware("http")
+    async def dynamic_cors_middleware(request, call_next):
+        if request.method == "OPTIONS":
+            response = Response(status_code=200)
+            origin = request.headers.get("origin", "*")
+            response.headers["Access-Control-Allow-Origin"] = origin
+            response.headers["Access-Control-Allow-Credentials"] = "true"
+            response.headers["Access-Control-Allow-Methods"] = "*"
+            response.headers["Access-Control-Allow-Headers"] = "*"
+            return response
+
+        response = await call_next(request)
+        origin = request.headers.get("origin")
+        if origin:
+            response.headers["Access-Control-Allow-Origin"] = origin
+            response.headers["Access-Control-Allow-Credentials"] = "true"
+        return response
+else:
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=settings.CORS_ORIGINS,
+        allow_credentials=True,
+        allow_methods=["*"],
+        allow_headers=["*"],
+    )
 
 @app.get("/health")
 async def health_check():
@@ -106,6 +128,17 @@ app.include_router(api_v1_router, prefix="/api")
 
 # 静态文件 (前端构建产物) - 必须放在最后，避免覆盖API路由
 import os
-frontend_dist = os.path.join(os.path.dirname(os.path.dirname(__file__)), "..", "frontend", "dist")
+backend_dir = os.path.dirname(os.path.dirname(__file__))
+project_root = os.path.dirname(backend_dir)
+
+# 后台管理 (挂载到 /admin)
+admin_dist = os.path.join(project_root, "frontend-admin", "dist")
+if os.path.exists(admin_dist):
+    app.mount("/admin", StaticFiles(directory=admin_dist, html=True), name="admin")
+    logger.info(f"Admin frontend mounted at /admin from {admin_dist}")
+
+# 用户前台 (挂载到根路径 /)
+frontend_dist = os.path.join(project_root, "frontend", "dist")
 if os.path.exists(frontend_dist):
     app.mount("/", StaticFiles(directory=frontend_dist, html=True), name="frontend")
+    logger.info(f"User frontend mounted at / from {frontend_dist}")

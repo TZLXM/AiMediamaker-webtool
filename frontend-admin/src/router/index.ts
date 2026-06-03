@@ -27,18 +27,7 @@ const routes: RouteRecordRaw[] = [
         component: () => import('@/views/model/ModelListView.vue'),
         meta: { title: '模型管理', icon: 'Box' },
       },
-      {
-        path: 'models/edit/:id',
-        name: 'model-edit',
-        component: () => import('@/views/model/ModelEditView.vue'),
-        meta: { title: '编辑模型', hidden: true },
-      },
-      {
-        path: 'models/create',
-        name: 'model-create',
-        component: () => import('@/views/model/ModelEditView.vue'),
-        meta: { title: '新增模型', hidden: true },
-      },
+
       {
         path: 'users',
         name: 'users',

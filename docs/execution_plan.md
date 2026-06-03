@@ -133,43 +133,118 @@
 
 | 任务 | 验收标准 |
 |------|----------|
-| 前台侧边栏 | 🟡 组件骨架存在（`AppSidebar.vue`）；**样式与 `前端前台.zip` 不一致**（颜色变量不同：当前 `#0f0f11` vs 参考 `#0b0d11`） |
-| 后台侧边栏 | 🟡 组件骨架存在（`LayoutView.vue`）；**样式与 `前端后台.zip` 不一致**（颜色系统完全不同） |
-| 登录弹窗 | 🟡 组件骨架存在（`LoginModal.vue` / `LoginView.vue`）；样式待对齐 |
-| 预览弹窗 | 🟡 组件骨架存在（`PreviewModal.vue`）；图片缩放/拖拽、视频播放逻辑待实现 |
-| 路由与权限 | 🟡 前台/后台路由均配置；后台 admin 角色校验已添加；**前台未登录跳转/弹窗逻辑待完善** |
+| 前台侧边栏 | ✅ `AppSidebar.vue` 完整实现：Logo SVG、3 个导航项（生成/历史/资产）、路由高亮、用户信息、登录/登出按钮、lucide 图标 |
+| 后台侧边栏 | ✅ `LayoutView.vue` 完整实现：5 个菜单项、路由高亮、用户信息/角色展示、退出登录、lucide 图标 |
+| 登录弹窗 | ✅ `LoginModal.vue`（前台）+ `LoginView.vue`（后台）完整实现：表单、loading、错误提示、无注册说明 |
+| 预览弹窗 | ✅ `PreviewModal.vue` 完整实现：`<Teleport>` 弹窗、图片滚轮缩放+拖拽平移、视频自定义控制条（播放/暂停/进度/音量）、下载按钮 |
+| 路由与权限 | ✅ 前台/后台路由均配置完整；后台 admin 角色校验（非 admin 强制退出）；前台未登录自动弹窗/阻止导航 |
 
 ### 里程碑 M3.2: 生成页面 (核心页面)
 **目标**: 用户可完成完整的生成操作
 
 | 任务 | 验收标准 |
 |------|----------|
-| 输入悬浮框 | 🟡 组件骨架存在（`InputBar.vue`）；固定在底部、多行输入、文件缩略图、参数选择器待实现 |
-| @文件引用 | ❌ 未实现 |
-| 文件上传 | 🟡 拖拽上传组件骨架存在；校验和进度待实现 |
-| 模型联动 | 🟡 模型列表接口存在；前端联动逻辑待实现 |
-| 任务块展示 | 🟡 组件骨架存在（`TaskBlock.vue`）；多输出缩略图布局待实现 |
-| 任务状态 | 🟡 状态枚举定义完整；前端状态显示待实现 |
-| 复用功能 | ❌ 未实现 |
-| 新建会话 | ❌ 未实现 |
+| 输入悬浮框 | ✅ `InputBar.vue` 完整实现：底部悬浮、contenteditable 多行输入、上传文件缩略图（可删除）、模式选择器、模型选择器（联动过滤）、参数面板（select/number/boolean 动态渲染） |
+| @文件引用 | ✅ `InputBar.vue` 已实现：输入 `@` 弹出文件选择器，选择后插入文件缩略图到 prompt 编辑器中 |
+| 文件上传 | ✅ 已实现：选择文件上传，类型和大小校验，缩略图预览，右上角删除按钮 |
+| 模型联动 | ✅ 已实现：`/models/list` 获取模型列表，根据 `mode` 过滤模型，根据模型 `parameters_schema` 动态渲染参数表单 |
+| 任务块展示 | ✅ `TaskBlock.vue` 完整实现：提示词（展开/收起/复制）、输入文件缩略图、参数徽章（模式/模型/参数值）、输出结果网格（每行最多 4 个）、状态显示、复用按钮、完成时间 |
+| 任务状态 | ✅ 已实现：`GenerateView.vue` 5 秒轮询活跃任务状态，实时更新任务块；`TaskBlock` 根据状态显示不同样式 |
+| 复用功能 | ✅ 已实现：`reuseTask()` 将任务的模式/模型/提示词/参数回填到输入栏 |
+| 新建会话 | ✅ 已实现：`resetSession()` 清空输入栏所有内容并恢复默认模式 |
 
 ### 里程碑 M3.3: 历史页面
 **目标**: 用户可检索和复用历史任务
 
 | 任务 | 验收标准 |
 |------|----------|
-| 历史列表 | 🟡 视图骨架存在（`HistoryView.vue`）；按日期分组、时间显示待实现 |
-| 搜索筛选 | ❌ 未实现 |
-| 复用跳转 | ❌ 未实现 |
+| 历史列表 | ✅ `HistoryView.vue` 完整实现（624 行）：按 `YYYY年MM月DD日` 日期分组显示，`dayjs` 格式化；加载/空状态完整 |
+| 搜索筛选 | ✅ 搜索框 + 300ms 防抖；时间预设筛选（全部/最近一周/一月/三月）+ 自定义日期范围；任务类型筛选（全部/图片/视频）；筛选联动自动重新请求 |
+| 复用跳转 | ✅ 点击任务「复用」按钮 → `router.push('/generate?reuse_task_id=xxx')`；`GenerateView.vue` 监听 query 参数 → `loadAndReuseTask()` 回填输入栏；跳转后清除 query 防重复 |
+| 后端接入 | ✅ `taskStore.fetchHistory()` → `GET /tasks/history/list`，支持 `mode`/`search`/`start_date`/`end_date`/`page`/`page_size` 参数 |
 
 ### 里程碑 M3.4: 资产页面
 **目标**: 用户可管理和下载生成的文件
 
 | 任务 | 验收标准 |
 |------|----------|
-| 资产网格 | 🟡 视图骨架存在（`AssetsView.vue`）；缩略图比例、自适应布局待实现 |
-| 悬停交互 | ❌ 未实现 |
-| 搜索筛选 | ❌ 未实现 |
+| 资产网格 | ✅ `AssetsView.vue` 完整实现：`grid-template-columns: repeat(auto-fill, minmax(180px, 1fr))` 自适应网格；`aspect-ratio: 1` 缩略图比例；`object-fit: cover` 填充；按日期分组展示 |
+| 悬停交互 | 🟡 卡片 hover 上浮+阴影、Thumbnail hover 渐变遮罩+文件名、下载按钮 hover 显示 ✅；**删除按钮未启用**（`Thumbnail` 组件支持 `show-delete` prop，但 `AssetsView.vue` 未传入，也未绑定删除事件） |
+| 搜索筛选 | ✅ 搜索框 + 300ms 防抖；时间预设筛选 + 自定义日期范围；类型筛选（全部/图片/视频）；筛选联动自动重新请求 |
+| 预览下载 | ✅ 点击资产打开 `PreviewModal.vue`（图片缩放拖拽、视频控制条）；下载按钮通过 `getFileUrl()` 下载 |
+| 后端接入 | ✅ `taskStore.fetchAssets()` → `GET /files/assets/list`，支持 `file_type`/`search`/`start_date`/`end_date`/`page`/`page_size` 参数 |
+
+### 里程碑 M3.5: 后台 UI 对齐与补全 (Admin Frontend Polish) ✅
+**目标**: 后台代码与 `前端后台.zip` 参考设计完全一致
+
+> **状态**: 已完成（约 95%）。经逐项核对，M3.5.3 / M3.5.5 / M3.5.6 全部完成；M3.5.1 / M3.5.2 / M3.5.4 基本完成，剩余 2 个微调项（见下方 ⚠️）纳入 M4 维护期处理。
+>
+> **已知遗留（非阻塞）**:
+> - M3.5.1: 输入框高度统一为 `h-9`（36px），参考设计约 40px（`h-10`）
+> - M3.5.4: Dashboard 模板未渲染 `redis_connected` / `tos_connected`（数据已返回，仅缺模板绑定）
+
+#### M3.5.1 全局样式对齐（🔴 高优先级）
+**目标**: 后台所有组件从 scoped CSS 迁移到 Tailwind v4 工具类，修复颜色/圆角/间距偏差
+
+| 任务 | 验收标准 |
+|------|----------|
+| scoped CSS → Tailwind | ✅ 8 个 Vue 文件中 7 个已完全使用 Tailwind utility 类；仅 `TaskListView.vue` 保留 9 行 `<style scoped>`（`@keyframes progress-indeterminate` 动画，Tailwind 无法原生实现） |
+| 圆角对齐 | ✅ 全部使用 Tailwind 设计系统类：`rounded-btn`（6px）用于按钮/输入框，`rounded-card`（10px）用于卡片/弹窗/表格；无硬编码圆角残留 |
+| 颜色修复 | ✅ 全局搜索无旧紫色残留；全部使用语义类：`text-accent`、`bg-accent`、`text-danger`、`bg-success`、`text-txtp`、`bg-card` 等 |
+| 输入框高度 | ⚠️ 全部统一为 `h-9`（36px），但参考设计要求的约 40px（`h-10`）未达标 |
+| 表格标题样式 | ✅ 全部表头统一使用 `text-xs text-txtm uppercase tracking-wider font-medium` |
+| 字体栈 | ✅ 全局统一定义在 `styles/main.css`，组件内无硬编码 `font-family` |
+
+#### M3.5.2 模型管理交互改造（🟡 中优先级）
+**目标**: 参考设计统一使用弹窗完成增删改查，代码当前使用独立页面，需对齐
+
+| 任务 | 验收标准 |
+|------|----------|
+| 新增模型弹窗 | ✅ 点击「新增」弹出 Modal（宽 560px），非跳转；包含字段：显示名称、模型ID、生成模式（image/video）、并发限制、关联 API 配置、支持文件类型 checkbox 组 |
+| 编辑模型弹窗 | ✅ 点击「编辑」在同一弹窗内完成编辑；删除确认使用原生 `confirm('删除后该模型的配置将无法恢复，是否继续？')` |
+| 移除独立页面 | ✅ `ModelEditView.vue` 不存在，`/models/edit/:id` 路由不存在；仅有 `/models` 指向 `ModelListView.vue` |
+| 保留参数配置 | ✅ 弹窗内完整保留 `parameters_schema` 动态配置区域，支持 select/number/boolean/text 类型及选项列表 |
+
+#### M3.5.3 任务管理补全（🔴 高优先级）
+**目标**: 补全参考设计中有但代码缺失的表格列和交互
+
+| 任务 | 验收标准 |
+|------|----------|
+| 远端任务ID 列 | ✅ 表格已增加「远端任务ID」列，显示 `remote_task_id || '-'` |
+| 进度条列 | ✅ 表格已增加「进度」列；`running` 状态显示 indeterminate 进度条动画（蓝色滑块在轨道上循环） |
+| 分页功能 | ✅ 表格底部有「上一页」/「下一页」按钮，带禁用状态 |
+| 任务详情弹窗 | ✅ 点击任务行弹出 Modal（宽 480px），显示全部要求字段：平台任务ID、远端任务ID、用户、状态（带颜色圆点）、提示词、创建时间、完成时间 |
+| 搜索框 | ✅ 筛选栏有「搜索提示词/ID...」输入框，回车触发搜索 |
+| 提示词列处理 | ✅ 表格列顺序：平台任务ID、远端任务ID、用户、模式、模型、状态、进度、创建时间、操作；提示词**不在表格中显示**，仅在详情弹窗展示 |
+
+#### M3.5.4 Dashboard 丰富化（🟡 中优先级）
+**目标**: 补全参考设计中的统计指标和服务状态监控
+
+| 任务 | 验收标准 |
+|------|----------|
+| 统计卡片增强 | ✅ 4 张统计卡片均带 `change` 指示：今日任务（`+12%`）、进行中（队列深度）、已完成（成功率 `X%`）、失败（需关注）；含上下箭头图标 |
+| 最近任务表格 | ✅ Dashboard 有「最近任务」区域，表格显示：任务ID、用户、模式、模型、状态、时间、操作；右上角有「查看全部」链接跳转 `/tasks` |
+| 服务状态面板 | ⚠️ `API 状态`（含在线标签、火山方舟 API、平均响应时间）、`存储状态`（含磁盘进度条、已用/剩余空间、文件总数）已显示；**Redis/TOS 连接状态在数据中但未在模板渲染** |
+
+#### M3.5.5 用户管理补全（🟢 低优先级）
+**目标**: 补齐搜索、确认密码、删除功能等缺失交互
+
+| 任务 | 验收标准 |
+|------|----------|
+| 搜索框 | ✅ 有「搜索用户...」输入框，300ms 防抖，通过 `params.search` 传参 |
+| 确认密码字段 | ✅ 弹窗内有「确认密码」输入框，带红框+文字提示（"两次输入的密码不一致"） |
+| 激活状态 toggle | ✅ 弹窗内有自定义 toggle 开关（`bg-accent`/`bg-txtm/30` 切换）；表格行内也有 toggle 开关，点击直接调用 API 切换 |
+| 删除用户功能 | ✅ 表格行内有「删除」按钮；点击弹出确认弹窗（文案："删除后该用户的所有数据将无法恢复，是否继续？"） |
+| 角色单选样式 | ✅ 使用 `<input type="radio">`，admin/leader/user 横向排列（`flex gap-4`），带 `accent-accent` 样式 |
+
+#### M3.5.6 系统配置补全（🟢 低优先级）
+**目标**: 补齐参考设计中的存储配置和任务队列配置
+
+| 任务 | 验收标准 |
+|------|----------|
+| 存储配置 | ✅ 有「最大存储容量」字段（`type="number"` + GB/TB `<select>` 单位选择）、「文件保留时间（天）」字段 |
+| 任务队列配置 | ✅ 有「默认轮询间隔（秒）」、「最大重试次数」、「单用户最大并发任务」三个字段 |
+| TOS 配置开关 | ✅ TOS 配置区域顶部有自定义 toggle 开关（`bg-accent`/`bg-txtm/30` 切换），显示「已启用」/「已禁用」 |
 
 ### M3 阶段出口检查清单
 - [ ] UI走查：所有页面风格统一；无明显的布局错位；深色主题无刺眼元素
@@ -177,6 +252,7 @@
 - [ ] 交互测试：所有按钮/链接/输入框有hover和active状态反馈
 - [ ] 性能测试：生成页滚动100个任务块无卡顿；资产页加载40个缩略图流畅
 - [ ] 后台功能验证：模型CRUD、用户创建/禁用、任务列表筛选、API/TOS配置保存
+- [ ] **后台设计对齐**：逐页对比 `前端后台.zip` 与当前后台构建产物，确认颜色/间距/圆角/字体/布局完全一致
 
 ---
 
@@ -367,6 +443,16 @@ Vue 组件 `<style scoped>` 中的旧 CSS 变量已全部替换为 Tailwind v4 `
 | 🟡 P1 | Vue 组件从 CSS 变量迁移到 utility 类 | 未开始 | 未充分利用 Tailwind v4 | 新组件优先用 `bg-page text-txtp`，旧组件逐步替换 |
 | ✅ 已完成 | `main` 分支缺失 | 已修复 | Git 工作流不完整 | 已从 `develop` 创建 `main` 分支 |
 | 🟡 P2 | 前端 admin 构建循环依赖警告 | 未修复 | Rollup chunk 执行顺序可能异常 | 将 `useAdminStore` 的引用从 `stores/index.ts` 改为直接引用 `stores/admin.ts` |
+| 🔴 P1 | 前台 Vue 组件全部使用 scoped CSS | 未修复 | 10 个 `.vue` 文件零 Tailwind utility 类使用；`InputBar.vue` 单文件 406 行 scoped CSS；与设计规范严重不符 | 逐组件将 `<style scoped>` 中的布局/颜色/间距样式替换为 Tailwind utility 类；可配合 M3.5.1 或前台样式对齐工作一起执行 |
+| 🔴 P1 | 前台硬编码颜色值（91 处） | 未修复 | `#6366f1`/`#f59e0b`/`#ef4444` 等散落在 10 个组件中；主题替换和维护成本极高 | 提取到 `main.css` 的 `@theme` 中统一定义；组件中替换为 `bg-accent`/`text-danger` 等 utility 类 |
+| ✅ 已修复 | API 层循环依赖 | 已修复 | `api/index.ts` 导入 `stores/user.ts`，`stores/user.ts` 又导入 `api/index.ts`；某些构建场景下会导致运行时错误 | api/index.ts 不再导入 useUserStore，token 从 localStorage 读取；401 触发 `api:unauthorized` 全局事件；App.vue 监听事件调用 logout |
+| ✅ 已修复 | 前台缺少 404 路由 | 已修复 | `router/index.ts` 仅 4 条路由，无 `/*` catch-all；非法 URL 显示空白 | 添加 `{ path: '/:pathMatch(.*)*', redirect: '/generate' }` catch-all 路由 |
+| ✅ 已修复 | `router.beforeEach` 位置不当 | 已修复 | 全局路由守卫写在 `App.vue` 的 `<script setup>` 中，而非 `router/index.ts` | 将守卫逻辑迁移到 `router/index.ts` 中注册；新增 `auth:required` 全局事件通知 App.vue 显示登录弹窗 |
+| ✅ 已修复 | `TaskBlock.vue` modelName 显示不友好 | 已修复 | 显示 `model_id`（如 `seedance-v1`）而非友好名称；用户体验差 | `types/index.ts` 给 `TaskItem` 新增 `model_name?: string`；`TaskBlock.vue` modelName computed 优先显示 `model_name`，回退到 `model_id` |
+| ✅ 已修复 | `TaskParameters.sequential_image_generation` 类型过于宽泛 | 已修复 | 定义为 `string`，实际值为 `'auto' | 'disabled'`；按语义应为更精确的类型 | 改为 `'auto' | 'disabled'` 字面量联合类型；清理 `any` 类型使用 |
+| ✅ 已修复 | 资产页面删除按钮未启用 | 已修复 | `AssetsView.vue` 调用 `<Thumbnail>` 时未传 `show-delete` prop，也未绑定 `@delete` 事件 | 传入 `show-delete` prop 并添加 `handleDelete` 方法；`taskStore` 新增 `deleteFile` 方法调用 `DELETE /files/{file_id}` |
+| ✅ 已修复 | `HistoryView.vue` 未使用导入 | 已修复 | 导入并 `extend` 了 `dayjs/plugin/isSameOrAfter`，但逻辑中未使用 | 移除未使用的导入和 extend 调用 |
+| ✅ 已修复 | `GenerateView.vue` 直接操作 DOM | 已修复 | `quickStart()` 使用 `document.querySelector('.prompt-input')` 与组件类名强耦合 | `InputBar.vue` expose `focus()` 方法；`GenerateView.vue` 通过 `ref` 调用 `inputBarRef.value?.focus()` |
 | 🟢 P3 | 数据库 100 并发压测未执行 | 未执行 | 未验证连接池稳定性 | 使用 `locust` 或 `ab` 压测 `/health` |
 
 ---

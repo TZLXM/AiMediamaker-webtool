@@ -176,12 +176,16 @@ async def delete_file(
 async def list_assets(
     file_type: str = None,
     search: str = None,
+    start_date: str = None,
+    end_date: str = None,
     page: int = 1,
     page_size: int = 40,
     db: AsyncSession = Depends(get_db),
     user: User = Depends(get_current_user),
 ):
     """获取用户资产列表 (模型生成的文件)"""
+    from datetime import datetime, timedelta
+    
     query = select(FileRecord).where(
         and_(
             FileRecord.user_id == user.id,
@@ -193,6 +197,19 @@ async def list_assets(
         query = query.where(FileRecord.file_type == file_type)
     if search:
         query = query.where(FileRecord.original_name.contains(search))
+    if start_date:
+        try:
+            start_dt = datetime.fromisoformat(start_date.replace('Z', '+00:00').replace('+00:00', ''))
+            query = query.where(FileRecord.created_at >= start_dt)
+        except ValueError:
+            pass
+    if end_date:
+        try:
+            end_dt = datetime.fromisoformat(end_date.replace('Z', '+00:00').replace('+00:00', ''))
+            end_dt = end_dt + timedelta(days=1)
+            query = query.where(FileRecord.created_at < end_dt)
+        except ValueError:
+            pass
     
     query = query.order_by(desc(FileRecord.created_at))
     query = query.offset((page - 1) * page_size).limit(page_size)

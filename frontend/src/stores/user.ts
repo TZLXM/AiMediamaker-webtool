@@ -2,6 +2,7 @@ import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import type { User } from '@/types'
 import api from '@/api'
+import { useTaskStore } from './task'
 
 export const useUserStore = defineStore('user', () => {
   const token = ref<string>(localStorage.getItem('token') || '')
@@ -25,6 +26,9 @@ export const useUserStore = defineStore('user', () => {
     token.value = ''
     user.value = null
     localStorage.removeItem('token')
+    // 清空任务数据，防止切换账号后残留其他用户的对话记录
+    const taskStore = useTaskStore()
+    taskStore.clearTasks()
   }
 
   async function fetchProfile() {

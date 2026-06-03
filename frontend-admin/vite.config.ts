@@ -4,6 +4,7 @@ import tailwindcss from '@tailwindcss/vite'
 import { resolve } from 'path'
 
 export default defineConfig({
+  base: '/admin/',
   plugins: [vue(), tailwindcss()],
   resolve: {
     alias: {
@@ -11,7 +12,12 @@ export default defineConfig({
     },
   },
   server: {
+    host: '0.0.0.0',
     port: 5174,
+    allowedHosts: true,
+    hmr: {
+      overlay: false,
+    },
     proxy: {
       '/api': {
         target: 'http://localhost:8000',

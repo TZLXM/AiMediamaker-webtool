@@ -96,7 +96,8 @@ const imageStyle = computed(() => ({
 }))
 
 function handleZoom(e: WheelEvent) {
-  const delta = e.deltaY > 0 ? -0.1 : 0.1
+  // 滚轮向上滚动(deltaY < 0)为缩小，向下滚动(deltaY > 0)为放大
+  const delta = e.deltaY > 0 ? 0.1 : -0.1
   scale.value = Math.max(0.1, Math.min(5, scale.value + delta))
 }
 
@@ -196,6 +197,8 @@ function downloadFile() {
   position: fixed;
   inset: 0;
   background: rgba(0, 0, 0, 0.9);
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -208,15 +211,15 @@ function downloadFile() {
   top: 16px;
   width: 36px;
   height: 36px;
-  border-radius: 8px;
-  background: var(--color-bg-tertiary);
-  border: 1px solid var(--color-border);
-  color: var(--color-text-secondary);
+  border-radius: 50%;
+  background: #ffffff1a;
+  border: none;
+  color: #fff;
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  transition: all 0.2s;
+  transition: background 0.2s;
 }
 
 .preview-close {
@@ -229,13 +232,12 @@ function downloadFile() {
 
 .preview-close:hover,
 .preview-download:hover {
-  background: var(--color-bg-hover);
-  color: var(--color-text-primary);
+  background: #ffffff33;
 }
 
 .image-preview-container {
-  max-width: 90vw;
-  max-height: 90vh;
+  max-width: 90%;
+  max-height: 90%;
   overflow: hidden;
   display: flex;
   align-items: center;
@@ -243,10 +245,12 @@ function downloadFile() {
 }
 
 .preview-image {
-  max-width: 100%;
-  max-height: 90vh;
+  max-width: 90%;
+  max-height: 90%;
   object-fit: contain;
   user-select: none;
+  border-radius: 8px;
+  transition: transform 0.1s;
 }
 
 .zoom-hint {
@@ -263,15 +267,16 @@ function downloadFile() {
 
 .video-preview-container {
   max-width: 90vw;
-  max-height: 90vh;
+  max-height: calc(90vh - 80px);
   display: flex;
   flex-direction: column;
 }
 
 .preview-video {
   max-width: 100%;
-  max-height: 80vh;
+  max-height: calc(90vh - 80px);
   cursor: pointer;
+  border-radius: 8px;
 }
 
 .video-controls {

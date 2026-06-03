@@ -63,7 +63,13 @@ class TaskQueue:
             if active > limit:
                 # 超限，回滚
                 await redis_client.decr_model_active(model_id)
+                import logging
+                logger = logging.getLogger(__name__)
+                logger.info(f"[Concurrency] Slot denied for {model_id}: active={active-1} >= limit={limit}")
                 return False
+            import logging
+            logger = logging.getLogger(__name__)
+            logger.info(f"[Concurrency] Slot acquired for {model_id}: active={active} / limit={limit}")
             return True
         # 内存回退
         active = self._memory_active_counts.get(model_id, 0) + 1
@@ -74,8 +80,11 @@ class TaskQueue:
     
     async def _release_slot(self, model_id: str):
         """释放并发槽位"""
+        import logging
+        logger = logging.getLogger(__name__)
         if redis_client.is_connected():
-            await redis_client.decr_model_active(model_id)
+            active = await redis_client.decr_model_active(model_id)
+            logger.info(f"[Concurrency] Slot released for {model_id}: active={active}")
         else:
             self._memory_active_counts[model_id] = max(
                 0, self._memory_active_counts.get(model_id, 0) - 1
@@ -399,6 +408,13 @@ class TaskQueue:
     
     async def recover_tasks(self, db: AsyncSession, db_factory):
         """服务启动时恢复未完成的任务"""
+        import logging
+        logger = logging.getLogger(__name__)
+        
+        # 先重置所有 Redis 计数器，避免旧泄漏影响新任务
+        await redis_client.reset_all_model_active()
+        logger.info("[Concurrency] Reset all model active counters on startup")
+        
         # 恢复 QUEUED 状态的任务
         queued_result = await db.execute(
             select(Task).where(Task.status == TaskStatus.QUEUED)
@@ -410,10 +426,12 @@ class TaskQueue:
         running_result = await db.execute(
             select(Task).where(Task.status == TaskStatus.RUNNING)
         )
-        for task in running_result.scalars().all():
+        running_tasks = running_result.scalars().all()
+        for task in running_tasks:
             # 先占用槽位，再恢复轮询
             await redis_client.incr_model_active(task.model_id)
             await self.start_task_processing(db_factory, task.platform_task_id)
+        logger.info(f"[Concurrency] Recovered {len(running_tasks)} RUNNING tasks with fresh counters")
     
     # --- 优雅关闭 ---
     

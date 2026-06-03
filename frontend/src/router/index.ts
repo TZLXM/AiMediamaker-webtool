@@ -24,6 +24,11 @@ const routes: RouteRecordRaw[] = [
     component: AssetsView,
     meta: { view: 'assets', requiresAuth: true },
   },
+  {
+    path: '/:pathMatch(.*)*',
+    name: 'not-found',
+    redirect: '/generate',
+  },
 ]
 
 const router = createRouter({
@@ -32,16 +37,12 @@ const router = createRouter({
 })
 
 router.beforeEach((to, _from, next) => {
-  // pinia 默认不持久化到 localStorage，直接读取 token
   const token = localStorage.getItem('token')
-  const isLoggedIn = !!token
-
-  if (to.meta.requiresAuth && !isLoggedIn) {
-    // 取消导航，避免无限重定向（因为 / 会 redirect 回 /generate）
-    next(false)
-  } else {
-    next()
+  if (to.meta.requiresAuth && !token) {
+    // 通过事件通知 App.vue 显示登录弹窗
+    window.dispatchEvent(new CustomEvent('auth:required'))
   }
+  next()
 })
 
 export default router

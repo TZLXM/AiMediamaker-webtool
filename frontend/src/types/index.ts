@@ -35,12 +35,13 @@ export interface TaskParameters {
   watermark?: boolean
   seed?: number
   // 图片
+  aspectRatio?: string
   size?: string
   output_format?: string
-  sequential_image_generation?: string
+  sequential_image_generation?: 'auto' | 'disabled'
   max_images?: number
   // 通用
-  extra?: Record<string, any>
+  extra?: Record<string, unknown>
   // 索引签名，支持动态参数 key
   [key: string]: any
 }
@@ -65,6 +66,7 @@ export interface TaskItem {
   platform_task_id: string
   mode: TaskMode
   model_id: string
+  model_name?: string
   prompt: string
   parameters?: TaskParameters
   status: TaskStatus

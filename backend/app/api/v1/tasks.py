@@ -80,12 +80,16 @@ async def cancel_task(
 async def list_history(
     mode: str = None,
     search: str = None,
+    start_date: str = None,
+    end_date: str = None,
     page: int = 1,
     page_size: int = 20,
     db: AsyncSession = Depends(get_db),
     user: User = Depends(get_current_user),
 ):
     """获取历史任务列表 (仅限自己的已结束任务)"""
+    from datetime import datetime, timedelta
+    
     query = select(Task).where(
         and_(
             Task.user_id == user.id,
@@ -97,6 +101,20 @@ async def list_history(
         query = query.where(Task.mode == mode)
     if search:
         query = query.where(Task.prompt.contains(search))
+    if start_date:
+        try:
+            start_dt = datetime.fromisoformat(start_date.replace('Z', '+00:00').replace('+00:00', ''))
+            query = query.where(Task.created_at >= start_dt)
+        except ValueError:
+            pass
+    if end_date:
+        try:
+            end_dt = datetime.fromisoformat(end_date.replace('Z', '+00:00').replace('+00:00', ''))
+            # 增加到次日以包含整天
+            end_dt = end_dt + timedelta(days=1)
+            query = query.where(Task.created_at < end_dt)
+        except ValueError:
+            pass
     
     query = query.order_by(Task.created_at)  # 升序：最晚生成的在最下方
     query = query.offset((page - 1) * page_size).limit(page_size)

@@ -28,6 +28,9 @@ class Settings(BaseSettings):
     # File Storage
     STORAGE_PATH: str = str(STORAGE_DIR)
     MAX_UPLOAD_SIZE: int = 100 * 1024 * 1024  # 100MB
+    MAX_STORAGE_GB: int = 100
+    MAX_USER_CONCURRENT_TASKS: int = 5
+    FILE_RETENTION_DAYS: int = 30
     ALLOWED_IMAGE_TYPES: List[str] = ["image/jpeg", "image/png", "image/webp", "image/bmp", "image/tiff", "image/gif"]
     ALLOWED_VIDEO_TYPES: List[str] = ["video/mp4", "video/quicktime", "video/x-msvideo"]
     ALLOWED_AUDIO_TYPES: List[str] = ["audio/mpeg", "audio/wav", "audio/ogg", "audio/aac"]
@@ -45,6 +48,7 @@ class Settings(BaseSettings):
     ARK_API_KEY: Optional[str] = None
     
     # TOS (Volcengine Object Storage) - 必选项
+    TOS_ENABLED: bool = True
     TOS_ENDPOINT: str = "tos-cn-beijing.volces.com"
     TOS_ACCESS_KEY: str = ""
     TOS_SECRET_KEY: str = ""

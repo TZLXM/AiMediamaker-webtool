@@ -91,6 +91,11 @@ class ModelConfigResponse(BaseModel):
     api_config_id: int
     
     model_config = ConfigDict(protected_namespaces=(), from_attributes=True)
+    
+    @field_validator('parameters_schema', 'supported_input_types', mode='before')
+    @classmethod
+    def default_empty_list(cls, v: Any) -> Any:
+        return v if v is not None else []
 
 
 class ModelConfigCreate(BaseModel):

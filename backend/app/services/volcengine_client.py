@@ -18,6 +18,29 @@ from ..services.file_processor import file_processor
 
 logger = logging.getLogger(__name__)
 
+# Seedream 官方文档推荐像素值映射表
+# 模型ID -> 分辨率档位 -> 比例 -> 像素值
+SEEDREAM_SIZE_MAP = {
+    "doubao-seedream-5-0-lite-260128": {
+        "2K": {"1:1": "2048x2048", "3:4": "1728x2304", "4:3": "2304x1728", "16:9": "2848x1600", "9:16": "1600x2848", "3:2": "2496x1664", "2:3": "1664x2496", "21:9": "3136x1344"},
+        "3K": {"1:1": "3072x3072", "3:4": "2592x3456", "4:3": "3456x2592", "16:9": "4096x2304", "9:16": "2304x4096", "2:3": "2496x3744", "3:2": "3744x2496", "21:9": "4704x2016"},
+        "4K": {"1:1": "4096x4096", "3:4": "3520x4704", "4:3": "4704x3520", "16:9": "5504x3040", "9:16": "3040x5504", "2:3": "3328x4992", "3:2": "4992x3328", "21:9": "6240x2656"},
+    },
+    "doubao-seedream-4-5-260128": {
+        "2K": {"1:1": "2048x2048", "3:4": "1728x2304", "4:3": "2304x1728", "16:9": "2848x1600", "9:16": "1600x2848", "3:2": "2496x1664", "2:3": "1664x2496", "21:9": "3136x1344"},
+        "4K": {"1:1": "4096x4096", "3:4": "3520x4704", "4:3": "4704x3520", "16:9": "5504x3040", "9:16": "3040x5504", "2:3": "3328x4992", "3:2": "4992x3328", "21:9": "6240x2656"},
+    },
+    "doubao-seedream-4-5-251128": {
+        "2K": {"1:1": "2048x2048", "3:4": "1728x2304", "4:3": "2304x1728", "16:9": "2848x1600", "9:16": "1600x2848", "3:2": "2496x1664", "2:3": "1664x2496", "21:9": "3136x1344"},
+        "4K": {"1:1": "4096x4096", "3:4": "3520x4704", "4:3": "4704x3520", "16:9": "5504x3040", "9:16": "3040x5504", "2:3": "3328x4992", "3:2": "4992x3328", "21:9": "6240x2656"},
+    },
+    "doubao-seedream-4-0-250828": {
+        "1K": {"1:1": "1024x1024", "3:4": "864x1152", "4:3": "1152x864", "16:9": "1312x736", "9:16": "736x1312", "3:2": "1248x832", "2:3": "832x1248", "21:9": "1568x672"},
+        "2K": {"1:1": "2048x2048", "3:4": "1728x2304", "4:3": "2304x1728", "16:9": "2848x1600", "9:16": "1600x2848", "3:2": "2496x1664", "2:3": "1664x2496", "21:9": "3136x1344"},
+        "4K": {"1:1": "4096x4096", "3:4": "3520x4704", "4:3": "4704x3520", "16:9": "5504x3040", "9:16": "3040x5504", "2:3": "3328x4992", "3:2": "4992x3328", "21:9": "6240x2656"},
+    },
+}
+
 
 class VolcengineAPIError(Exception):
     """火山方舟API业务错误"""
@@ -35,7 +58,7 @@ class VolcengineClient:
         self.model_id = model_id
         self.api_key = model_manager.get_api_key(model_id)
         self.base_url = model_manager.get_base_url(model_id)
-        
+
         if not self.api_key:
             raise VolcengineAPIError(
                 code="missing_api_key",
@@ -93,36 +116,48 @@ class VolcengineClient:
     async def _create_video_task(self, task, db: Optional[AsyncSession] = None) -> str:
         """创建视频生成任务 (Seedance)"""
         contents = []
-        
-        # 添加文本提示词
+
+        # 准备参考文件（图生视频要求参考图片在文本之前）
+        image_files = [f for f in task.input_files if str(f.file_type) == "image"]
+        video_files = [f for f in task.input_files if str(f.file_type) == "video"]
+        audio_files = [f for f in task.input_files if str(f.file_type) == "audio"]
+
+        # 参考图片（全部传递，API 端会决定接受多少张）
+        # 所有参考图片统一加 role="reference_image"（兼容单张/多张）
+        for idx, file_record in enumerate(image_files):
+            file_content = await self._prepare_file_content(file_record, db=db)
+            contents.append({
+                "type": "image_url",
+                "image_url": file_content,
+                "role": "reference_image",
+            })
+            logger.info(f"[Seedance] Reference image #{idx + 1}: {file_record.file_id}")
+
+        # 参考视频（视频延长/参考视频）
+        for file_record in video_files:
+            file_content = await self._prepare_file_content(file_record, db=db)
+            contents.append({
+                "type": "video_url",
+                "video_url": file_content,
+                "role": "reference_video",
+            })
+            logger.info(f"[Seedance] Reference video: {file_record.file_id}")
+
+        # 参考音频
+        for file_record in audio_files:
+            file_content = await self._prepare_file_content(file_record, db=db)
+            contents.append({
+                "type": "audio_url",
+                "audio_url": file_content,
+                "role": "reference_audio",
+            })
+            logger.info(f"[Seedance] Reference audio: {file_record.file_id}")
+
+        # 文本提示词（必须放在参考文件之后）
         contents.append({
             "type": "text",
             "text": task.prompt,
         })
-        
-        # 添加参考文件
-        for file_record in task.input_files:
-            file_content = await self._prepare_file_content(file_record, db=db)
-            
-            ft = str(file_record.file_type)
-            if ft == "image":
-                contents.append({
-                    "type": "image_url",
-                    "image_url": file_content,
-                    "role": "reference_image",
-                })
-            elif ft == "video":
-                contents.append({
-                    "type": "video_url",
-                    "video_url": file_content,
-                    "role": "reference_video",
-                })
-            elif ft == "audio":
-                contents.append({
-                    "type": "audio_url",
-                    "audio_url": file_content,
-                    "role": "reference_audio",
-                })
         
         payload = {
             "model": self.model_id,
@@ -161,6 +196,7 @@ class VolcengineClient:
             )
             return self._parse_task_response(resp)
     
+
     async def _create_image_task(self, task, db: Optional[AsyncSession] = None) -> Dict[str, Any]:
         """创建图片生成任务 (Seedream)，返回完整响应数据"""
         payload = {
@@ -180,8 +216,39 @@ class VolcengineClient:
         
         # 参数
         params = task.parameters or {}
-        if params.get("size"):
-            payload["size"] = params["size"]
+        
+        # size 处理：
+        # - 有具体比例时发送像素值 (WIDTHxHEIGHT)
+        # - adaptive 时只传分辨率档位 (1k/2k/4k)，让 API 自动决定比例
+        # - API 要求小写 k，所以统一 lower()
+        resolution = params.get("resolution")
+        aspect_ratio = params.get("aspectRatio")
+        logger.info(f"[Seedream] Task params: resolution={resolution}, aspectRatio={aspect_ratio}, model_id={self.model_id}")
+        if aspect_ratio == "adaptive":
+            if resolution:
+                payload["size"] = resolution.lower()
+                logger.info(f"[Seedream] aspectRatio=adaptive, using size={payload['size']}")
+            else:
+                logger.info(f"[Seedream] aspectRatio=adaptive, no resolution, omitting size")
+        elif resolution and aspect_ratio:
+            # 根据模型ID + 分辨率 + 比例 查找对应像素值
+            model_map = SEEDREAM_SIZE_MAP.get(self.model_id, {})
+            res_map = model_map.get(resolution, {})
+            pixel_size = res_map.get(aspect_ratio)
+            logger.info(f"[Seedream] Lookup: model_map keys={list(model_map.keys()) if model_map else 'EMPTY'}, res_map keys={list(res_map.keys()) if res_map else 'EMPTY'}")
+            if pixel_size:
+                payload["size"] = pixel_size
+                logger.info(f"[Seedream] Mapped {resolution}+{aspect_ratio} -> {pixel_size}")
+            else:
+                # 未找到映射，回退到分辨率档位
+                payload["size"] = resolution.lower()
+                logger.info(f"[Seedream] No mapping for {self.model_id}/{resolution}/{aspect_ratio}, fallback to {payload['size']}")
+        elif resolution:
+            payload["size"] = resolution.lower()
+            logger.info(f"[Seedream] No aspectRatio, using size={payload['size']}")
+        elif params.get("size"):
+            payload["size"] = params.get("size")
+            logger.info(f"[Seedream] Using explicit size={params.get('size')}")
         if params.get("output_format"):
             payload["output_format"] = params["output_format"]
         if params.get("sequential_image_generation"):
@@ -199,7 +266,12 @@ class VolcengineClient:
             if key not in payload:
                 payload[key] = value
         
-        logger.info(f"[Seedream] Creating image task with model={self.model_id}, refs={len(images)}")
+        # sequential_image_generation: disabled 时直接省略该字段
+        if payload.get("sequential_image_generation") == "disabled":
+            payload.pop("sequential_image_generation", None)
+            payload.pop("sequential_image_generation_options", None)
+        
+        logger.warning(f"[Seedream] Full payload: {payload}")
         
         async with httpx.AsyncClient() as client:
             resp = await client.post(
@@ -208,7 +280,29 @@ class VolcengineClient:
                 json=payload,
                 timeout=120,
             )
-            resp.raise_for_status()
+            # 自动处理 output_format 不被支持的情况（部分旧模型不支持）
+            if resp.status_code == 400:
+                error_text = resp.text
+                if "output_format" in error_text and "not supported" in error_text:
+                    logger.warning(f"[Seedream] output_format not supported by {self.model_id}, retrying without it")
+                    payload.pop("output_format", None)
+                    resp = await client.post(
+                        f"{self.base_url}/images/generations",
+                        headers=self.headers,
+                        json=payload,
+                        timeout=120,
+                    )
+            
+            try:
+                resp.raise_for_status()
+            except httpx.HTTPStatusError as e:
+                error_body = e.response.text
+                logger.error(f"[Seedream] API error {e.response.status_code}: {error_body}")
+                raise VolcengineAPIError(
+                    code="http_error",
+                    message=f"{e.response.status_code}: {error_body[:500]}",
+                    status_code=e.response.status_code,
+                )
             data = resp.json()
             
             # 检查API返回的业务错误

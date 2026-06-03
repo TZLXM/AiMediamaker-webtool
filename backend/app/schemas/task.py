@@ -7,6 +7,8 @@ from pydantic import BaseModel, Field, ConfigDict, model_validator
 
 
 class TaskParameter(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+    
     # 视频参数
     ratio: Optional[str] = None           # 16:9, 9:16, 1:1, adaptive
     duration: Optional[int] = None        # 视频时长(秒)
@@ -17,6 +19,7 @@ class TaskParameter(BaseModel):
     
     # 图片参数
     size: Optional[str] = None            # 1K, 2K, 3K
+    aspectRatio: Optional[str] = None     # 比例: 16:9, 9:16, 1:1, adaptive
     output_format: Optional[str] = None   # png, jpeg
     sequential_image_generation: Optional[str] = None  # auto, disabled
     max_images: Optional[int] = None      # 组图最大数量
