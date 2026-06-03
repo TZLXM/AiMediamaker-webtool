@@ -197,10 +197,10 @@ async def test_video_task_request_format(db_session: AsyncSession, test_user, te
         # content 顺序：参考图片 -> 参考视频 -> 参考音频 -> 文本提示词
         content = captured_payload["content"]
 
-        # 图片（单张，role 省略）
+        # 图片（单张，统一加 role="reference_image"）
         assert content[0]["type"] == "image_url"
         assert content[0]["image_url"]["url"] == "https://example.com/ref.png"
-        assert "role" not in content[0]
+        assert content[0]["role"] == "reference_image"
 
         # 视频
         assert content[1]["type"] == "video_url"

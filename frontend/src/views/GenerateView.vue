@@ -84,17 +84,22 @@ async function handleSubmit() {
   }
 
   const fileIds = uploadedFiles.value.map((f) => f.file_id)
-  await taskStore.createTask(
-    selectedMode.value,
-    selectedModel.value,
-    prompt.value,
-    parameters.value,
-    fileIds
-  )
-
-  // 清空输入
-  prompt.value = ''
-  uploadedFiles.value = []
+  try {
+    await taskStore.createTask(
+      selectedMode.value,
+      selectedModel.value,
+      prompt.value,
+      parameters.value,
+      fileIds
+    )
+    // 清空输入
+    prompt.value = ''
+    uploadedFiles.value = []
+  } catch (e: any) {
+    const detail = e.response?.data?.detail
+    const message = typeof detail === 'string' ? detail : e.message
+    alert(`创建任务失败: ${message || '请检查网络或稍后重试'}`)
+  }
 }
 
 function reuseTask(task: TaskItem) {

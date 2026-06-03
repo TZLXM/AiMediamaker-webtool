@@ -123,17 +123,14 @@ class VolcengineClient:
         audio_files = [f for f in task.input_files if str(f.file_type) == "audio"]
 
         # 参考图片（全部传递，API 端会决定接受多少张）
-        # 单张图片可不填 role（默认首帧），多张参考图必填 role=reference_image
-        num_images = len(image_files)
+        # 所有参考图片统一加 role="reference_image"（兼容单张/多张）
         for idx, file_record in enumerate(image_files):
             file_content = await self._prepare_file_content(file_record, db=db)
-            item = {
+            contents.append({
                 "type": "image_url",
                 "image_url": file_content,
-            }
-            if num_images >= 2:
-                item["role"] = "reference_image"
-            contents.append(item)
+                "role": "reference_image",
+            })
             logger.info(f"[Seedance] Reference image #{idx + 1}: {file_record.file_id}")
 
         # 参考视频（视频延长/参考视频）

@@ -38,7 +38,10 @@
 
       <!-- @ 文件引用面板 -->
       <div v-if="showFilePicker" class="mention-panel">
-        <div class="mention-header">引用文件</div>
+        <div class="mention-header">
+          引用文件
+          <span v-if="availableFiles.length > 0" class="mention-hint">↑↓ 选择 · Enter 确认 · Esc 关闭</span>
+        </div>
         <template v-if="availableFiles.length > 0">
           <div
             v-for="(file, idx) in availableFiles"
@@ -54,7 +57,7 @@
           </div>
         </template>
         <div v-else class="mention-empty">
-          暂无可用文件，请先上传
+          暂无可用文件，请先上传文件后输入 @ 引用
         </div>
       </div>
     </div>
@@ -269,7 +272,10 @@
       <div class="progress-track">
         <div class="progress-fill" :style="{ width: uploadProgress + '%' }" />
       </div>
-      <span class="progress-text">上传中 {{ uploadProgress }}%</span>
+      <div class="progress-meta">
+        <span class="progress-text">上传中 {{ uploadProgress }}%</span>
+        <button class="cancel-upload-btn" @click="cancelUpload">取消</button>
+      </div>
     </div>
   </div>
 </template>
@@ -343,6 +349,8 @@ const showDurationSelect = ref(false)
 const showFilePicker = ref(false)
 const highlightIndex = ref(0)
 const models = ref<ModelInfo[]>([])
+const isLoadingModels = ref(false)
+let loadModelsAbortCtrl: AbortController | null = null
 
 // 下拉面板容器 refs（用于点击外部关闭）
 const modeSelectWrapRef = ref<HTMLElement>()
@@ -450,10 +458,14 @@ const resolutionParam = computed(() => {
   return currentModelParams.value.find((p) => p.key === 'resolution') || null
 })
 
-// 分辨率标签
+// 分辨率标签（根据当前模型的 schema options 动态匹配 label）
 const resolutionLabel = computed(() => {
   const res = params.value.resolution
   if (!res) return ''
+  // 优先从 schema 的 options 中匹配 label
+  const opt = resolutionParam.value?.options?.find((o: any) => o.value === res)
+  if (opt?.label) return opt.label
+  // 兜底：按值类型显示
   if (res === '1K') return '标清 1K'
   if (res === '2K') return '高清 2K'
   if (res === '3K') return '超清 3K'
@@ -513,8 +525,29 @@ watch(() => props.prompt, (val) => {
 })
 
 async function loadModels() {
-  const res = await api.get('/models/list', { params: { mode: selectedMode.value } })
-  models.value = res.data
+  // 取消之前的请求，防止竞态
+  if (loadModelsAbortCtrl) {
+    loadModelsAbortCtrl.abort()
+  }
+  loadModelsAbortCtrl = new AbortController()
+  isLoadingModels.value = true
+  try {
+    const res = await api.get('/models/list', {
+      params: { mode: selectedMode.value },
+      signal: loadModelsAbortCtrl.signal,
+    })
+    models.value = res.data
+    // 加载完成后，如果当前没有选中模型，自动选择第一个
+    if (!selectedModel.value && models.value.length > 0) {
+      selectModel(models.value[0].model_id)
+    }
+  } catch (e: any) {
+    if (e.name !== 'CanceledError' && e.name !== 'AbortError') {
+      console.error('加载模型列表失败:', e)
+    }
+  } finally {
+    isLoadingModels.value = false
+  }
 }
 
 function selectMode(mode: TaskMode) {
@@ -524,6 +557,7 @@ function selectMode(mode: TaskMode) {
   showModeSelect.value = false
   // 过滤掉不兼容的文件
   filterIncompatibleFiles()
+  // 加载模型列表并自动选择第一个（在 loadModels 中处理）
   loadModels()
 }
 
@@ -565,9 +599,57 @@ function submit() {
 }
 
 function removeFile(idx: number) {
-  const newFiles = [...uploadedFiles.value]
-  newFiles.splice(idx, 1)
+  const deletedFile = uploadedFiles.value[idx]
+  if (!deletedFile) return
+
+  const oldFiles = [...uploadedFiles.value]
+  const newFiles = oldFiles.filter((_, i) => i !== idx)
   uploadedFiles.value = newFiles
+
+  // 重写 prompt 中的引用标记序号
+  nextTick(() => {
+    rewriteFileRefs(oldFiles, newFiles)
+  })
+}
+
+/**
+ * 删除文件后重写 prompt 中的 @图片N / @视频N / @音频N 引用标记
+ * 规则：按同类型文件在新数组中的位置重新编号
+ */
+function rewriteFileRefs(oldFiles: FileItem[], newFiles: FileItem[]) {
+  let text = promptText.value
+  if (!text) return
+
+  // 按类型收集旧文件和新文件的映射关系
+  const typeOrder = ['image', 'video', 'audio'] as const
+  for (const type of typeOrder) {
+    const oldOfType = oldFiles.filter((f) => f.file_type === type)
+    const newOfType = newFiles.filter((f) => f.file_type === type)
+    const label = fileTypeLabel(type)
+
+    // 如果该类型文件数量变了，需要重写引用
+    if (oldOfType.length !== newOfType.length) {
+      // 从后往前替换，避免前面的替换影响后面的位置
+      for (let oldIdx = oldOfType.length; oldIdx >= 1; oldIdx--) {
+        const oldFile = oldOfType[oldIdx - 1]
+        const newIdx = newOfType.findIndex((f) => f.file_id === oldFile.file_id)
+        const regex = new RegExp(`@${label}${oldIdx}\\b`, 'g')
+        if (newIdx >= 0) {
+          // 文件还在，更新序号
+          text = text.replace(regex, `@${label}${newIdx + 1}`)
+        } else {
+          // 文件被删除了，移除引用标记（保留一个空格以维持可读性）
+          text = text.replace(regex, '')
+        }
+      }
+    }
+  }
+
+  // 清理多余的空格
+  text = text.replace(/\s+/g, ' ').trim()
+  if (text !== promptText.value) {
+    promptText.value = text
+  }
 }
 
 const isComposing = ref(false)
@@ -667,7 +749,8 @@ function insertFileRef(file: FileItem, idx: number) {
   showFilePicker.value = false
 
   nextTick(() => {
-    el.focus()
+    // preventScroll: true 避免 focus 触发页面自动滚动
+    el.focus({ preventScroll: true })
     // 将光标放到插入文本之后
     const newCursorPos = beforeAt.length + insertText.length
     el.setSelectionRange(newCursorPos, newCursorPos)
@@ -688,16 +771,23 @@ function filterIncompatibleFiles() {
   }
 }
 
+// 当前上传的 AbortController（用于取消上传）
+let currentUploadAbortCtrl: AbortController | null = null
+
 // 上传文件
 async function uploadFiles(files: FileList | null) {
   if (!files || files.length === 0) return
   isUploading.value = true
   uploadProgress.value = 0
+  currentUploadAbortCtrl = new AbortController()
 
   const newFiles: FileItem[] = []
   const total = files.length
 
   for (let i = 0; i < total; i++) {
+    // 如果上传被取消，提前退出
+    if (currentUploadAbortCtrl.signal.aborted) break
+
     const file = files[i]
     const fileType = file.type.startsWith('image/')
       ? 'image'
@@ -723,18 +813,25 @@ async function uploadFiles(files: FileList | null) {
     try {
       const res = await api.post('/files/upload', formData, {
         headers: { 'Content-Type': 'multipart/form-data' },
+        signal: currentUploadAbortCtrl.signal,
+        timeout: 120000, // 单个文件上传超时 2 分钟（大文件需要更长时间）
         onUploadProgress: (progressEvent) => {
-          const percent = Math.round(
-            ((progressEvent.loaded / (progressEvent.total || 1)) + i) / total * 100
-          )
-          uploadProgress.value = Math.min(percent, 99)
+          const filePercent = progressEvent.loaded / (progressEvent.total || file.size || 1)
+          const overallPercent = Math.round(((i + filePercent) / total) * 100)
+          uploadProgress.value = Math.min(overallPercent, 99)
         },
       })
       newFiles.push(res.data)
     } catch (e: any) {
+      if (e.name === 'CanceledError' || e.name === 'AbortError') {
+        console.log('上传已取消')
+        break
+      }
       alert(`上传失败: ${file.name} - ${e.response?.data?.detail || e.message}`)
     }
   }
+
+  currentUploadAbortCtrl = null
 
   if (newFiles.length > 0) {
     uploadedFiles.value = [...uploadedFiles.value, ...newFiles]
@@ -756,6 +853,15 @@ function handleFileSelect(e: Event) {
 function handleDrop(e: DragEvent) {
   isDragOver.value = false
   uploadFiles(e.dataTransfer?.files || null)
+}
+
+function cancelUpload() {
+  if (currentUploadAbortCtrl) {
+    currentUploadAbortCtrl.abort()
+    currentUploadAbortCtrl = null
+  }
+  isUploading.value = false
+  uploadProgress.value = 0
 }
 
 // 比例图形样式（在 28x18 容器内按比例显示）
@@ -869,6 +975,17 @@ watch(selectedMode, loadModels, { immediate: true })
   text-transform: uppercase;
   letter-spacing: 0.05em;
   margin-bottom: 2px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.mention-hint {
+  font-size: 10px;
+  color: var(--color-text-muted);
+  opacity: 0.7;
+  text-transform: none;
+  letter-spacing: 0;
 }
 
 .mention-item {
@@ -1177,10 +1294,32 @@ watch(selectedMode, loadModels, { immediate: true })
   transition: width 0.2s;
 }
 
+.progress-meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
 .progress-text {
   font-size: 11px;
   color: var(--color-text-muted);
   white-space: nowrap;
+}
+
+.cancel-upload-btn {
+  font-size: 11px;
+  color: var(--color-text-muted);
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 2px 6px;
+  border-radius: 4px;
+  transition: all 0.15s;
+}
+
+.cancel-upload-btn:hover {
+  color: #ef4444;
+  background: #ef44441a;
 }
 
 @keyframes scale-in {
